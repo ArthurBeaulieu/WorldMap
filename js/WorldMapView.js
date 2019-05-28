@@ -9,7 +9,6 @@ class WorldMapView {
     };
     this._sunlight = null;
     this._renderer = null;
-    this._rotationPivot = null;
     this._controls = null;
     this._meshes = {
       earth: null,
@@ -19,6 +18,11 @@ class WorldMapView {
       sun: null,
       starfield: null
     };
+    this._pivots = {
+      moon: null,
+      sun: null,
+      sunlight: null
+    };
     // Build final scene
     this._buildScene();
     this._buildObjects();
@@ -26,10 +30,8 @@ class WorldMapView {
     this._meshes.earth.rotation.y -= Math.PI / 2; // Earth rotation
     this._meshes.clouds.rotation.y -= Math.PI / 2; // Slowly move clouds over earth surface
     this._meshes.boundaries.rotation.y -= Math.PI / 2; // Rotate boundaries according to Earth's rotation
-    // Tilting on z-axis to simulate Earth's obliquity (oscilate between 22 and 24, but 22 is fine right)
-    this._meshes.earth.rotation.z -= (22 * Math.PI) / 180;
-    this._meshes.clouds.rotation.z -= (22 * Math.PI) / 180;
-    this._meshes.boundaries.rotation.z -= (22 * Math.PI) / 180;
+
+    this.reframeOn(48.866667, 2.333333, 0.5)
 
     window.addEventListener('resize', this._onResize.bind(this), false);
     this._renderTo.appendChild(this._renderer.domElement);
@@ -47,13 +49,16 @@ class WorldMapView {
     this._lights.sun = new THREE.PointLight(0xffffff, 1, 0);
     this._lights.ambient = new THREE.AmbientLight(0x202020);
     this._renderer = new THREE.WebGLRenderer({ antialias: true });
-    this._rotationPivot = new THREE.Object3D(); // For moon to orbit around earth
-    // Configure viewer to match init scenario
-    this._camera.position.z = 1.5;
-    this._renderer.setSize(window.innerWidth, window.innerHeight);
+    this._pivots.moon = new THREE.Object3D(); // For moon to orbit around earth
+    this._pivots.sun = new THREE.Object3D(); // For moon to orbit around earth
+    this._pivots.sunlight = new THREE.Object3D(); // For moon to orbit around earth
     this._controls = new THREE.TrackballControls(this._camera);
+    // Configure viewer to match init scenario
+    this._camera.position.z = 1.4;
+    this._renderer.setPixelRatio(window.devicePixelRatio);
+    this._renderer.setSize(window.innerWidth, window.innerHeight);
     // Building scene lights
-    this._scene.add(this._lights.sun); // From Sun
+    //this._scene.add(this._lights.sun); // From Sun
     this._scene.add(this._lights.ambient); // From cosmic noise, maybe ?
   }
 
@@ -75,31 +80,32 @@ class WorldMapView {
     this._meshes.sun.position.set(0, 0, 11160); // True distance is 23323 times earth radius, but it's too far otherwise
     this._lights.sun.position.set(0, 0, 10000);
     // Attaching elements to the scene
-    this._rotationPivot.add(this._meshes.moon);
-    this._meshes.earth.add(this._rotationPivot);
+    this._pivots.moon.add(this._meshes.moon);
+    this._pivots.sun.add(this._meshes.sun);
+    this._pivots.sunlight.add(this._lights.sun)
+    this._meshes.earth.add(this._pivots.moon);
+    this._meshes.earth.add(this._pivots.sun);
+    this._meshes.earth.add(this._pivots.sunlight);
     this._scene.add(this._meshes.earth);
     this._scene.add(this._meshes.clouds);
     this._scene.add(this._meshes.boundaries);
-    this._scene.add(this._meshes.sun);
     this._scene.add(this._meshes.starfield);
-    /* Pin WIP */
-    const calcPosFromLatLonRad = (lat, lon, radius) => {
-      // 'member old spherical to cartesian ?
-      const phi   = (90 - lat) * (Math.PI / 180);
-      const theta = (lon + 180) * (Math.PI / 180);
-      // Return as cartesian coordinates
-      return [
-        -radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.cos(phi),
-        radius * Math.sin(phi) * Math.sin(theta)
-      ];
-    };
     // Add a pin on Paris
     var pin = new MeshFactory('earthpin');
-    var latlonpoint = calcPosFromLatLonRad(48.866667, 2.333333, 0.5)
-    this._meshes.earth.add(pin)
+    var latlonpoint = this.getPosFromLatLonRad(48.866667, 2.333333, 0.5)
+    // Add border using wireframe
+    var wireframe = new THREE.LineSegments(
+      new THREE.EdgesGeometry(pin.geometry),
+      new THREE.LineBasicMaterial({
+        color: 0x000000,
+        linewidth: 4
+      })
+    );
+    wireframe.renderOrder = 1;
+    pin.add(wireframe);
     pin.position.set(latlonpoint[0], latlonpoint[1], latlonpoint[2]);
     pin.lookAt(new THREE.Vector3(0, 0, 0)); // As referential is geocentric, we look at the earth's center
+    this._meshes.earth.add(pin);
   }
 
   // Loading generator
@@ -131,10 +137,9 @@ class WorldMapView {
   // Mesh animation
   _render() {
     this._controls.update();
-    this._meshes.earth.rotation.y += 0.00005; // Earth rotation
-    this._meshes.clouds.rotation.y += 0.000075; // Slowly move clouds over earth surface
-    this._meshes.boundaries.rotation.y += 0.00005; // Rotate boundaries according to Earth's rotation
-    this._rotationPivot.rotation.y += 0.0005; // Moon orbiting around earth
+    this._pivots.moon.rotation.y += 0.0005; // Moon orbiting around earth
+    this._pivots.sun.rotation.y += 0.0005; // Moon orbiting around earth
+    this._pivots.sunlight.rotation.y += 0.0005; // Moon orbiting around earth
     this._meshes.moon.rotation.y -= 0.000001; // Moon rotation to compensate moon orbit around earth (so we only see clear side of the moon)
   }
 
@@ -145,6 +150,26 @@ class WorldMapView {
     this._renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
+
+  reframeOn(lat, lon, radius) {
+    const targetPos = this.getPosFromLatLonRad(lat, lon, radius);
+    console.log(targetPos);
+    //this._camera.position.set(targetPos[0] * 100, targetPos[1] * 100, targetPos[2] * 100);
+//    this._camera.lookAt(new THREE.Vector3(0, 0, 0));
+  }
+
+
+  getPosFromLatLonRad(lat, lon, radius) {
+    // 'member old spherical to cartesian ?
+    const phi   = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+    // Return as cartesian coordinates
+    return [
+      -radius * Math.sin(phi) * Math.cos(theta),
+      radius * Math.cos(phi),
+      radius * Math.sin(phi) * Math.sin(theta)
+    ];
+  }
 
   /* Unit THREE meshes */
 }

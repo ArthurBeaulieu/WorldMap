@@ -3,7 +3,7 @@ const CLOUDS = ['fair', 'africa', 'asia', 'australia', 'europe', 'na'];
 class MeshFactory {
   constructor(type, stateGenerator) {
     const radius = 0.5; // Earth radius
-    const segments = 64; // 32 segments gives a fair rounded shpere
+    const segments = 128; // 32 segments gives a fair rounded shpere
 
     this._mesh = null;
 
@@ -69,8 +69,7 @@ class MeshFactory {
         alphaMap: new THREE.TextureLoader().load(`img/maps/mask_boundaries.jpg`, nextState),
         bumpMap: new THREE.TextureLoader().load('img/maps/mask_boundaries.jpg', nextState),
         bumpScale: 0.005,
-        transparent: true,
-        depthWrite: false
+        transparent: true
       })
     );
   }
@@ -94,7 +93,8 @@ class MeshFactory {
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius, segments, segments), // Moon is approximatively a third of earth radius, but we keep earth size to make is more visible
       new THREE.MeshPhongMaterial({
-        map: new THREE.TextureLoader().load('img/maps/moon.jpg', nextState)
+        map: new THREE.TextureLoader().load('img/maps/moon.jpg', nextState),
+        shininess: 2
       })
     );
   }
@@ -118,9 +118,9 @@ class MeshFactory {
 
   _buildEarthPin() {
     return new THREE.Mesh(
-      new THREE.BoxGeometry(0.001, 0.001, 0.1),
+      new THREE.BoxGeometry(0.003, 0.003, 0.05),
       new THREE.MeshBasicMaterial({
-        color: new THREE.Color('white')
+        color: new THREE.Color(0x56d45b)
       })
     );
   }
