@@ -13,7 +13,7 @@ Coming Milestones can be found on the [Trello board](https://trello.com/b/ONoFwD
 - [x] Sun and Moon ;
 - [x] Space navigation ;
 - [ ] Loading country data from json ;
-- [ ] Display country data with détails when selected ;
+- [ ] Display country data with details when selected ;
 - [ ] Mzk plugin formatting.
 
 ## Techno
