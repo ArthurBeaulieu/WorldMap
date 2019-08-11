@@ -29,7 +29,7 @@ class WorldMapView {
       ambient: null
     };
     // Init 3D viewer
-    this.init();    
+    this.init();
   }
 
 
@@ -48,7 +48,7 @@ class WorldMapView {
     this._scene = new THREE.Scene();
     this._camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 25000);
     this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
-    // Renderer parameters 
+    // Renderer parameters
     this._renderer = new THREE.WebGLRenderer({ antialias: true });
     this._renderer.gammaInput = true;
     this._renderer.gammaOutput = true;
@@ -71,7 +71,7 @@ class WorldMapView {
 
 
   _buildLights() {
-    this._lights.ambient = new THREE.AmbientLight(0x202020);   
+    this._lights.ambient = new THREE.AmbientLight(0x202020);
     this._lights.sun = new THREE.PointLight(0xffee88, 4, 0);
   }
 
@@ -84,22 +84,28 @@ class WorldMapView {
     this._meshes.clouds.rotation.y += Math.PI / 2; // Slowly move clouds over earth surface
     this._meshes.boundaries.rotation.y += Math.PI / 2; // Rotate boundaries according to Earth's rotation
 
-    this._lights.sun.position.set(0, 0, 5);  
+    // Shift earth along its axis from 23.3 deg (average in between earth tilt axis extremums : 22.1 and 24.5)
+    this._meshes.moon.rotation.z += (23.3 * Math.PI) / 180;
+    this._meshes.earth.rotation.z += (23.3 * Math.PI) / 180; // Earth rotation
+    this._meshes.clouds.rotation.z += (23.3 * Math.PI) / 180; // Slowly move clouds over earth surface
+    this._meshes.boundaries.rotation.z += (23.3 * Math.PI) / 180; // Rotate boundaries according to Earth's rotation
 
-    this._meshes.earth.position.set(0, 0, 0);  
-    this._meshes.moon.position.set(-0.5, 0, -2);  
+    this._lights.sun.position.set(0, 0, 5);
+
+    this._meshes.earth.position.set(0, 0, 0);
+    this._meshes.moon.position.set(-0.5, 0, -2);
 
     this._scene.add(this._lights.sun); // From Sun
-    this._scene.add(this._lights.ambient); // From cosmic noise, maybe ? 
+    this._scene.add(this._lights.ambient); // From cosmic noise, maybe ?
 
     this._scene.add(this._meshes.earth);
     this._scene.add(this._meshes.clouds);
     this._scene.add(this._meshes.boundaries);
-    this._scene.add(this._meshes.starfield);    
+    this._scene.add(this._meshes.starfield);
     this._scene.add(this._meshes.moon);
 
     var axesHelper = new THREE.AxesHelper( 5 );
-    this._scene.add( axesHelper );    
+    this._scene.add( axesHelper );
 
     for (let i = 0; i < this._worldData.countries.length; ++i) {
       var pin = new MeshFactory('earthpin', { CONST: this.CONST });
@@ -144,7 +150,7 @@ class WorldMapView {
 
   _events() {
     window.addEventListener('resize', this._onResize.bind(this), false);
-    window.addEventListener('beforeunload', this._onDestroy.bind(this), false);    
+    window.addEventListener('beforeunload', this._onDestroy.bind(this), false);
 
     window.addEventListener('click', evt => {
         evt.preventDefault();
@@ -153,8 +159,8 @@ class WorldMapView {
 
         mouse.x = (evt.clientX / this._renderer.domElement.clientWidth) * 2 - 1;
         mouse.y =  - (evt.clientY / this._renderer.domElement.clientHeight) * 2 + 1;
- 
-        raycaster.setFromCamera(mouse, this._camera);        
+
+        raycaster.setFromCamera(mouse, this._camera);
         var intersects = raycaster.intersectObjects(this._pins);
         if (intersects.length > 0) {
             intersects[0].object.clickCallback();
@@ -171,7 +177,7 @@ class WorldMapView {
 
 
   _onDestroy() {
-    cancelAnimationFrame(this._rafId);    
+    cancelAnimationFrame(this._rafId);
     this._controls.reset();
     this._renderer.forceContextLoss();
     this._renderer.context = null;
@@ -190,7 +196,7 @@ class WorldMapView {
       radius * Math.cos(phi),
       radius * Math.sin(phi) * Math.sin(theta)
     ];
-  } 
+  }
 }
 
 
