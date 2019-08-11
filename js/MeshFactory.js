@@ -1,24 +1,25 @@
-const CLOUDS = ['fair', 'africa', 'asia', 'australia', 'europe', 'na'];
-
 class MeshFactory {
-  constructor(type, stateGenerator) {
-    const radius = 0.5; // Earth radius
-    const segments = 128; // 32 segments gives a fair rounded shpere
-
+  constructor(type, options) {
+    this.CONST = options.CONST
     this._mesh = null;
 
+    let radius = 0.5; // Earth diameter is equal to 1
+    const segments = 128;
+
     if (type === 'earth') { // Earth sphere
-      this._mesh = this._buildEarthSphere(radius, segments, stateGenerator);
+      this._mesh = this._buildEarthSphere(radius, segments);
     } else if (type === 'clouds') { // Clouds layer for Earth
-      this._mesh = this._buildCloudLayer(radius, segments, stateGenerator);
-    } else if (type === 'boundaries') { // Clouds layer for Earth
-      this._mesh = this._buildBoundariesSphere(radius, segments, stateGenerator);
+      this._mesh = this._buildCloudLayer(radius, segments);
+    } else if (type === 'boundaries') { // Political country boundaries
+      this._mesh = this._buildBoundariesSphere(radius, segments);
     } else if (type === 'sun') { // Sun sphere
-      this._mesh = this._buildSunSphere(radius, segments, stateGenerator);
+      radius = options.CONST.SIZES.SUN / (options.CONST.SIZES.EARTH * 100);
+      this._mesh = this._buildSunSphere(radius, segments);
     } else if (type === 'moon') { // Moon sphere
-      this._mesh = this._buildMoonSphere(radius, segments, stateGenerator);
+      radius *= 2/3;      
+      this._mesh = this._buildMoonSphere(radius, segments);
     } else if (type === 'background') { //
-      this._mesh = this._buildSpaceBackground(15000, segments, stateGenerator);
+      this._mesh = this._buildSpaceBackground(15000, segments);
     } else if (type === 'earthpin') {
       this._mesh = this._buildEarthPin();
     }
@@ -28,16 +29,27 @@ class MeshFactory {
 
   /* This is Sphere land */
 
-  _buildEarthSphere(radius, segments, loadingStateGenerator) {
-    const nextState = () => { loadingStateGenerator.next(); };
-
+  _buildEarthSphere(radius, segments) {
+    // Loading textures from img folder
+    var map = new THREE.TextureLoader().load('assets/img/maps/world.jpg');
+    var bumpMap = new THREE.TextureLoader().load('assets/img/maps/bump_elevation.jpg');
+    var specularMap = new THREE.TextureLoader().load('assets/img/maps/specular_water.png');
+    // Allow texture repetition
+    map.wrapS = THREE.RepeatWrapping;
+    bumpMap.wrapS = THREE.RepeatWrapping;
+    specularMap.wrapS = THREE.RepeatWrapping;
+    // Rotating the texture to match Lat/Long earth values
+    map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
+    bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);    
+    specularMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);        
+    // Creating the mesh
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius, segments, segments),
       new THREE.MeshPhongMaterial({
-        map: new THREE.TextureLoader().load('img/maps/world.jpg', nextState),
-        bumpMap: new THREE.TextureLoader().load('img/maps/bump_elevation.jpg', nextState),
+        map: map,
+        bumpMap: bumpMap,
         bumpScale: 0.005,
-        specularMap: new THREE.TextureLoader().load('img/maps/specular_water.png', nextState),
+        specularMap: specularMap,
         specular: new THREE.Color('grey'),
         shininess: 10 // Light reflexion on the specular map
       })
@@ -45,13 +57,11 @@ class MeshFactory {
   }
 
 
-  _buildCloudLayer(radius, segments, loadingStateGenerator) {
-    const nextState = () => { loadingStateGenerator.next(); };
-
+  _buildCloudLayer(radius, segments) {
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius + 0.002, segments, segments),
       new THREE.MeshPhongMaterial({
-        alphaMap: new THREE.TextureLoader().load(`img/clouds/${CLOUDS[0]}.jpg`, nextState),
+        alphaMap: new THREE.TextureLoader().load(`assets/img/clouds/${this.CONST.CLOUDS[0]}.jpg`),
         transparent: true,
         depthWrite: false
       })
@@ -59,54 +69,66 @@ class MeshFactory {
   }
 
 
-  _buildBoundariesSphere(radius, segments, loadingStateGenerator) {
-    const nextState = () => { loadingStateGenerator.next(); };
-
+  _buildBoundariesSphere(radius, segments) {
+    // Loading textures from img folder    
+    var envMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
+    var alphaMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
+    var bumpMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
+    // Allow texture repetition    
+    envMap.wrapS = THREE.RepeatWrapping;
+    alphaMap.wrapS = THREE.RepeatWrapping;
+    bumpMap.wrapS = THREE.RepeatWrapping;
+    // Rotating the texture to match Lat/Long earth values    
+    envMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);  
+    alphaMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);  
+    bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);          
+    // Creating the mesh
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius, segments, segments),
       new THREE.MeshPhongMaterial({
-        envMap: new THREE.TextureLoader().load(`img/maps/mask_boundaries.jpg`, nextState), // Using envMap will invert boundaries color
-        alphaMap: new THREE.TextureLoader().load(`img/maps/mask_boundaries.jpg`, nextState),
-        bumpMap: new THREE.TextureLoader().load('img/maps/mask_boundaries.jpg', nextState),
-        bumpScale: 0.005,
+        envMap: envMap,
+        alphaMap: alphaMap,
+        bumpMap: bumpMap,
+        bumpScale: 5,
         transparent: true
       })
     );
   }
 
 
-  _buildSunSphere(radius, segments, loadingStateGenerator) {
-    const nextState = () => { loadingStateGenerator.next(); };
-
+  _buildSunSphere(radius, segments) {
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius * 109, segments, segments), // Sun is approximatively 109 larger than earth
+      new THREE.SphereGeometry(radius, segments, segments),
       new THREE.MeshPhongMaterial({
-        map: new THREE.TextureLoader().load('img/maps/sun.jpg', nextState),
+        emissive: 0xffee88,
+        emissiveIntensity: 8,
+        map: new THREE.TextureLoader().load('assets/img/maps/sun.jpg'),
       })
     );
   }
 
 
-  _buildMoonSphere(radius, segments, loadingStateGenerator) {
-    const nextState = () => { loadingStateGenerator.next(); };
+  _buildMoonSphere(radius, segments) {
+    // Loading textures from img folder
+    var map = new THREE.TextureLoader().load('assets/img/maps/moon.jpg');
+    map.wrapS = THREE.RepeatWrapping;
+    map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);  
 
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, segments, segments), // Moon is approximatively a third of earth radius, but we keep earth size to make is more visible
+      new THREE.SphereGeometry(radius, segments, segments),
       new THREE.MeshPhongMaterial({
-        map: new THREE.TextureLoader().load('img/maps/moon.jpg', nextState),
+        map: map,
         shininess: 2
       })
     );
   }
 
 
-  _buildSpaceBackground(radius, segments, loadingStateGenerator) {
-    const nextState = () => { loadingStateGenerator.next(); };
-
+  _buildSpaceBackground(radius, segments) {
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius, segments, segments),
       new THREE.MeshBasicMaterial({
-        map: new THREE.TextureLoader().load('img/starfield.jpg', nextState),
+        map: new THREE.TextureLoader().load('assets/img/milkyway.jpg'),
         side: THREE.BackSide
       })
     );
@@ -125,3 +147,6 @@ class MeshFactory {
     );
   }
 }
+
+
+export default MeshFactory;

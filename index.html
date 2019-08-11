@@ -9,12 +9,11 @@
   <div id="worldmap"></div>
   <!--  Map textures from http://www.shadedrelief.com/natural3/pages/extra.html -->
   <script type="text/javascript" src="./js/three.min.js"></script>
-  <script type="text/javascript" src="./js/TrackballControls.js"></script>
-  <script type="text/javascript" src="./js/MeshFactory.js"></script>
-  <script type="text/javascript" src="./js/WorldMapView.js"></script>
-  <script type="text/javascript">
-    var world = new WorldMapView({
-      renderTo: document.querySelector('#worldmap')
+  <script type="module">
+    import MzkWorldMap from './js/MzkWorldMap.js';
+    new MzkWorldMap({
+      renderTo: document.querySelector('#worldmap'),
+      worldDataPath: './assets/WorldData.json'
     });
   </script>
 </body>
