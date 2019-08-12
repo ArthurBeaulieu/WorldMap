@@ -26,8 +26,7 @@ class WorldMapView {
       starfield: null
     };
     this._buttons = {
-      resetCamera: null,
-      zoomRange: null
+      resetCamera: null
     };
     this._pins = [];
     // Scene lights
@@ -72,20 +71,12 @@ class WorldMapView {
       // Camera controls
       this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
       this._controls.minDistance = 0.666;
-      this._controls.maxDistance = 666;
+      this._controls.maxDistance = 100;
       // Navigation controls
       this._buttons.resetCamera = document.createElement('BUTTON');
       this._buttons.resetCamera.classList.add('reset-camera');
       this._buttons.resetCamera.innerHTML = 'Reset camera position';
       this._renderTo.appendChild(this._buttons.resetCamera);
-
-      this._buttons.zoomRange = document.createElement('INPUT');
-      this._buttons.zoomRange.setAttribute('type', 'range');
-      this._buttons.zoomRange.setAttribute('min', '0.666');
-      this._buttons.zoomRange.setAttribute('max', '666');
-      this._buttons.zoomRange.setAttribute('step', '0.1');
-      // WIP
-      //this._renderTo.appendChild(this._buttons.zoomRange);
     }
 
 
@@ -182,7 +173,6 @@ class WorldMapView {
     window.addEventListener('click', this._onCanvasClicked.bind(this), false);
 
     this._buttons.resetCamera.addEventListener('click', this._controls.targetOnCenter.bind(this._controls), false);
-    this._buttons.zoomRange.addEventListener('input', this._onZoomRangeClicked.bind(this), false);
   }
 
 
@@ -216,13 +206,6 @@ class WorldMapView {
     if (intersects.length > 0) {
       intersects[0].object.clickCallback();
     }
-  }
-
-
-  _onZoomRangeClicked(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    console.log('here');
   }
 
 

@@ -53,6 +53,7 @@ class TrackballControls {
     this.up0 = this.object.up.clone();
 
     this.keys = [ 65 /*A*/, 83 /*S*/, 68 /*D*/ ];
+    this.enaled = true;
 
     this.init();
   }
@@ -141,6 +142,12 @@ class TrackballControls {
   }
 
 
+  zoom(value) {
+    this._eye.multiplyScalar(value);
+    this._zoomStart.y += (this._zoomEnd.y - this._zoomStart.y) * this.dynamicDampingFactor;
+  }
+
+
   panCamera() {
     var mouseChange = this._panEnd.clone().sub( this._panStart );
     if ( mouseChange.lengthSq() ) {
@@ -217,6 +224,8 @@ class TrackballControls {
 
 
   mousedown(event) {
+    if (this.enabled === false) { return; }
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -238,6 +247,8 @@ class TrackballControls {
 
 
   mousemove(event) {
+    if (this.enabled === false) { return; }
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -252,6 +263,8 @@ class TrackballControls {
 
 
   mouseup(event) {
+    if (this.enabled === false) { return; }
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -263,6 +276,8 @@ class TrackballControls {
 
 
   mousewheel(event) {
+    if (this.enabled === false) { return; }
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -278,6 +293,8 @@ class TrackballControls {
 
 
   touchstart(event) {
+    if (this.enabled === false) { return; }
+
     switch (event.touches.length) {
       case 1:
         this._state = this.STATE.TOUCH_ROTATE;
@@ -300,6 +317,8 @@ class TrackballControls {
 
 
   touchmove(event) {
+    if (this.enabled === false) { return; }
+
     event.preventDefault();
     event.stopPropagation();
 
@@ -322,6 +341,8 @@ class TrackballControls {
 
 
   touchend(event) {
+    if (this.enabled === false) { return; }
+
     switch (event.touches.length) {
       case 1:
         this._rotateStart = this._rotateEnd = this.getMouseProjectionOnBall(event.touches[0].pageX, event.touches[0].pageY);
@@ -339,7 +360,7 @@ class TrackballControls {
 
 
   keydown(event) {
-    if ( this.enabled === false ) return;
+    if (this.enabled === false) { return; }
 
     window.removeEventListener( 'keydown', this.keydown.bind(this) );
 
@@ -366,14 +387,18 @@ class TrackballControls {
 
 
   keyup(event) {
-
-    if ( this.enabled === false ) return;
+    if (this.enabled === false) { return; }
 
     this._state = this._prevState;
-
     window.addEventListener( 'keydown', this.keydown.bind(this), false );
 
   }
+
+
+  set enable(state) {
+    this.enable = state;
+  }
+
 
 }
 
