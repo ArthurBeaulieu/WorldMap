@@ -1,0 +1,19 @@
+button.reset-camera {
+  background-color: rgba(255, 255, 255, 0.2);
+  bottom: 10px;
+  border: none;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  padding: 0.5em 1em;
+  position: absolute;
+  right: 10px;
+}
+
+input[type="range"] {
+  position: absolute;
+  transform: rotateZ(270deg);
+  top: 49%;
+  right: -23%;
+  width: 50%;
+}

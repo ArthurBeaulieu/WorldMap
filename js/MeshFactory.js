@@ -1,10 +1,12 @@
 class MeshFactory {
+
+
   constructor(type, options) {
     this.CONST = options.CONST
     this._mesh = null;
 
     let radius = 0.5; // Earth diameter is equal to 1
-    const segments = 128;
+    const segments = 64;
 
     if (type === 'earth') { // Earth sphere
       this._mesh = this._buildEarthSphere(radius, segments);
@@ -16,7 +18,7 @@ class MeshFactory {
       radius = options.CONST.SIZES.SUN / (options.CONST.SIZES.EARTH * 100);
       this._mesh = this._buildSunSphere(radius, segments);
     } else if (type === 'moon') { // Moon sphere
-      radius *= 2/3;      
+      radius *= 2/3;
       this._mesh = this._buildMoonSphere(radius, segments);
     } else if (type === 'background') { //
       this._mesh = this._buildSpaceBackground(15000, segments);
@@ -40,8 +42,8 @@ class MeshFactory {
     specularMap.wrapS = THREE.RepeatWrapping;
     // Rotating the texture to match Lat/Long earth values
     map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
-    bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);    
-    specularMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);        
+    bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
+    specularMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     // Creating the mesh
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius, segments, segments),
@@ -70,18 +72,18 @@ class MeshFactory {
 
 
   _buildBoundariesSphere(radius, segments) {
-    // Loading textures from img folder    
+    // Loading textures from img folder
     var envMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
     var alphaMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
     var bumpMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
-    // Allow texture repetition    
+    // Allow texture repetition
     envMap.wrapS = THREE.RepeatWrapping;
     alphaMap.wrapS = THREE.RepeatWrapping;
     bumpMap.wrapS = THREE.RepeatWrapping;
-    // Rotating the texture to match Lat/Long earth values    
-    envMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);  
-    alphaMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);  
-    bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);          
+    // Rotating the texture to match Lat/Long earth values
+    envMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
+    alphaMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
+    bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     // Creating the mesh
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius, segments, segments),
@@ -112,7 +114,7 @@ class MeshFactory {
     // Loading textures from img folder
     var map = new THREE.TextureLoader().load('assets/img/maps/moon.jpg');
     map.wrapS = THREE.RepeatWrapping;
-    map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);  
+    map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
 
     return new THREE.Mesh(
       new THREE.SphereGeometry(radius, segments, segments),
@@ -146,6 +148,8 @@ class MeshFactory {
       })
     );
   }
+
+
 }
 
 

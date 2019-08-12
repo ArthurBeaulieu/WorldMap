@@ -1,4 +1,4 @@
-/** @author Eberhard Graether / http://egraether.com/ 
+/** @author Eberhard Graether / http://egraether.com/
  * This was modified to become an ES6 module. Also, pan movement have been removed since useless in here */
 
 
@@ -74,7 +74,7 @@ class TrackballControls {
     this.domElement.addEventListener('touchmove', this.touchmove.bind(this), false);
     window.addEventListener( 'keydown', this.keydown.bind(this), false );
     window.addEventListener( 'keyup', this.keyup.bind(this), false );
-  } 
+  }
 
 
   getMouseOnScreen(clientX, clientY) {
@@ -105,7 +105,7 @@ class TrackballControls {
     projection.add(this._eye.setLength(mouseOnBall.z ));
 
     return projection;
-  }  
+  }
 
 
   rotateCamera() {
@@ -202,7 +202,7 @@ class TrackballControls {
     this._eye.subVectors(this.object.position, this.target);
     this.object.lookAt(this.target);
     this.lastPosition.copy(this.object.position);
-  } 
+  }
 
 
   targetOnCenter() {
@@ -213,13 +213,12 @@ class TrackballControls {
     this._eye.subVectors(this.object.position, this.target);
     this.object.lookAt(this.target);
     this.lastPosition.copy(this.object.position);
-  } 
+  }
 
 
   mousedown(event) {
     event.preventDefault();
     event.stopPropagation();
-      //this.targetOnCenter(); // TODO move this in a button (handle in MzkWorldMap since it is UI external interaction)
 
     if (this._state === this.STATE.NONE) {
       this._state = event.button;
@@ -235,7 +234,7 @@ class TrackballControls {
 
     document.addEventListener( 'mousemove', this.mousemove.bind(this), false );
     document.addEventListener( 'mouseup', this.mouseup.bind(this), false );
-  }  
+  }
 
 
   mousemove(event) {
@@ -249,7 +248,7 @@ class TrackballControls {
     } else if ( this._state === this.STATE.PAN && !this.noPan ) {
       this._panEnd = this.getMouseOnScreen( event.clientX, event.clientY );
     }
-  }  
+  }
 
 
   mouseup(event) {
@@ -260,7 +259,7 @@ class TrackballControls {
 
     document.removeEventListener('mousemove', this.mousemove.bind(this));
     document.removeEventListener('mouseup', this.mouseup.bind(this));
-  }  
+  }
 
 
   mousewheel(event) {
@@ -275,7 +274,7 @@ class TrackballControls {
     }
 
     this._zoomStart.y += delta * 0.01;
-  }  
+  }
 
 
   touchstart(event) {
@@ -293,11 +292,11 @@ class TrackballControls {
       case 3:
         this._state = this.STATE.TOUCH_PAN;
         this._panStart = this._panEnd = this.getMouseOnScreen( event.touches[0].pageX, event.touches[0].pageY);
-        break;        
+        break;
       default:
         this._state = this.STATE.NONE;
     }
-  }  
+  }
 
 
   touchmove(event) {
@@ -315,11 +314,11 @@ class TrackballControls {
         break;
       case 3:
         this._panEnd = this.getMouseOnScreen(event.touches[0].pageX, event.touches[0].pageY );
-        break;        
+        break;
       default:
         this._state = this.STATE.NONE;
     }
-  }  
+  }
 
 
   touchend(event) {
@@ -332,15 +331,14 @@ class TrackballControls {
         break;
       case 3:
         this._panStart = this._panEnd = this.getMouseOnScreen(event.touches[0].pageX, event.touches[0].pageY );
-        break;        
+        break;
     }
 
     this._state = this.STATE.NONE;
-  }  
+  }
 
 
   keydown(event) {
-
     if ( this.enabled === false ) return;
 
     window.removeEventListener( 'keydown', this.keydown.bind(this) );

@@ -4,12 +4,14 @@
   <meta charset=utf-8>
   <title>MzkWorldMap</title>
   <style>body{margin:0;overflow:hidden;}#worldmap{width:100%;height:100%}</style>
+  <link rel="stylesheet" href="./css/mzkworldmap.css">
 </head>
 <body>
+  <!--  Map textures come from http://www.shadedrelief.com/natural3/pages/extra.html -->
   <div id="worldmap"></div>
-  <!--  Map textures from http://www.shadedrelief.com/natural3/pages/extra.html -->
   <script type="text/javascript" src="./js/three.min.js"></script>
   <script type="module">
+    /* Typical instanciation of a world map */
     import MzkWorldMap from './js/MzkWorldMap.js';
     new MzkWorldMap({
       renderTo: document.querySelector('#worldmap'),

@@ -1,7 +1,10 @@
-import MeshFactory from './MeshFactory.js';
 import TrackballControls from './TrackballControls.js';
+import MeshFactory from './MeshFactory.js';
+
 
 class WorldMapView {
+
+
   constructor(options) {
     THREE.TrackballControls = TrackballControls; // Override THREE TrackBallControl with provided module
     // View options
@@ -22,6 +25,10 @@ class WorldMapView {
       moon: null,
       starfield: null
     };
+    this._buttons = {
+      resetCamera: null,
+      zoomRange: null
+    };
     this._pins = [];
     // Scene lights
     this._lights = {
@@ -38,6 +45,7 @@ class WorldMapView {
     this._buildMeshes();
     this._buildLights();
     this._placeElements();
+    this._buildControls();
     this._events();
     this.animate();
   }
@@ -47,7 +55,6 @@ class WorldMapView {
     // Viewer utils
     this._scene = new THREE.Scene();
     this._camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 25000);
-    this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
     // Renderer parameters
     this._renderer = new THREE.WebGLRenderer({ antialias: true });
     this._renderer.gammaInput = true;
@@ -58,6 +65,28 @@ class WorldMapView {
     this._renderer.setSize(window.innerWidth, window.innerHeight);
     this._renderTo.appendChild(this._renderer.domElement);
   }
+
+
+
+    _buildControls() {
+      // Camera controls
+      this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
+      this._controls.minDistance = 0.666;
+      this._controls.maxDistance = 666;
+      // Navigation controls
+      this._buttons.resetCamera = document.createElement('BUTTON');
+      this._buttons.resetCamera.classList.add('reset-camera');
+      this._buttons.resetCamera.innerHTML = 'Reset camera position';
+      this._renderTo.appendChild(this._buttons.resetCamera);
+
+      this._buttons.zoomRange = document.createElement('INPUT');
+      this._buttons.zoomRange.setAttribute('type', 'range');
+      this._buttons.zoomRange.setAttribute('min', '0.666');
+      this._buttons.zoomRange.setAttribute('max', '666');
+      this._buttons.zoomRange.setAttribute('step', '0.1');
+      // WIP
+      //this._renderTo.appendChild(this._buttons.zoomRange);
+    }
 
 
   _buildMeshes() {
@@ -83,7 +112,6 @@ class WorldMapView {
     this._meshes.earth.rotation.y += Math.PI / 2; // Earth rotation
     this._meshes.clouds.rotation.y += Math.PI / 2; // Slowly move clouds over earth surface
     this._meshes.boundaries.rotation.y += Math.PI / 2; // Rotate boundaries according to Earth's rotation
-
     // Shift earth along its axis from 23.3 deg (average in between earth tilt axis extremums : 22.1 and 24.5)
     this._meshes.moon.rotation.z += (23.3 * Math.PI) / 180;
     this._meshes.earth.rotation.z += (23.3 * Math.PI) / 180; // Earth rotation
@@ -151,21 +179,10 @@ class WorldMapView {
   _events() {
     window.addEventListener('resize', this._onResize.bind(this), false);
     window.addEventListener('beforeunload', this._onDestroy.bind(this), false);
+    window.addEventListener('click', this._onCanvasClicked.bind(this), false);
 
-    window.addEventListener('click', evt => {
-        evt.preventDefault();
-        var raycaster = new THREE.Raycaster();
-        var mouse = new THREE.Vector2();
-
-        mouse.x = (evt.clientX / this._renderer.domElement.clientWidth) * 2 - 1;
-        mouse.y =  - (evt.clientY / this._renderer.domElement.clientHeight) * 2 + 1;
-
-        raycaster.setFromCamera(mouse, this._camera);
-        var intersects = raycaster.intersectObjects(this._pins);
-        if (intersects.length > 0) {
-            intersects[0].object.clickCallback();
-        }
-    }, false);
+    this._buttons.resetCamera.addEventListener('click', this._controls.targetOnCenter.bind(this._controls), false);
+    this._buttons.zoomRange.addEventListener('input', this._onZoomRangeClicked.bind(this), false);
   }
 
 
@@ -185,6 +202,30 @@ class WorldMapView {
     this._renderer = null;
   }
 
+
+  _onCanvasClicked(event) {
+    event.preventDefault();
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    mouse.x = (event.clientX / this._renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y =  - (event.clientY / this._renderer.domElement.clientHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, this._camera);
+    const intersects = raycaster.intersectObjects(this._pins);
+    if (intersects.length > 0) {
+      intersects[0].object.clickCallback();
+    }
+  }
+
+
+  _onZoomRangeClicked(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('here');
+  }
+
+
   // Move in utils or some kind of
   getPosFromLatLonRad(lat, lon, radius) {
     // 'member old spherical to cartesian ?
@@ -197,6 +238,8 @@ class WorldMapView {
       radius * Math.sin(phi) * Math.sin(theta)
     ];
   }
+
+
 }
 
 
