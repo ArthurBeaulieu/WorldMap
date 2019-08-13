@@ -2,7 +2,7 @@ class MeshFactory {
 
 
   constructor(type, options) {
-    this.CONST = options.CONST
+    this.CONST = options.CONST;
     this._mesh = null;
 
     let radius = 0.5; // Earth diameter is equal to 1
