@@ -9,14 +9,11 @@ class MzkWorldMap {
         worldData: worldData,
         CONST: {
           CLOUDS: ['fair', 'africa', 'asia', 'australia', 'europe', 'na'],
-          SIZES: { // Meter diameter sizes
-            EARTH: 12756274,
-            MOON: 3476000,
-            SUN: 139200000000
-          },
-          DISTANCES: { // Meters
-            MOON: 384400,
-            SUN: 149597870700
+          RADIUS: {
+            EARTH: 0.5,
+            MOON: 0.33,
+            SUN: 5,
+            SCENE: 100
           }
         }
       });

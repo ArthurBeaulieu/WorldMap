@@ -9,11 +9,3 @@ button.reset-camera {
   position: absolute;
   right: 10px;
 }
-
-input[type="range"] {
-  position: absolute;
-  transform: rotateZ(270deg);
-  top: 49%;
-  right: -23%;
-  width: 50%;
-}

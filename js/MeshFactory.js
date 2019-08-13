@@ -1,37 +1,34 @@
 class MeshFactory {
 
 
-  constructor(type, options) {
+  constructor(options) {
     this.CONST = options.CONST;
-    this._mesh = null;
-
-    let radius = 0.5; // Earth diameter is equal to 1
-    const segments = 64;
-
-    if (type === 'earth') { // Earth sphere
-      this._mesh = this._buildEarthSphere(radius, segments);
-    } else if (type === 'clouds') { // Clouds layer for Earth
-      this._mesh = this._buildCloudLayer(radius, segments);
-    } else if (type === 'boundaries') { // Political country boundaries
-      this._mesh = this._buildBoundariesSphere(radius, segments);
-    } else if (type === 'sun') { // Sun sphere
-      radius = options.CONST.SIZES.SUN / (options.CONST.SIZES.EARTH * 100);
-      this._mesh = this._buildSunSphere(radius, segments);
-    } else if (type === 'moon') { // Moon sphere
-      radius *= 2/3;
-      this._mesh = this._buildMoonSphere(radius, segments);
-    } else if (type === 'background') { //
-      this._mesh = this._buildSpaceBackground(15000, segments);
-    } else if (type === 'earthpin') {
-      this._mesh = this._buildEarthPin();
-    }
-
-    return this._mesh;
+    this._segments = options.segments || 64;
   }
+
+
+  new(type) {
+    if (type === 'earth') { // Earth sphere
+      return this._buildEarthSphere();
+    } else if (type === 'clouds') { // Clouds layer for Earth
+      return this._buildCloudLayer();
+    } else if (type === 'boundaries') { // Political country boundaries
+      return this._buildBoundariesSphere();
+    } else if (type === 'sun') { // Sun sphere
+      return this._buildSunSphere();
+    } else if (type === 'moon') { // Moon sphere
+      return this._buildMoonSphere();
+    } else if (type === 'background') { //
+      return this._buildSpaceBackground();
+    } else if (type === 'earthpin') {
+      return this._buildEarthPin();
+    }
+  }
+
 
   /* This is Sphere land */
 
-  _buildEarthSphere(radius, segments) {
+  _buildEarthSphere() {
     // Loading textures from img folder
     var map = new THREE.TextureLoader().load('assets/img/maps/world.jpg');
     var bumpMap = new THREE.TextureLoader().load('assets/img/maps/bump_elevation.jpg');
@@ -46,7 +43,7 @@ class MeshFactory {
     specularMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     // Creating the mesh
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, segments, segments),
+      new THREE.SphereGeometry(this.CONST.RADIUS.EARTH, this._segments, this._segments),
       new THREE.MeshPhongMaterial({
         map: map,
         bumpMap: bumpMap,
@@ -59,9 +56,9 @@ class MeshFactory {
   }
 
 
-  _buildCloudLayer(radius, segments) {
+  _buildCloudLayer() {
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius + 0.002, segments, segments),
+      new THREE.SphereGeometry(this.CONST.RADIUS.EARTH + 0.002, this._segments, this._segments),
       new THREE.MeshPhongMaterial({
         alphaMap: new THREE.TextureLoader().load(`assets/img/clouds/${this.CONST.CLOUDS[0]}.jpg`),
         transparent: true,
@@ -71,7 +68,7 @@ class MeshFactory {
   }
 
 
-  _buildBoundariesSphere(radius, segments) {
+  _buildBoundariesSphere() {
     // Loading textures from img folder
     var envMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
     var alphaMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.jpg`);
@@ -86,7 +83,7 @@ class MeshFactory {
     bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     // Creating the mesh
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, segments, segments),
+      new THREE.SphereGeometry(this.CONST.RADIUS.EARTH, this._segments, this._segments),
       new THREE.MeshPhongMaterial({
         envMap: envMap,
         alphaMap: alphaMap,
@@ -98,9 +95,9 @@ class MeshFactory {
   }
 
 
-  _buildSunSphere(radius, segments) {
+  _buildSunSphere() {
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, segments, segments),
+      new THREE.SphereGeometry(this.CONST.RADIUS.SUN, this._segments, this._segments),
       new THREE.MeshPhongMaterial({
         emissive: 0xffee88,
         emissiveIntensity: 8,
@@ -110,14 +107,14 @@ class MeshFactory {
   }
 
 
-  _buildMoonSphere(radius, segments) {
+  _buildMoonSphere() {
     // Loading textures from img folder
     var map = new THREE.TextureLoader().load('assets/img/maps/moon.jpg');
     map.wrapS = THREE.RepeatWrapping;
     map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
 
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, segments, segments),
+      new THREE.SphereGeometry(this.CONST.RADIUS.MOON, this._segments, this._segments),
       new THREE.MeshPhongMaterial({
         map: map,
         shininess: 2
@@ -126,9 +123,9 @@ class MeshFactory {
   }
 
 
-  _buildSpaceBackground(radius, segments) {
+  _buildSpaceBackground() {
     return new THREE.Mesh(
-      new THREE.SphereGeometry(radius, segments, segments),
+      new THREE.SphereGeometry(this.CONST.RADIUS.SCENE, this._segments, this._segments),
       new THREE.MeshBasicMaterial({
         map: new THREE.TextureLoader().load('assets/img/milkyway.jpg'),
         side: THREE.BackSide

@@ -46,40 +46,20 @@ class WorldMapView {
     const consolelog = console.log; // Store Js console.log behavior
     if (this.debug === false) { console.log = function() {}; } // Remove THREE Js log message when not debugging
 
-    this._startUILoading()
-      .then(this._buildViewer.bind(this))
+    this._buildViewer()
       .then(this._buildMeshes.bind(this))
       .then(this._buildLights.bind(this))
       .then(this._placeElements.bind(this))
       .then(this._buildControls.bind(this))
       .then(this._events.bind(this))
-      .then(this._stopUILoading.bind(this))
       .then(this.animate.bind(this))
       .then(() => { if (this.debug === false) { console.log = consolelog; } }) // Restore Js console.log behavior
       .catch(this._initFailed.bind(this));
   }
 
 
-  _startUILoading() {
-    return new Promise(resolve => {
-      resolve();
-    });
-  }
-
-
-  _stopUILoading() {
-    return new Promise(resolve => {
-      resolve();
-    });
-  }
-
-
   _initFailed(e) {
-    this._stopUILoading()
-      .then(() => {
-        // TODO add error page in render to
-        console.error(e);
-      })
+    console.error(e);
   }
 
 
@@ -111,12 +91,23 @@ class WorldMapView {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._buildMeshes'); }
       try {
+        const Meshes = new MeshFactory({
+          CONST: this.CONST,
+          segments: 64
+        });
         // Build scene elements (Earth, Clouds, Outter space)
-        this._meshes.earth = new MeshFactory('earth', { CONST: this.CONST });
-        this._meshes.clouds = new MeshFactory('clouds', { CONST: this.CONST });
-        this._meshes.boundaries = new MeshFactory('boundaries', { CONST: this.CONST });
-        this._meshes.moon = new MeshFactory('moon', { CONST: this.CONST });
-        this._meshes.starfield = new MeshFactory('background', { CONST: this.CONST });
+        this._meshes.earth = Meshes.new('earth');
+        this._meshes.clouds = Meshes.new('clouds');
+        this._meshes.boundaries = Meshes.new('boundaries');
+        this._meshes.moon = Meshes.new('moon');
+        this._meshes.starfield = Meshes.new('background');
+        // Build country pins on Earth
+        for (let i = 0; i < this._worldData.countries.length; ++i) {
+          let pin = Meshes.new('earthpin');
+          pin.info = this._worldData.countries[i]; // Attach country information to the pin
+          this._pins.push(pin);
+        }
+
         resolve();
       } catch (e) {
         reject(`WorldMapView._buildMeshes\n${e}`);
@@ -169,32 +160,28 @@ class WorldMapView {
         this._scene.add(this._meshes.starfield);
         this._scene.add(this._meshes.moon);
 
-        var axesHelper = new THREE.AxesHelper( 5 );
-        this._scene.add( axesHelper );
+        if (this.debug) { this._scene.add(new THREE.AxesHelper(this.CONST.RADIUS.SCENE)); }
 
-        for (let i = 0; i < this._worldData.countries.length; ++i) {
-          var pin = new MeshFactory('earthpin', { CONST: this.CONST });
-          pin.info = this._worldData.countries[i];
-          var latlonpoint = this.getPosFromLatLonRad(pin.info.countryCenter.lat, pin.info.countryCenter.long, 0.5)
+        for (let i = 0; i < this._pins.length; ++i) {
+          var latlonpoint = this.getPosFromLatLonRad(this._pins[i].info.countryCenter.lat, this._pins[i].info.countryCenter.long, this.CONST.RADIUS.EARTH);
           // Add border using wireframe
           var wireframe = new THREE.LineSegments(
-            new THREE.EdgesGeometry(pin.geometry),
+            new THREE.EdgesGeometry(this._pins[i].geometry),
             new THREE.LineBasicMaterial({
               color: 0x000000,
               linewidth: 4
             })
           );
           wireframe.renderOrder = 1;
-          pin.add(wireframe);
-          pin.position.set(latlonpoint[0], latlonpoint[1], latlonpoint[2]);
-          pin.lookAt(new THREE.Vector3(0, 0, 0)); // As referential is geocentric, we look at the earth's center
+          this._pins[i].add(wireframe);
+          this._pins[i].position.set(latlonpoint[0], latlonpoint[1], latlonpoint[2]);
+          this._pins[i].lookAt(new THREE.Vector3(0, 0, 0)); // As referential is geocentric, we look at the earth's center
 
-          pin.clickCallback = function() {
+          this._pins[i].clickCallback = function() {
             console.log(this.info);
           };
 
-          this._pins.push(pin);
-          this._meshes.earth.add(pin);
+          this._meshes.earth.add(this._pins[i]);
         }
         resolve();
       } catch (e) {
@@ -210,8 +197,8 @@ class WorldMapView {
       try {
         // Camera controls
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
-        this._controls.minDistance = 0.666;
-        this._controls.maxDistance = 100;
+        this._controls.minDistance = this.CONST.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
+        this._controls.maxDistance = this.CONST.RADIUS.SCENE;
         // Navigation controls
         this._buttons.resetCamera = document.createElement('BUTTON');
         this._buttons.resetCamera.classList.add('reset-camera');
