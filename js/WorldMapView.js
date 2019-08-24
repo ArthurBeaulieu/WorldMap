@@ -10,6 +10,7 @@ class WorldMapView {
     // View options
     this.debug = options.debug;
     this._renderTo = options.renderTo;
+    this._countryClicked = options.countryClicked;
     this._worldData = options.worldData;
     this.CONST = options.CONST;
     // 3D context internals
@@ -23,17 +24,26 @@ class WorldMapView {
       earth: null,
       cloud: null,
       boundaries: null,
+      sun: null,
       moon: null,
       starfield: null
-    };
-    // Scene manual controls
-    this._buttons = {
-      resetCamera: null
     };
     // Scene lights
     this._lights = {
       sun: null,
       ambient: null
+    };
+    // Animation pivots to simulate spheres orbiting
+    this._pivots = {
+      sun: null,
+      moon: null
+    };
+    // Scene DOM elements
+    this._selectedCountry = null;
+    this._selectedPin = null;
+    this._buttons = {
+      resetCamera: null,
+      resetPositions: null
     };
     // Scene country pins
     this._pins = [];
@@ -44,12 +54,13 @@ class WorldMapView {
 
   init() {
     const consolelog = console.log; // Store Js console.log behavior
-    if (this.debug === false) { console.log = function() {}; } // Remove THREE Js log message when not debugging
+    if (this.debug === false) { console.log = () => {}; } // Remove THREE Js log message when not debugging
 
     this._buildViewer()
-      .then(this._buildMeshes.bind(this))
       .then(this._buildLights.bind(this))
+      .then(this._buildMeshes.bind(this))
       .then(this._placeElements.bind(this))
+      .then(this._fillScene.bind(this))
       .then(this._buildControls.bind(this))
       .then(this._events.bind(this))
       .then(this.animate.bind(this))
@@ -95,10 +106,14 @@ class WorldMapView {
           CONST: this.CONST,
           segments: 64
         });
+        // Pivots are for animating objects
+        this._pivots.sun = new THREE.Object3D();
+        this._pivots.moon = new THREE.Object3D();        
         // Build scene elements (Earth, Clouds, Outter space)
         this._meshes.earth = Meshes.new('earth');
         this._meshes.clouds = Meshes.new('clouds');
         this._meshes.boundaries = Meshes.new('boundaries');
+        this._meshes.sun = Meshes.new('sun');
         this._meshes.moon = Meshes.new('moon');
         this._meshes.starfield = Meshes.new('background');
         // Build country pins on Earth
@@ -120,8 +135,8 @@ class WorldMapView {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._buildLights'); }
       try {
-        this._lights.ambient = new THREE.AmbientLight(0x202020);
-        this._lights.sun = new THREE.PointLight(0xffee88, 4, 0);
+        this._lights.ambient = new THREE.AmbientLight(0x101010);
+        this._lights.sun = new THREE.PointLight(0xffee88, 3, 0);
         resolve();
       } catch (e) {
         reject(`WorldMapView._buildLights\n${e}`);
@@ -133,34 +148,24 @@ class WorldMapView {
   _placeElements() {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._placeElements'); }
-      try {
+      try {       
         this._camera.position.z = 3;
+
+        this._meshes.earth.position.set(0, 0, 0);        
+        this._meshes.moon.position.set(0, 0, -5);
+        this._meshes.sun.position.set(0, 0, this.CONST.RADIUS.SCENE);
+        this._lights.sun.position.set(0, 0, this.CONST.RADIUS.SCENE - (2 * this.CONST.RADIUS.SUN)); // Place sunlight before sun sphere 
+        this._pivots.moon.position.set(0, 0, 0);
+        this._pivots.sun.position.set(0, 0, 0);
         // Place Earth facing Greenwich
-        this._meshes.moon.rotation.y += Math.PI / 2;
-        this._meshes.earth.rotation.y += Math.PI / 2; // Earth rotation
-        this._meshes.clouds.rotation.y += Math.PI / 2; // Slowly move clouds over earth surface
-        this._meshes.boundaries.rotation.y += Math.PI / 2; // Rotate boundaries according to Earth's rotation
-        // Shift earth along its axis from 23.3 deg (average in between earth tilt axis extremums : 22.1 and 24.5)
-        this._meshes.moon.rotation.z += (23.3 * Math.PI) / 180;
-        this._meshes.earth.rotation.z += (23.3 * Math.PI) / 180; // Earth rotation
-        this._meshes.clouds.rotation.z += (23.3 * Math.PI) / 180; // Slowly move clouds over earth surface
-        this._meshes.boundaries.rotation.z += (23.3 * Math.PI) / 180; // Rotate boundaries according to Earth's rotation
-
-        this._lights.sun.position.set(0, 0, 5);
-
-        this._meshes.earth.position.set(0, 0, 0);
-        this._meshes.moon.position.set(-0.5, 0, -2);
-
-        this._scene.add(this._lights.sun); // From Sun
-        this._scene.add(this._lights.ambient); // From cosmic noise, maybe ?
-
-        this._scene.add(this._meshes.earth);
-        this._scene.add(this._meshes.clouds);
-        this._scene.add(this._meshes.boundaries);
-        this._scene.add(this._meshes.starfield);
-        this._scene.add(this._meshes.moon);
-
-        if (this.debug) { this._scene.add(new THREE.AxesHelper(this.CONST.RADIUS.SCENE)); }
+        this._meshes.moon.rotation.y += Math.PI / 2; // Put dark side of the moon to the dark
+        this._meshes.earth.rotation.y += Math.PI / 2; // Earth rotation to face Greenwich
+        this._meshes.clouds.rotation.y += Math.PI / 2;
+        this._meshes.boundaries.rotation.y += Math.PI / 2;
+        // Shift earth along its axis from 23.3° (average in between earth tilt axis extremums : 22.1 and 24.5)
+        this._meshes.earth.rotation.z += (23.3 * Math.PI) / 180; // Earth tilt
+        this._meshes.boundaries.rotation.z += (23.3 * Math.PI) / 180;
+        this._pivots.moon.rotation.x += (5.145 * Math.PI) / 180; // 5.145° offset from the earth plane
 
         for (let i = 0; i < this._pins.length; ++i) {
           var latlonpoint = this.getPosFromLatLonRad(this._pins[i].info.countryCenter.lat, this._pins[i].info.countryCenter.long, this.CONST.RADIUS.EARTH);
@@ -176,17 +181,33 @@ class WorldMapView {
           this._pins[i].add(wireframe);
           this._pins[i].position.set(latlonpoint[0], latlonpoint[1], latlonpoint[2]);
           this._pins[i].lookAt(new THREE.Vector3(0, 0, 0)); // As referential is geocentric, we look at the earth's center
-
-          this._pins[i].clickCallback = function() {
-            console.log(this.info);
-          };
+          this._pins[i].clickCallback = this._pinClicked;
 
           this._meshes.earth.add(this._pins[i]);
         }
+
+        if (this.debug) { this._scene.add(new THREE.AxesHelper(this.CONST.RADIUS.SCENE)); }
         resolve();
       } catch (e) {
         reject(`WorldMapView._placeElements\n${e}`);
       }
+    });
+  }
+
+
+  _fillScene() {
+    return new Promise(resolve => {
+      this._pivots.moon.add(this._meshes.moon);
+      this._pivots.sun.add(this._meshes.sun);
+      this._pivots.sun.add(this._lights.sun);
+      this._scene.add(this._pivots.moon);
+      this._scene.add(this._pivots.sun);
+      this._scene.add(this._meshes.earth);
+      this._scene.add(this._meshes.clouds);
+      this._scene.add(this._meshes.boundaries);
+      this._scene.add(this._meshes.starfield);      
+      this._scene.add(this._lights.ambient);
+      resolve();
     });
   }
 
@@ -199,11 +220,16 @@ class WorldMapView {
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = this.CONST.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
         this._controls.maxDistance = this.CONST.RADIUS.SCENE;
-        // Navigation controls
+        // Reset camera position button
         this._buttons.resetCamera = document.createElement('BUTTON');
         this._buttons.resetCamera.classList.add('reset-camera');
-        this._buttons.resetCamera.innerHTML = 'Reset camera position';
+        this._buttons.resetCamera.innerHTML = 'Reset camera';
         this._renderTo.appendChild(this._buttons.resetCamera);
+        // Reset planet/sun/moon position button
+        this._buttons.resetPositions = document.createElement('BUTTON');
+        this._buttons.resetPositions.classList.add('reset-positions');
+        this._buttons.resetPositions.innerHTML = 'Reset position';
+        this._renderTo.appendChild(this._buttons.resetPositions);        
         resolve();
       } catch (e) {
         reject(`WorldMapView._buildControls\n${e}`);
@@ -221,6 +247,7 @@ class WorldMapView {
         window.addEventListener('click', this._onCanvasClicked.bind(this), false);
 
         this._buttons.resetCamera.addEventListener('click', this._controls.targetOnCenter.bind(this._controls), false);
+        this._buttons.resetPositions.addEventListener('click', this._resetPositions.bind(this), false);
         resolve();
       } catch (e) {
         reject(`WorldMapView._events\n${e}`);
@@ -237,14 +264,20 @@ class WorldMapView {
   }
 
 
-  // Mesh animation
   _render() {
-    // Compute angular velocities : https://www.calculator.org/properties/angular_velocity.html
+    // Angular speed are tweaked to see an actual animation on render loop
+    this._pivots.moon.rotation.y += (2 * Math.PI) / (27.3 * 60 * 60); // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
+    this._pivots.sun.rotation.y += (2 * Math.PI) / (365 * 90); // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
+    this._meshes.clouds.rotation.y += (2 * Math.PI) / (42 * 60 * 60);
     this._controls.update();
   }
 
 
-  // Events callbacks
+  _resetPositions() {
+    this._pivots.moon.rotation.y = 0;
+    this._pivots.sun.rotation.y = 0;
+    this._meshes.clouds.rotation.y = 0;
+  }
 
 
   _onResize() {
@@ -276,15 +309,44 @@ class WorldMapView {
     raycaster.setFromCamera(mouse, this._camera);
     const intersects = raycaster.intersectObjects(this._pins);
     if (intersects.length > 0) {
-      intersects[0].object.clickCallback();
+      if (this._selectedPin !== null) {
+        this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
+      }
+
+      this._selectedPin = intersects[0].object;
+      this._selectedPin.material.color.setHex(0xFF6B67);
+      this._selectedPin.clickCallback(this);
+    } else if (this._selectedCountry !== null && event.target.closest('div').classList.contains('worldmap')) {
+      this._selectedCountry.style.left = '-20%';
+      this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
+      setTimeout(() => {
+        this._renderTo.removeChild(this._selectedCountry);
+        this._selectedCountry = null;
+        this._selectedPin = null;
+      }, 300);
     }
+  }
+
+
+  _pinClicked(WorldMapView) { // This is already binded to the target pin
+    if (WorldMapView._selectedCountry === null) {
+      WorldMapView._selectedCountry = document.createElement('DIV');
+      WorldMapView._selectedCountry.classList.add('selected-country');
+      WorldMapView._renderTo.appendChild(WorldMapView._selectedCountry);
+
+      setTimeout(() => {
+        WorldMapView._selectedCountry.style.left = '0';
+      }, 50);
+    }
+
+    WorldMapView._countryClicked(WorldMapView._selectedCountry, this.info);
   }
 
 
   // Move in utils or some kind of
   getPosFromLatLonRad(lat, lon, radius) {
     // 'member old spherical to cartesian ?
-    const phi   = (90 - lat) * (Math.PI / 180);
+    const phi = (90 - lat) * (Math.PI / 180);
     const theta = (lon + 180) * (Math.PI / 180);
     // Return as cartesian coordinates
     return [
