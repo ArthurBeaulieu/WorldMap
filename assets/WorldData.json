@@ -4,7 +4,7 @@
 		"trigram": "AFG",
 		"name": "Afghanistan",
 		"capitalCity": {
-			"name": "Kabul",		
+			"name": "Kabul",
 			"lat": "34.555347",
 			"long": "69.207489"
 		},
@@ -16,7 +16,7 @@
 		"trigram": "AGO",
 		"name": "Angola",
 		"capitalCity": {
-			"name": "Luanda",				
+			"name": "Luanda",
 			"lat": "-8.839988",
 			"long": "13.289437"
 		},
@@ -28,7 +28,7 @@
 		"trigram": "ALB",
 		"name": "Albania",
 		"capitalCity": {
-			"name": "Tirana",		
+			"name": "Tirana",
 			"lat": "41.327545",
 			"long": "19.818699"
 		},
@@ -40,7 +40,7 @@
 		"trigram": "AND",
 		"name": "Andorra",
 		"capitalCity": {
-			"name": "Andorra la Vella",		
+			"name": "Andorra la Vella",
 			"lat": "42.506287",
 			"long": "1.521801"
 		},
@@ -52,7 +52,7 @@
 		"trigram": "ARE",
 		"name": "United Arab Emirates",
 		"capitalCity": {
-			"name": "Abu Dhabi",		
+			"name": "Abu Dhabi",
 			"lat": "24.453884",
 			"long": "54.377342"
 		},
@@ -64,7 +64,7 @@
 		"trigram": "ARG",
 		"name": "Argentina",
 		"capitalCity": {
-			"name": "Buenos Aires",		
+			"name": "Buenos Aires",
 			"lat": "-34.603683",
 			"long": "-58.381557"
 		},
@@ -76,7 +76,7 @@
 		"trigram": "ARM",
 		"name": "Armenia",
 		"capitalCity": {
-			"name": "Yerevan",		
+			"name": "Yerevan",
 			"lat": "40.179188",
 			"long": "44.499104"
 		},
@@ -88,7 +88,7 @@
 		"trigram": "ATG",
 		"name": "Antigua And Barbuda",
 		"capitalCity": {
-			"name": "St. John's",		
+			"name": "St. John's",
 			"lat": "17.118820",
 			"long": "-61.843960"
 		},
@@ -100,7 +100,7 @@
 		"trigram": "AUS",
 		"name": "Australia",
 		"capitalCity": {
-			"name": "Canberra",		
+			"name": "Canberra",
 			"lat": "-35.308093",
 			"long": ",149.124424"
 		},
@@ -112,7 +112,7 @@
 		"trigram": "AUT",
 		"name": "Austria",
 		"capitalCity": {
-			"name": "Vienna",		
+			"name": "Vienna",
 			"lat": "48.184767",
 			"long": "16.376955"
 		},
@@ -124,7 +124,7 @@
 		"trigram": "AZE",
 		"name": "Azerbaijan",
 		"capitalCity": {
-			"name": "Baku",		
+			"name": "Baku",
 			"lat": "40.387403",
 			"long": "49.837691"
 		},
@@ -136,7 +136,7 @@
 		"trigram": "BDI",
 		"name": "Burundi",
 		"capitalCity": {
-			"name": "Gitega",		
+			"name": "Gitega",
 			"lat": "-3.428630",
 			"long": "29.925091"
 		},
@@ -148,7 +148,7 @@
 		"trigram": "BEL",
 		"name": "Belgium",
 		"capitalCity": {
-			"name": "Brussels",		
+			"name": "Brussels",
 			"lat": "50.850346",
 			"long": "4.351721"
 		},
@@ -160,7 +160,7 @@
 		"trigram": "BEN",
 		"name": "Benin",
 		"capitalCity": {
-			"name": "Porto-Novo",		
+			"name": "Porto-Novo",
 			"lat": "6.492746",
 			"long": "2.626183"
 		},
@@ -172,7 +172,7 @@
 		"trigram": "BFA",
 		"name": "Burkina Faso",
 		"capitalCity": {
-			"name": "Ouagadougou",		
+			"name": "Ouagadougou",
 			"lat": "12.371428",
 			"long": "-1.519660"
 		},
@@ -184,7 +184,7 @@
 		"trigram": "BGD",
 		"name": "Bangladesh",
 		"capitalCity": {
-			"name": "Dhaka",		
+			"name": "Dhaka",
 			"lat": "23.813648",
 			"long": "90.411767"
 		},
@@ -196,7 +196,7 @@
 		"trigram": "BGR",
 		"name": "Bulgaria",
 		"capitalCity": {
-			"name": "Sofia",		
+			"name": "Sofia",
 			"lat": "42.697854",
 			"long": "23.322381"
 		},
@@ -208,7 +208,7 @@
 		"trigram": "BHR",
 		"name": "Bahrain",
 		"capitalCity": {
-			"name": "Manama",		
+			"name": "Manama",
 			"lat": "26.228516",
 			"long": "50.586048"
 		},
@@ -220,7 +220,7 @@
 		"trigram": "BHS",
 		"name": "Bahamas",
 		"capitalCity": {
-			"name": "Nassau",		
+			"name": "Nassau",
 			"lat": "25.047983",
 			"long": "-77.355415"
 		},
@@ -232,7 +232,7 @@
 		"trigram": "BIH",
 		"name": "Bosnia-Herzegovina",
 		"capitalCity": {
-			"name": "Sarajevo",		
+			"name": "Sarajevo",
 			"lat": "43.851625",
 			"long": "18.386893"
 		},
@@ -244,7 +244,7 @@
 		"trigram": "BLR",
 		"name": "Belarus",
 		"capitalCity": {
-			"name": "Minsk",		
+			"name": "Minsk",
 			"lat": "53.904541",
 			"long": "27.561523"
 		},
@@ -256,7 +256,7 @@
 		"trigram": "BLZ",
 		"name": "Belize",
 		"capitalCity": {
-			"name": "Belmopan",		
+			"name": "Belmopan",
 			"lat": "17.250351",
 			"long": "-88.770154"
 		},
@@ -268,7 +268,7 @@
 		"trigram": "BOL",
 		"name": "Bolivia",
 		"capitalCity": {
-			"name": "Santa Cruz de la Sierra",		
+			"name": "Santa Cruz de la Sierra",
 			"lat": "-17.783964",
 			"long": "-63.180572"
 		},
@@ -280,7 +280,7 @@
 		"trigram": "BRA",
 		"name": "Brazil",
 		"capitalCity": {
-			"name": "Brasília",		
+			"name": "Brasília",
 			"lat": "-15.794533",
 			"long": "-47.881746"
 		},
@@ -292,7 +292,7 @@
 		"trigram": "BRB",
 		"name": "Barbados",
 		"capitalCity": {
-			"name": "Bridgetown",		
+			"name": "Bridgetown",
 			"lat": "13.097958",
 			"long": "-59.618194"
 		},
@@ -304,7 +304,7 @@
 		"trigram": "BRN",
 		"name": "Brunei",
 		"capitalCity": {
-			"name": "Bandar Seri Begawan",		
+			"name": "Bandar Seri Begawan",
 			"lat": "4.890528",
 			"long": "114.942253"
 		},
@@ -316,7 +316,7 @@
 		"trigram": "BTN",
 		"name": "Bhutan",
 		"capitalCity": {
-			"name": "Thimphu",		
+			"name": "Thimphu",
 			"lat": "27.472792",
 			"long": "89.639282"
 		},
@@ -328,7 +328,7 @@
 		"trigram": "BWA",
 		"name": "Botswana",
 		"capitalCity": {
-			"name": "Gaborone",		
+			"name": "Gaborone",
 			"lat": "-24.655319",
 			"long": "25.908728"
 		},
@@ -340,7 +340,7 @@
 		"trigram": "BZH",
 		"name": "Brittany",
 		"capitalCity": {
-			"name": "Rennes",		
+			"name": "Rennes",
 			"lat": "48.112268",
 			"long": "-1.661912"
 		},
@@ -352,7 +352,7 @@
 		"trigram": "CAF",
 		"name": "Central African Republic",
 		"capitalCity": {
-			"name": "Bangui",		
+			"name": "Bangui",
 			"lat": "4.381363",
 			"long": "18.548828"
 		},
@@ -364,7 +364,7 @@
 		"trigram": "CAN",
 		"name": "Canada",
 		"capitalCity": {
-			"name": "Ottawa",		
+			"name": "Ottawa",
 			"lat": "45.414937",
 			"long": "-75.699510"
 		},
@@ -376,7 +376,7 @@
 		"trigram": "CHE",
 		"name": "Switzerland",
 		"capitalCity": {
-			"name": "Bern",		
+			"name": "Bern",
 			"lat": "46.948165",
 			"long": "7.454802"
 		},
@@ -388,7 +388,7 @@
 		"trigram": "CHL",
 		"name": "Chile",
 		"capitalCity": {
-			"name": "Santiago",		
+			"name": "Santiago",
 			"lat": "-33.443417",
 			"long": "-70.650094"
 		},
@@ -400,7 +400,7 @@
 		"trigram": "CHN",
 		"name": "China",
 		"capitalCity": {
-			"name": "Beijing",		
+			"name": "Beijing",
 			"lat": "39.904574",
 			"long": "116.400640"
 		},
@@ -412,7 +412,7 @@
 		"trigram": "CIV",
 		"name": "Ivory Coast",
 		"capitalCity": {
-			"name": "Abidjan",		
+			"name": "Abidjan",
 			"lat": "5.319355",
 			"long": "-4.018339"
 		},
@@ -424,7 +424,7 @@
 		"trigram": "CMR",
 		"name": "Cameroon",
 		"capitalCity": {
-			"name": "Yaoundé",		
+			"name": "Yaoundé",
 			"lat": "3.863261",
 			"long": "11.522358"
 		},
@@ -436,7 +436,7 @@
 		"trigram": "COD",
 		"name": "Democratic Republic Of The Congo",
 		"capitalCity": {
-			"name": "Kinshasa",		
+			"name": "Kinshasa",
 			"lat": "-4.323629",
 			"long": "15.312744"
 		},
@@ -448,7 +448,7 @@
 		"trigram": "COG",
 		"name": "Republic Of The Congo",
 		"capitalCity": {
-			"name": "Brazzaville",		
+			"name": "Brazzaville",
 			"lat": "-4.255995",
 			"long": "15.269736"
 		},
@@ -460,7 +460,7 @@
 		"trigram": "COL",
 		"name": "Colombia",
 		"capitalCity": {
-			"name": "Bogotá",		
+			"name": "Bogotá",
 			"lat": "4.647673",
 			"long": "-74.096329"
 		},
@@ -472,7 +472,7 @@
 		"trigram": "COM",
 		"name": "Comoros",
 		"capitalCity": {
-			"name": "Moroni",		
+			"name": "Moroni",
 			"lat": "-11.695760",
 			"long": "43.251347"
 		},
@@ -484,7 +484,7 @@
 		"trigram": "CPV",
 		"name": "Cape Verde",
 		"capitalCity": {
-			"name": "Praia",		
+			"name": "Praia",
 			"lat": "14.916438",
 			"long": "-23.511025"
 		},
@@ -496,7 +496,7 @@
 		"trigram": "CRI",
 		"name": "Costa Rica",
 		"capitalCity": {
-			"name": "San José",		
+			"name": "San José",
 			"lat": "9.933023",
 			"long": "-84.080544"
 		},
@@ -508,7 +508,7 @@
 		"trigram": "CUB",
 		"name": "Cuba",
 		"capitalCity": {
-			"name": "Havana",		
+			"name": "Havana",
 			"lat": "23.134393",
 			"long": "-82.361291"
 		},
@@ -520,7 +520,7 @@
 		"trigram": "CYP",
 		"name": "Cyprus",
 		"capitalCity": {
-			"name": "Nicosia",		
+			"name": "Nicosia",
 			"lat": "35.173963",
 			"long": "33.363987"
 		},
@@ -532,7 +532,7 @@
 		"trigram": "CZE",
 		"name": "Czech Republic",
 		"capitalCity": {
-			"name": "Prague",		
+			"name": "Prague",
 			"lat": "50.086457",
 			"long": "14.422705"
 		},
@@ -544,7 +544,7 @@
 		"trigram": "DEU",
 		"name": "Germany",
 		"capitalCity": {
-			"name": "Berlin",		
+			"name": "Berlin",
 			"lat": "52.516869",
 			"long": "13.389696"
 		},
@@ -556,7 +556,7 @@
 		"trigram": "DJI",
 		"name": "Djibouti",
 		"capitalCity": {
-			"name": "Djibouti",		
+			"name": "Djibouti",
 			"lat": "11.589048",
 			"long": "43.145430"
 		},
@@ -568,7 +568,7 @@
 		"trigram": "DMA",
 		"name": "Dominica",
 		"capitalCity": {
-			"name": "Roseau",		
+			"name": "Roseau",
 			"lat": "15.299382",
 			"long": "-61.387032"
 		},
@@ -580,7 +580,7 @@
 		"trigram": "DNK",
 		"name": "Denmark",
 		"capitalCity": {
-			"name": "Copenhagen",		
+			"name": "Copenhagen",
 			"lat": "55.683856",
 			"long": "12.567391"
 		},
@@ -592,7 +592,7 @@
 		"trigram": "DOM",
 		"name": "Dominican Republic",
 		"capitalCity": {
-			"name": "Santo Domingo",		
+			"name": "Santo Domingo",
 			"lat": "18.462090",
 			"long": "-69.935724"
 		},
@@ -604,7 +604,7 @@
 		"trigram": "DZA",
 		"name": "Algeria",
 		"capitalCity": {
-			"name": "Algiers",		
+			"name": "Algiers",
 			"lat": "36.775344",
 			"long": "3.059580"
 		},
@@ -616,7 +616,7 @@
 		"trigram": "ECU",
 		"name": "Ecuador",
 		"capitalCity": {
-			"name": "Quito",		
+			"name": "Quito",
 			"lat": "-0.220052",
 			"long": "-78.512359"
 		},
@@ -628,7 +628,7 @@
 		"trigram": "EGY",
 		"name": "Egypt",
 		"capitalCity": {
-			"name": "Cairo",		
+			"name": "Cairo",
 			"lat": "30.042082",
 			"long": "31.234583"
 		},
@@ -640,7 +640,7 @@
 		"trigram": "ERI",
 		"name": "Eritrea",
 		"capitalCity": {
-			"name": "Asmara",		
+			"name": "Asmara",
 			"lat": "15.336521",
 			"long": "38.932348"
 		},
@@ -652,7 +652,7 @@
 		"trigram": "ESP",
 		"name": "Spain",
 		"capitalCity": {
-			"name": "Madrid",		
+			"name": "Madrid",
 			"lat": "40.422958",
 			"long": "-3.694386"
 		},
@@ -664,7 +664,7 @@
 		"trigram": "EST",
 		"name": "Estonia",
 		"capitalCity": {
-			"name": "Tallinn",		
+			"name": "Tallinn",
 			"lat": "59.436382",
 			"long": "24.744985"
 		},
@@ -676,7 +676,7 @@
 		"trigram": "ETH",
 		"name": "Ethiopia",
 		"capitalCity": {
-			"name": "Addis Ababa",		
+			"name": "Addis Ababa",
 			"lat": "9.020117",
 			"long": "38.759994"
 		},
@@ -688,7 +688,7 @@
 		"trigram": "FIN",
 		"name": "Finland",
 		"capitalCity": {
-			"name": "Helsinki",		
+			"name": "Helsinki",
 			"lat": "60.199022",
 			"long": "24.940272"
 		},
@@ -700,7 +700,7 @@
 		"trigram": "FJI",
 		"name": "Fiji",
 		"capitalCity": {
-			"name": "Suva",		
+			"name": "Suva",
 			"lat": "-18.137956",
 			"long": "178.443604"
 		},
@@ -712,7 +712,7 @@
 		"trigram": "FRA",
 		"name": "France",
 		"capitalCity": {
-			"name": "Paris",		
+			"name": "Paris",
 			"lat": "48.855352",
 			"long": "2.347007"
 		},
@@ -724,7 +724,7 @@
 		"trigram": "FSM",
 		"name": "Micronesia",
 		"capitalCity": {
-			"name": "Palikir",		
+			"name": "Palikir",
 			"lat": "6.920301",
 			"long": "158.162810"
 		},
@@ -736,7 +736,7 @@
 		"trigram": "FYR",
 		"name": "North Macedonia",
 		"capitalCity": {
-			"name": "Skopje",		
+			"name": "Skopje",
 			"lat": "41.998054",
 			"long": "21.433409"
 		},
@@ -748,7 +748,7 @@
 		"trigram": "GAB",
 		"name": "Gabon",
 		"capitalCity": {
-			"name": "Libreville",		
+			"name": "Libreville",
 			"lat": "0.389685",
 			"long": "9.453798"
 		},
@@ -760,7 +760,7 @@
 		"trigram": "GBR",
 		"name": "United Kingdom",
 		"capitalCity": {
-			"name": "London",		
+			"name": "London",
 			"lat": "51.509832",
 			"long": "-0.108384"
 		},
@@ -772,7 +772,7 @@
 		"trigram": "GEO",
 		"name": "Georgia",
 		"capitalCity": {
-			"name": "Tbilisi",		
+			"name": "Tbilisi",
 			"lat": "41.699077",
 			"long": "44.812949"
 		},
@@ -784,7 +784,7 @@
 		"trigram": "GHA",
 		"name": "Ghana",
 		"capitalCity": {
-			"name": "Accra",		
+			"name": "Accra",
 			"lat": "5.559299",
 			"long": "-0.206230"
 		},
@@ -796,7 +796,7 @@
 		"trigram": "GIN",
 		"name": "Guinea",
 		"capitalCity": {
-			"name": "Conakry",		
+			"name": "Conakry",
 			"lat": "9.514426",
 			"long": "-13.703523"
 		},
@@ -808,7 +808,7 @@
 		"trigram": "GMB",
 		"name": "Gambia",
 		"capitalCity": {
-			"name": "Banjul",		
+			"name": "Banjul",
 			"lat": "13.454493",
 			"long": "-16.576896"
 		},
@@ -820,7 +820,7 @@
 		"trigram": "GNB",
 		"name": "Guinea-Bissau",
 		"capitalCity": {
-			"name": "Bissau",		
+			"name": "Bissau",
 			"lat": "11.862328",
 			"long": "-15.583017"
 		},
@@ -832,7 +832,7 @@
 		"trigram": "GNQ",
 		"name": "Equatorial Guinea",
 		"capitalCity": {
-			"name": "Malabo",		
+			"name": "Malabo",
 			"lat": "3.752082",
 			"long": "8.780025"
 		},
@@ -844,7 +844,7 @@
 		"trigram": "GRC",
 		"name": "Greece",
 		"capitalCity": {
-			"name": "Athens",		
+			"name": "Athens",
 			"lat": "37.981605",
 			"long": "23.727266"
 		},
@@ -856,7 +856,7 @@
 		"trigram": "GRD",
 		"name": "Grenada",
 		"capitalCity": {
-			"name": "St. George's",		
+			"name": "St. George's",
 			"lat": "12.052424",
 			"long": "-61.752828"
 		},
@@ -868,7 +868,7 @@
 		"trigram": "GTM",
 		"name": "Guatemala",
 		"capitalCity": {
-			"name": "Guatemala City",		
+			"name": "Guatemala City",
 			"lat": "14.620827",
 			"long": "-90.516276"
 		},
@@ -880,7 +880,7 @@
 		"trigram": "GUY",
 		"name": "Guyana",
 		"capitalCity": {
-			"name": "Georgetown",		
+			"name": "Georgetown",
 			"lat": "6.808336",
 			"long": "-58.147320"
 		},
@@ -892,7 +892,7 @@
 		"trigram": "HND",
 		"name": "Honduras",
 		"capitalCity": {
-			"name": "Tegucigalpa",		
+			"name": "Tegucigalpa",
 			"lat": "14.092475",
 			"long": "-87.201680"
 		},
@@ -904,7 +904,7 @@
 		"trigram": "HRV",
 		"name": "Croatia",
 		"capitalCity": {
-			"name": "Zagreb",		
+			"name": "Zagreb",
 			"lat": "45.810400",
 			"long": "15.978388"
 		},
@@ -916,7 +916,7 @@
 		"trigram": "HTI",
 		"name": "Haiti",
 		"capitalCity": {
-			"name": "Port-au-Prince",		
+			"name": "Port-au-Prince",
 			"lat": "18.547178",
 			"long": "-72.340455"
 		},
@@ -928,7 +928,7 @@
 		"trigram": "HUN",
 		"name": "Hungary",
 		"capitalCity": {
-			"name": "Budapest",		
+			"name": "Budapest",
 			"lat": "47.498207",
 			"long": "19.043562"
 		},
@@ -940,7 +940,7 @@
 		"trigram": "IDN",
 		"name": "Indonesia",
 		"capitalCity": {
-			"name": "Jakarta",		
+			"name": "Jakarta",
 			"lat": "-6.174621",
 			"long": "106.830633"
 		},
@@ -952,7 +952,7 @@
 		"trigram": "IND",
 		"name": "India",
 		"capitalCity": {
-			"name": "New Delhi",		
+			"name": "New Delhi",
 			"lat": "28.632204",
 			"long": "77.219710"
 		},
@@ -964,7 +964,7 @@
 		"trigram": "IRL",
 		"name": "Ireland",
 		"capitalCity": {
-			"name": "Dublin",		
+			"name": "Dublin",
 			"lat": "53.346493",
 			"long": "-6.264697"
 		},
@@ -976,7 +976,7 @@
 		"trigram": "IRN",
 		"name": "Iran",
 		"capitalCity": {
-			"name": "Tehran",		
+			"name": "Tehran",
 			"lat": "35.700857",
 			"long": "51.402542"
 		},
@@ -988,7 +988,7 @@
 		"trigram": "IRQ",
 		"name": "Iraq",
 		"capitalCity": {
-			"name": "Baghdad",		
+			"name": "Baghdad",
 			"lat": "33.323127",
 			"long": "44.385675"
 		},
@@ -1000,7 +1000,7 @@
 		"trigram": "ISL",
 		"name": "Iceland",
 		"capitalCity": {
-			"name": "Reykjavík",		
+			"name": "Reykjavík",
 			"lat": "64.143278",
 			"long": "-21.940937"
 		},
@@ -1012,7 +1012,7 @@
 		"trigram": "ISR",
 		"name": "Israel",
 		"capitalCity": {
-			"name": "Jerusalem",		
+			"name": "Jerusalem",
 			"lat": "31.778460",
 			"long": "35.225200"
 		},
@@ -1024,7 +1024,7 @@
 		"trigram": "ITA",
 		"name": "Italy",
 		"capitalCity": {
-			"name": "Rome",		
+			"name": "Rome",
 			"lat": "41.895147",
 			"long": "12.484724"
 		},
@@ -1036,7 +1036,7 @@
 		"trigram": "JAM",
 		"name": "Jamaica",
 		"capitalCity": {
-			"name": "Kingston",		
+			"name": "Kingston",
 			"lat": "17.970169",
 			"long": "-76.791482"
 		},
@@ -1048,7 +1048,7 @@
 		"trigram": "JOR",
 		"name": "Jordan",
 		"capitalCity": {
-			"name": "Amman",		
+			"name": "Amman",
 			"lat": "31.954230",
 			"long": "35.910627"
 		},
@@ -1060,7 +1060,7 @@
 		"trigram": "JPN",
 		"name": "Japan",
 		"capitalCity": {
-			"name": "Tokyo",		
+			"name": "Tokyo",
 			"lat": "35.684685",
 			"long": "139.764107"
 		},
@@ -1072,7 +1072,7 @@
 		"trigram": "KAZ",
 		"name": "Kazakhstan",
 		"capitalCity": {
-			"name": "Nur-Sultan",		
+			"name": "Nur-Sultan",
 			"lat": "51.140673",
 			"long": "71.426729"
 		},
@@ -1084,7 +1084,7 @@
 		"trigram": "KEN",
 		"name": "Kenya",
 		"capitalCity": {
-			"name": "Nairobi",		
+			"name": "Nairobi",
 			"lat": "-1.286648",
 			"long": "36.819183"
 		},
@@ -1096,7 +1096,7 @@
 		"trigram": "KGZ",
 		"name": "Kyrgyzstan",
 		"capitalCity": {
-			"name": "Bishkek",		
+			"name": "Bishkek",
 			"lat": "42.871486",
 			"long": "74.602216"
 		},
@@ -1108,7 +1108,7 @@
 		"trigram": "KHM",
 		"name": "Cambodia",
 		"capitalCity": {
-			"name": "Phnom Penh",		
+			"name": "Phnom Penh",
 			"lat": "11.560829",
 			"long": "104.914863"
 		},
@@ -1120,7 +1120,7 @@
 		"trigram": "KIR",
 		"name": "Kiribati",
 		"capitalCity": {
-			"name": "Tarawa",		
+			"name": "Tarawa",
 			"lat": "1.461778",
 			"long": "172.986819"
 		},
@@ -1132,7 +1132,7 @@
 		"trigram": "KNA",
 		"name": "Saint Kitts And Nevis",
 		"capitalCity": {
-			"name": "Basseterre",		
+			"name": "Basseterre",
 			"lat": "17.296158",
 			"long": "-62.722377"
 		},
@@ -1144,7 +1144,7 @@
 		"trigram": "KOR",
 		"name": "South Korea",
 		"capitalCity": {
-			"name": "Seoul",		
+			"name": "Seoul",
 			"lat": "37.570039",
 			"long": "126.975229"
 		},
@@ -1156,7 +1156,7 @@
 		"trigram": "KWT",
 		"name": "Kuwait",
 		"capitalCity": {
-			"name": "Kuwait City",		
+			"name": "Kuwait City",
 			"lat": "29.372931",
 			"long": "47.976380"
 		},
@@ -1168,7 +1168,7 @@
 		"trigram": "LAO",
 		"name": "Laos",
 		"capitalCity": {
-			"name": "Vientiane",		
+			"name": "Vientiane",
 			"lat": "17.967156",
 			"long": "102.615623"
 		},
@@ -1180,7 +1180,7 @@
 		"trigram": "LBN",
 		"name": "Lebanon",
 		"capitalCity": {
-			"name": "Beirut",		
+			"name": "Beirut",
 			"lat": "33.892676",
 			"long": "35.494542"
 		},
@@ -1192,7 +1192,7 @@
 		"trigram": "LBR",
 		"name": "Liberia",
 		"capitalCity": {
-			"name": "Monrovia",		
+			"name": "Monrovia",
 			"lat": "6.311221",
 			"long": "-10.803246"
 		},
@@ -1204,7 +1204,7 @@
 		"trigram": "LBY",
 		"name": "Libya",
 		"capitalCity": {
-			"name": "Tripoli",		
+			"name": "Tripoli",
 			"lat": "32.887112",
 			"long": "13.186762"
 		},
@@ -1216,7 +1216,7 @@
 		"trigram": "LCA",
 		"name": "Saint Lucia",
 		"capitalCity": {
-			"name": "Castries",		
+			"name": "Castries",
 			"lat": "14.010537",
 			"long": "-60.990234"
 		},
@@ -1228,7 +1228,7 @@
 		"trigram": "LIE",
 		"name": "Liechtenstein",
 		"capitalCity": {
-			"name": "Vaduz",		
+			"name": "Vaduz",
 			"lat": "47.140116",
 			"long": "9.521139"
 		},
@@ -1240,7 +1240,7 @@
 		"trigram": "LKA",
 		"name": "Sri Lanka",
 		"capitalCity": {
-			"name": "Sri Jayawardenepura Kotte",		
+			"name": "Sri Jayawardenepura Kotte",
 			"lat": "6.885109",
 			"long": "79.910448"
 		},
@@ -1252,7 +1252,7 @@
 		"trigram": "LSO",
 		"name": "Lesotho",
 		"capitalCity": {
-			"name": "Maseru",		
+			"name": "Maseru",
 			"lat": "-29.317222",
 			"long": "27.494711"
 		},
@@ -1264,7 +1264,7 @@
 		"trigram": "LTU",
 		"name": "Lithuania",
 		"capitalCity": {
-			"name": "Vilnius",		
+			"name": "Vilnius",
 			"lat": "54.684232",
 			"long": "25.282595"
 		},
@@ -1276,7 +1276,7 @@
 		"trigram": "LUX",
 		"name": "Luxembourg",
 		"capitalCity": {
-			"name": "Luxembourg City",		
+			"name": "Luxembourg City",
 			"lat": "49.610721",
 			"long": "6.130411"
 		},
@@ -1288,7 +1288,7 @@
 		"trigram": "LVA",
 		"name": "Latvia",
 		"capitalCity": {
-			"name": "Riga",		
+			"name": "Riga",
 			"lat": "56.946547",
 			"long": "24.111171"
 		},
@@ -1300,7 +1300,7 @@
 		"trigram": "MAR",
 		"name": "Morocco",
 		"capitalCity": {
-			"name": "Rabat",		
+			"name": "Rabat",
 			"lat": "34.022559",
 			"long": "-6.837484"
 		},
@@ -1312,7 +1312,7 @@
 		"trigram": "MCO",
 		"name": "Monaco",
 		"capitalCity": {
-			"name": "Monaco",		
+			"name": "Monaco",
 			"lat": "43.733157",
 			"long": "7.418108"
 		},
@@ -1324,7 +1324,7 @@
 		"trigram": "MDA",
 		"name": "Moldova",
 		"capitalCity": {
-			"name": "Chișinău",		
+			"name": "Chișinău",
 			"lat": "47.023696",
 			"long": "28.834152"
 		},
@@ -1336,7 +1336,7 @@
 		"trigram": "MDG",
 		"name": "Madagascar",
 		"capitalCity": {
-			"name": "Antananarivo",		
+			"name": "Antananarivo",
 			"lat": "-18.915527",
 			"long": "47.536346"
 		},
@@ -1348,7 +1348,7 @@
 		"trigram": "MDV",
 		"name": "Maldives",
 		"capitalCity": {
-			"name": "Malé",		
+			"name": "Malé",
 			"lat": "4.174916",
 			"long": "73.509271"
 		},
@@ -1360,7 +1360,7 @@
 		"trigram": "MEX",
 		"name": "Mexico",
 		"capitalCity": {
-			"name": "Mexico City",		
+			"name": "Mexico City",
 			"lat": "19.425283",
 			"long": "-99.129143"
 		},
@@ -1372,7 +1372,7 @@
 		"trigram": "MHL",
 		"name": "Marshall Islands",
 		"capitalCity": {
-			"name": "Majuro",		
+			"name": "Majuro",
 			"lat": "7.090680",
 			"long": "171.381425"
 		},
@@ -1384,7 +1384,7 @@
 		"trigram": "MLI",
 		"name": "Mali",
 		"capitalCity": {
-			"name": "Bamako",		
+			"name": "Bamako",
 			"lat": "12.642415",
 			"long": "-8.001142"
 		},
@@ -1396,7 +1396,7 @@
 		"trigram": "MLT",
 		"name": "Malta",
 		"capitalCity": {
-			"name": "Valletta",		
+			"name": "Valletta",
 			"lat": "35.898374",
 			"long": "14.512275"
 		},
@@ -1408,7 +1408,7 @@
 		"trigram": "MMR",
 		"name": "Myanmar",
 		"capitalCity": {
-			"name": "Naypyidaw",		
+			"name": "Naypyidaw",
 			"lat": "19.748965",
 			"long": "96.080317"
 		},
@@ -1420,7 +1420,7 @@
 		"trigram": "MNG",
 		"name": "Mongolia",
 		"capitalCity": {
-			"name": "Ulaanbaatar",		
+			"name": "Ulaanbaatar",
 			"lat": "47.920070",
 			"long": "106.917808"
 		},
@@ -1432,7 +1432,7 @@
 		"trigram": "MNP",
 		"name": "Northern Mariana Islands",
 		"capitalCity": {
-			"name": "Saipan",		
+			"name": "Saipan",
 			"lat": "15.188916",
 			"long": "145.747838"
 		},
@@ -1444,7 +1444,7 @@
 		"trigram": "MOZ",
 		"name": "Mozambique",
 		"capitalCity": {
-			"name": "Maputo",		
+			"name": "Maputo",
 			"lat": "-25.967860",
 			"long": "32.578123"
 		},
@@ -1456,7 +1456,7 @@
 		"trigram": "MRT",
 		"name": "Mauritania",
 		"capitalCity": {
-			"name": "Nouakchott",		
+			"name": "Nouakchott",
 			"lat": "18.080655",
 			"long": "-15.966304"
 		},
@@ -1468,7 +1468,7 @@
 		"trigram": "MUS",
 		"name": "Mauritius",
 		"capitalCity": {
-			"name": "Port Louis",		
+			"name": "Port Louis",
 			"lat": "-20.162289",
 			"long": "57.505298"
 		},
@@ -1480,7 +1480,7 @@
 		"trigram": "MWI",
 		"name": "Malawi",
 		"capitalCity": {
-			"name": "Lilongwe",		
+			"name": "Lilongwe",
 			"lat": "-13.975316",
 			"long": "33.786614"
 		},
@@ -1492,7 +1492,7 @@
 		"trigram": "MYS",
 		"name": "Malaysia",
 		"capitalCity": {
-			"name": "Kuala Lumpur",		
+			"name": "Kuala Lumpur",
 			"lat": "3.144698",
 			"long": "101.690409"
 		},
@@ -1504,7 +1504,7 @@
 		"trigram": "NAM",
 		"name": "Namibia",
 		"capitalCity": {
-			"name": "Windhoek",		
+			"name": "Windhoek",
 			"lat": "-22.582568",
 			"long": "17.087087"
 		},
@@ -1516,7 +1516,7 @@
 		"trigram": "NER",
 		"name": "Niger",
 		"capitalCity": {
-			"name": "Niamey",		
+			"name": "Niamey",
 			"lat": "13.531257",
 			"long": "2.109594"
 		},
@@ -1528,7 +1528,7 @@
 		"trigram": "NGA",
 		"name": "Nigeria",
 		"capitalCity": {
-			"name": "Abuja",		
+			"name": "Abuja",
 			"lat": "9.062906",
 			"long": "7.487548"
 		},
@@ -1540,7 +1540,7 @@
 		"trigram": "NIC",
 		"name": "Nicaragua",
 		"capitalCity": {
-			"name": "Managua",		
+			"name": "Managua",
 			"lat": "12.137415",
 			"long": "-86.268528"
 		},
@@ -1552,7 +1552,7 @@
 		"trigram": "NLD",
 		"name": "Netherlands",
 		"capitalCity": {
-			"name": "Amsterdam",		
+			"name": "Amsterdam",
 			"lat": "52.371009",
 			"long": "4.898627"
 		},
@@ -1564,7 +1564,7 @@
 		"trigram": "NOR",
 		"name": "Norway",
 		"capitalCity": {
-			"name": "Oslo",		
+			"name": "Oslo",
 			"lat": "59.910899",
 			"long": "10.742617"
 		},
@@ -1576,7 +1576,7 @@
 		"trigram": "NPL",
 		"name": "Nepal",
 		"capitalCity": {
-			"name": "Kathmandu",		
+			"name": "Kathmandu",
 			"lat": "27.702437",
 			"long": "85.320720"
 		},
@@ -1588,7 +1588,7 @@
 		"trigram": "NRU",
 		"name": "Nauru",
 		"capitalCity": {
-			"name": "Yaren",		
+			"name": "Yaren",
 			"lat": "-0.545858",
 			"long": "166.916715"
 		},
@@ -1600,7 +1600,7 @@
 		"trigram": "NZL",
 		"name": "New Zealand",
 		"capitalCity": {
-			"name": "Wellington",		
+			"name": "Wellington",
 			"lat": "-41.290048",
 			"long": "174.776906"
 		},
@@ -1612,7 +1612,7 @@
 		"trigram": "OMN",
 		"name": "Oman",
 		"capitalCity": {
-			"name": "Muscat",		
+			"name": "Muscat",
 			"lat": "23.595516",
 			"long": "58.363060"
 		},
@@ -1624,7 +1624,7 @@
 		"trigram": "PAK",
 		"name": "Pakistan",
 		"capitalCity": {
-			"name": "Islamabad",		
+			"name": "Islamabad",
 			"lat": "33.687839",
 			"long": "73.065432"
 		},
@@ -1636,7 +1636,7 @@
 		"trigram": "PAN",
 		"name": "Panama",
 		"capitalCity": {
-			"name": "Panama City",		
+			"name": "Panama City",
 			"lat": "8.970609",
 			"long": "-79.539472"
 		},
@@ -1648,7 +1648,7 @@
 		"trigram": "PER",
 		"name": "Peru",
 		"capitalCity": {
-			"name": "Lima",		
+			"name": "Lima",
 			"lat": "-12.066047",
 			"long": "-77.043782"
 		},
@@ -1660,7 +1660,7 @@
 		"trigram": "PHL",
 		"name": "Philippines",
 		"capitalCity": {
-			"name": "Manila",		
+			"name": "Manila",
 			"lat": "14.600993",
 			"long": "120.988822"
 		},
@@ -1672,7 +1672,7 @@
 		"trigram": "PLW",
 		"name": "Palau",
 		"capitalCity": {
-			"name": "Ngerulmud",		
+			"name": "Ngerulmud",
 			"lat": "7.500013",
 			"long": "134.624176"
 		},
@@ -1684,7 +1684,7 @@
 		"trigram": "PNG",
 		"name": "Papua New Guinea",
 		"capitalCity": {
-			"name": "Port Moresby",		
+			"name": "Port Moresby",
 			"lat": "-9.475781",
 			"long": "147.157860"
 		},
@@ -1696,7 +1696,7 @@
 		"trigram": "POL",
 		"name": "Poland",
 		"capitalCity": {
-			"name": "Warsaw",		
+			"name": "Warsaw",
 			"lat": "52.231606",
 			"long": "21.008365"
 		},
@@ -1708,7 +1708,7 @@
 		"trigram": "PRI",
 		"name": "Puerto Rico",
 		"capitalCity": {
-			"name": "San Juan",		
+			"name": "San Juan",
 			"lat": "18.439260",
 			"long": "-66.119393"
 		},
@@ -1720,7 +1720,7 @@
 		"trigram": "PRK",
 		"name": "North Korea",
 		"capitalCity": {
-			"name": "Pyongyang",		
+			"name": "Pyongyang",
 			"lat": "39.020837",
 			"long": "125.751161"
 		},
@@ -1732,7 +1732,7 @@
 		"trigram": "PRT",
 		"name": "Portugal",
 		"capitalCity": {
-			"name": "Lisbon",		
+			"name": "Lisbon",
 			"lat": "38.730733",
 			"long": "-9.143557"
 		},
@@ -1744,7 +1744,7 @@
 		"trigram": "PRY",
 		"name": "Paraguay",
 		"capitalCity": {
-			"name": "Asunción",		
+			"name": "Asunción",
 			"lat": "-25.296792",
 			"long": "-57.626808"
 		},
@@ -1756,7 +1756,7 @@
 		"trigram": "QAT",
 		"name": "Qatar",
 		"capitalCity": {
-			"name": "Doha",		
+			"name": "Doha",
 			"lat": "25.283848",
 			"long": "51.528511"
 		},
@@ -1768,7 +1768,7 @@
 		"trigram": "RAS",
 		"name": "Sahrawi Arab Democratic Republic",
 		"capitalCity": {
-			"name": "Laayoune",		
+			"name": "Laayoune",
 			"lat": "27.145953",
 			"long": "-13.191888"
 		},
@@ -1780,7 +1780,7 @@
 		"trigram": "ROU",
 		"name": "Romania",
 		"capitalCity": {
-			"name": "Bucharest",		
+			"name": "Bucharest",
 			"lat": "44.434809",
 			"long": "26.104709"
 		},
@@ -1792,7 +1792,7 @@
 		"trigram": "RUS",
 		"name": "Russia",
 		"capitalCity": {
-			"name": "Moscow",		
+			"name": "Moscow",
 			"lat": "55.753801",
 			"long": "37.620556"
 		},
@@ -1804,7 +1804,7 @@
 		"trigram": "RWA",
 		"name": "Rwanda",
 		"capitalCity": {
-			"name": "Kigali",		
+			"name": "Kigali",
 			"lat": "-1.956371",
 			"long": "30.073514"
 		},
@@ -1816,7 +1816,7 @@
 		"trigram": "SAU",
 		"name": "Saudi Arabia",
 		"capitalCity": {
-			"name": "Riyadh",		
+			"name": "Riyadh",
 			"lat": "24.722135",
 			"long": "46.743666"
 		},
@@ -1828,7 +1828,7 @@
 		"trigram": "SDN",
 		"name": "Sudan",
 		"capitalCity": {
-			"name": "Khartoum",		
+			"name": "Khartoum",
 			"lat": "15.596716",
 			"long": "32.537217"
 		},
@@ -1840,7 +1840,7 @@
 		"trigram": "SEN",
 		"name": "Senegal",
 		"capitalCity": {
-			"name": "Dakar",		
+			"name": "Dakar",
 			"lat": "14.740488",
 			"long": "-17.431399"
 		},
@@ -1852,7 +1852,7 @@
 		"trigram": "SGP",
 		"name": "Singapore",
 		"capitalCity": {
-			"name": "Singapore",		
+			"name": "Singapore",
 			"lat": "1.334787",
 			"long": "103.835808"
 		},
@@ -1864,7 +1864,7 @@
 		"trigram": "SLB",
 		"name": "Solomon Islands",
 		"capitalCity": {
-			"name": "Honiara",		
+			"name": "Honiara",
 			"lat": "-9.436158",
 			"long": "159.963634"
 		},
@@ -1876,7 +1876,7 @@
 		"trigram": "SLE",
 		"name": "Sierra Leone",
 		"capitalCity": {
-			"name": "Freetown",		
+			"name": "Freetown",
 			"lat": "8.473085",
 			"long": "-13.260522"
 		},
@@ -1888,7 +1888,7 @@
 		"trigram": "SLV",
 		"name": "El Salvador",
 		"capitalCity": {
-			"name": "San Salvador",		
+			"name": "San Salvador",
 			"lat": "13.702731",
 			"long": "-89.212793"
 		},
@@ -1900,7 +1900,7 @@
 		"trigram": "SMR",
 		"name": "San Marino",
 		"capitalCity": {
-			"name": "San Marino",		
+			"name": "San Marino",
 			"lat": "43.939983",
 			"long": "12.467312"
 		},
@@ -1912,7 +1912,7 @@
 		"trigram": "SOM",
 		"name": "Somalia",
 		"capitalCity": {
-			"name": "Mogadishu",		
+			"name": "Mogadishu",
 			"lat": "2.042372",
 			"long": "45.332632"
 		},
@@ -1924,7 +1924,7 @@
 		"trigram": "STP",
 		"name": "São Tomé And Príncipe",
 		"capitalCity": {
-			"name": "São Tomé",		
+			"name": "São Tomé",
 			"lat": "0.337579",
 			"long": "6.730737"
 		},
@@ -1936,7 +1936,7 @@
 		"trigram": "SUR",
 		"name": "Suriname",
 		"capitalCity": {
-			"name": "Paramaribo",		
+			"name": "Paramaribo",
 			"lat": "5.820988",
 			"long": "-55.175088"
 		},
@@ -1948,7 +1948,7 @@
 		"trigram": "SVK",
 		"name": "Slovakia",
 		"capitalCity": {
-			"name": "Bratislava",		
+			"name": "Bratislava",
 			"lat": "48.149848",
 			"long": "17.111155"
 		},
@@ -1960,7 +1960,7 @@
 		"trigram": "SVN",
 		"name": "Slovenia",
 		"capitalCity": {
-			"name": "Ljubljana",		
+			"name": "Ljubljana",
 			"lat": "46.052291",
 			"long": "14.507059"
 		},
@@ -1972,7 +1972,7 @@
 		"trigram": "SWE",
 		"name": "Sweden",
 		"capitalCity": {
-			"name": "Stockholm",		
+			"name": "Stockholm",
 			"lat": "59.326955",
 			"long": "18.068257"
 		},
@@ -1984,7 +1984,7 @@
 		"trigram": "SWZ",
 		"name": "Swaziland",
 		"capitalCity": {
-			"name": "Mbabane",		
+			"name": "Mbabane",
 			"lat": "-26.326637",
 			"long": "31.143984"
 		},
@@ -1996,7 +1996,7 @@
 		"trigram": "SYC",
 		"name": "Seychelles",
 		"capitalCity": {
-			"name": "Victoria",		
+			"name": "Victoria",
 			"lat": "-4.623215",
 			"long": "55.452020"
 		},
@@ -2008,7 +2008,7 @@
 		"trigram": "SYR",
 		"name": "Syria",
 		"capitalCity": {
-			"name": "Damascus",		
+			"name": "Damascus",
 			"lat": "33.513934",
 			"long": "36.276489"
 		},
@@ -2020,7 +2020,7 @@
 		"trigram": "TCD",
 		"name": "Chad",
 		"capitalCity": {
-			"name": "N'Djamena",		
+			"name": "N'Djamena",
 			"lat": "12.122847",
 			"long": "15.053657"
 		},
@@ -2032,7 +2032,7 @@
 		"trigram": "TGO",
 		"name": "Togo",
 		"capitalCity": {
-			"name": "Lomé",		
+			"name": "Lomé",
 			"lat": "6.129870",
 			"long": "1.221146"
 		},
@@ -2044,7 +2044,7 @@
 		"trigram": "THA",
 		"name": "Thailand",
 		"capitalCity": {
-			"name": "Bangkok",		
+			"name": "Bangkok",
 			"lat": "13.762529",
 			"long": "100.520615"
 		},
@@ -2056,7 +2056,7 @@
 		"trigram": "TJK",
 		"name": "Tajikistan",
 		"capitalCity": {
-			"name": "Dushanbe",		
+			"name": "Dushanbe",
 			"lat": "38.575467",
 			"long": "68.787376"
 		},
@@ -2068,7 +2068,7 @@
 		"trigram": "TKM",
 		"name": "Turkmenistan",
 		"capitalCity": {
-			"name": "Ashgabat",		
+			"name": "Ashgabat",
 			"lat": "37.938078",
 			"long": "58.392166"
 		},
@@ -2080,7 +2080,7 @@
 		"trigram": "TLS",
 		"name": "Timor-Leste",
 		"capitalCity": {
-			"name": "Dili",		
+			"name": "Dili",
 			"lat": "-8.555441",
 			"long": "125.579035"
 		},
@@ -2092,7 +2092,7 @@
 		"trigram": "TON",
 		"name": "Tonga",
 		"capitalCity": {
-			"name": "Nukuʻalofa",		
+			"name": "Nukuʻalofa",
 			"lat": "-21.134352",
 			"long": "-184.798418"
 		},
@@ -2104,7 +2104,7 @@
 		"trigram": "TTO",
 		"name": "Trinidad And Tobago",
 		"capitalCity": {
-			"name": "Port Of Spain",		
+			"name": "Port Of Spain",
 			"lat": "10.657015",
 			"long": "-61.519003"
 		},
@@ -2116,7 +2116,7 @@
 		"trigram": "TUN",
 		"name": "Tunisia",
 		"capitalCity": {
-			"name": "Tunis",		
+			"name": "Tunis",
 			"lat": "36.799072",
 			"long": "10.181382"
 		},
@@ -2128,7 +2128,7 @@
 		"trigram": "TUV",
 		"name": "Turkey",
 		"capitalCity": {
-			"name": "Ankara",		
+			"name": "Ankara",
 			"lat": "39.920717",
 			"long": "32.854545"
 		},
@@ -2140,7 +2140,7 @@
 		"trigram": "TWN",
 		"name": "Taiwan",
 		"capitalCity": {
-			"name": "Taipei",		
+			"name": "Taipei",
 			"lat": "25.045388",
 			"long": "121.534494"
 		},
@@ -2152,7 +2152,7 @@
 		"trigram": "TZN",
 		"name": "Tanzania",
 		"capitalCity": {
-			"name": "Dodoma",		
+			"name": "Dodoma",
 			"lat": "-6.169637",
 			"long": "35.750673"
 		},
@@ -2164,7 +2164,7 @@
 		"trigram": "UGA",
 		"name": "Uganda",
 		"capitalCity": {
-			"name": "Kampala",		
+			"name": "Kampala",
 			"lat": "0.315649",
 			"long": "32.579185"
 		},
@@ -2176,7 +2176,7 @@
 		"trigram": "UKR",
 		"name": "Ukraine",
 		"capitalCity": {
-			"name": "Kiev",		
+			"name": "Kiev",
 			"lat": "50.447383",
 			"long": "30.519285"
 		},
@@ -2188,7 +2188,7 @@
 		"trigram": "URY",
 		"name": "Uruguay",
 		"capitalCity": {
-			"name": "Montevideo",		
+			"name": "Montevideo",
 			"lat": "-34.905248",
 			"long": "-56.180737"
 		},
@@ -2200,7 +2200,7 @@
 		"trigram": "USA",
 		"name": "United States Of America",
 		"capitalCity": {
-			"name": "Washington, D.C.",		
+			"name": "Washington, D.C.",
 			"lat": "38.893545",
 			"long": "-77.028647"
 		},
@@ -2212,7 +2212,7 @@
 		"trigram": "UZB",
 		"name": "Uzbekistan",
 		"capitalCity": {
-			"name": "Tashkent",		
+			"name": "Tashkent",
 			"lat": "41.311546",
 			"long": "69.263157"
 		},
@@ -2224,7 +2224,7 @@
 		"trigram": "VAT",
 		"name": "Vatican City",
 		"capitalCity": {
-			"name": "Vatican City",		
+			"name": "Vatican City",
 			"lat": "41.903438",
 			"long": "12.453322"
 		},
@@ -2236,7 +2236,7 @@
 		"trigram": "VCT",
 		"name": "Saint Vincent And The Grenadines",
 		"capitalCity": {
-			"name": "Kingstown",		
+			"name": "Kingstown",
 			"lat": "13.155855",
 			"long": "-61.227677"
 		},
@@ -2248,7 +2248,7 @@
 		"trigram": "VEN",
 		"name": "Venezuela",
 		"capitalCity": {
-			"name": "Caracas",		
+			"name": "Caracas",
 			"lat": "10.505265",
 			"long": "-66.915703"
 		},
@@ -2260,7 +2260,7 @@
 		"trigram": "VNM",
 		"name": "Vietnam",
 		"capitalCity": {
-			"name": "Hanoi",		
+			"name": "Hanoi",
 			"lat": "20.844310",
 			"long": "106.674290"
 		},
@@ -2272,7 +2272,7 @@
 		"trigram": "VUT",
 		"name": "Vanuatu",
 		"capitalCity": {
-			"name": "Port Vila",		
+			"name": "Port Vila",
 			"lat": "-17.745466",
 			"long": "168.317036"
 		},
@@ -2284,7 +2284,7 @@
 		"trigram": "WSM",
 		"name": "Samoa",
 		"capitalCity": {
-			"name": "Apia",		
+			"name": "Apia",
 			"lat": "-13.834463",
 			"long": "188.229592"
 		},
@@ -2296,7 +2296,7 @@
 		"trigram": "YEM",
 		"name": "Yemen",
 		"capitalCity": {
-			"name": "Sana'a",		
+			"name": "Sana'a",
 			"lat": "15.344021",
 			"long": "44.205871"
 		},
@@ -2308,7 +2308,7 @@
 		"trigram": "ZAF",
 		"name": "South Africa",
 		"capitalCity": {
-			"name": "Pretoria",		
+			"name": "Pretoria",
 			"lat": "-25.747425",
 			"long": "28.193583"
 		},
@@ -2320,7 +2320,7 @@
 		"trigram": "ZMB",
 		"name": "Zambia",
 		"capitalCity": {
-			"name": "Lusaka",		
+			"name": "Lusaka",
 			"lat": "-15.416152",
 			"long": "28.280741"
 		},
@@ -2332,7 +2332,7 @@
 		"trigram": "ZWE",
 		"name": "Zimbabwe",
 		"capitalCity": {
-			"name": "Harare",		
+			"name": "Harare",
 			"lat": "-17.830185",
 			"long": "31.048310"
 		},

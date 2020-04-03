@@ -38,8 +38,8 @@ class TrackballControls {
     // Camera movement inertia : Closer to 0 -> very slow decay ; closer to 1 -> very fast decay
     this.dynamicDampingFactor = 0.33;
 
-    this.minDistance = 0;
-    this.maxDistance = Infinity;
+    this._minDistance = 0;
+    this._maxDistance = Infinity;
 
     this.target = new THREE.Vector3();
     this.lastPosition = new THREE.Vector3();
@@ -52,7 +52,6 @@ class TrackballControls {
     this.position0 = this.object.position.clone();
     this.up0 = this.object.up.clone();
 
-    this.keys = [ 65 /*A*/, 83 /*S*/, 68 /*D*/ ];
     this.enaled = true;
 
     this.init();
@@ -65,16 +64,33 @@ class TrackballControls {
     this.screen.offsetLeft = 0;
     this.screen.offsetTop = 0;
     this.radius = (this.screen.width + this.screen.height) / 4;
+    // Bind this for all events so they can be unsubscribed
+    this.preventDefault = this.preventDefault.bind(this);
+    this.mousedown = this.mousedown.bind(this);
+    this.mousewheel = this.mousewheel.bind(this);
+    this.touchstart = this.touchstart.bind(this);
+    this.touchend = this.touchend.bind(this);
+    this.touchmove = this.touchmove.bind(this);
     // Hook up on mouse and touch events
-    this.domElement.addEventListener('contextmenu', (event) => { event.preventDefault(); }, false);
-    this.domElement.addEventListener('mousedown', this.mousedown.bind(this), false);
-    this.domElement.addEventListener('mousewheel', this.mousewheel.bind(this), false);
-    this.domElement.addEventListener('DOMMouseScroll', this.mousewheel.bind(this), false); // Firefox support
-    this.domElement.addEventListener('touchstart', this.touchstart.bind(this), false);
-    this.domElement.addEventListener('touchend', this.touchend.bind(this), false);
-    this.domElement.addEventListener('touchmove', this.touchmove.bind(this), false);
-    window.addEventListener( 'keydown', this.keydown.bind(this), false );
-    window.addEventListener( 'keyup', this.keyup.bind(this), false );
+    this.domElement.addEventListener('contextmenu', this.preventDefault, false);
+    this.domElement.addEventListener('mousedown', this.mousedown, false);
+    this.domElement.addEventListener('mousewheel', this.mousewheel, false);
+    this.domElement.addEventListener('DOMMouseScroll', this.mousewheel, false); // Firefox support
+    this.domElement.addEventListener('touchstart', this.touchstart, false);
+    this.domElement.addEventListener('touchend', this.touchend, false);
+    this.domElement.addEventListener('touchmove', this.touchmove, false);
+  }
+
+
+  destroy() {
+     // Clean all subscribe events
+    this.domElement.removeEventListener('contextmenu', this.preventDefault, false);
+    this.domElement.removeEventListener('mousedown', this.mousedown, false);
+    this.domElement.removeEventListener('mousewheel', this.mousewheel, false);
+    this.domElement.removeEventListener('DOMMouseScroll', this.mousewheel, false);
+    this.domElement.removeEventListener('touchstart', this.touchstart, false);
+    this.domElement.removeEventListener('touchend', this.touchend, false);
+    this.domElement.removeEventListener('touchmove', this.touchmove, false);
   }
 
 
@@ -163,12 +179,12 @@ class TrackballControls {
 
   checkDistances() {
     if (!this.noZoom || !this.noPan) {
-      if (this.object.position.lengthSq() > this.maxDistance * this.maxDistance) {
-        this.object.position.setLength(this.maxDistance);
+      if (this.object.position.lengthSq() > this._maxDistance * this._maxDistance) {
+        this.object.position.setLength(this._maxDistance);
       }
 
-      if (this._eye.lengthSq() < this.minDistance * this.minDistance) {
-        this.object.position.addVectors(this.target, this._eye.setLength(this.minDistance));
+      if (this._eye.lengthSq() < this._minDistance * this._minDistance) {
+        this.object.position.addVectors(this.target, this._eye.setLength(this._minDistance));
       }
     }
   }
@@ -359,44 +375,23 @@ class TrackballControls {
   }
 
 
-  keydown(event) {
-    if (this.enabled === false) { return; }
-
-    window.removeEventListener( 'keydown', this.keydown.bind(this) );
-
-    this._prevState = this._state;
-
-    if ( this._state !== this.STATE.NONE ) {
-
-      return;
-
-    } else if ( event.keyCode === this.keys[this.STATE.ROTATE] && !this.noRotate ) {
-
-      this._state = this.STATE.ROTATE;
-
-    } else if ( event.keyCode === this.keys[this.STATE.ZOOM] && !this.noZoom ) {
-
-      this._state = this.STATE.ZOOM;
-
-    } else if ( event.keyCode === this.keys[this.STATE.PAN] && !this.noPan ) {
-
-      this._state = this.STATE.PAN;
-
-    }
-  }
-
-
-  keyup(event) {
-    if (this.enabled === false) { return; }
-
-    this._state = this._prevState;
-    window.addEventListener( 'keydown', this.keydown.bind(this), false );
-
+  preventDefault(event) {
+    event.preventDefault();
   }
 
 
   set enable(state) {
     this.enable = state;
+  }
+
+
+  set maxDistance(maxDistance) {
+    this._maxDistance = maxDistance;
+  }
+
+
+  set minDistance(minDistance) {
+    this._minDistance = minDistance;
   }
 
 

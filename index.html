@@ -25,7 +25,7 @@
             </div>
             <div class="sc-artist">
               <img src="https://i.scdn.co/image/387806e50ea12d16c6a66796d73be5abe04589e7">
-            </div>                                   
+            </div>
           </div>
           <div class="sc-albums">
             <h2>Albums<span><a href="#">More albums...</a></span></h2>
@@ -37,10 +37,10 @@
             </div>
             <div class="sc-album">
               <img src="https://img.archambault.ca/images/PG/2042/2042294-gf.jpg?404=default&w=400">
-            </div>                                            
-          </div>  
+            </div>
+          </div>
           <div class="sc-labels">
-            <h2>Labels<span><a href="#">More labels...</a></span></h2>            
+            <h2>Labels<span><a href="#">More labels...</a></span></h2>
             <div class="sc-label">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/UKF_basic_logo.svg/1200px-UKF_basic_logo.svg.png">
             </div>
@@ -49,10 +49,10 @@
             </div>
             <div class="sc-label">
               <img src="https://d1fuks2cnuq5t9.cloudfront.net/i/oLPR7tVwKlwhvUuMaUUtlHxKlgBIBCaar0Usyf3P.jpg">
-            </div>           
+            </div>
           </div>
           <div class="sc-genres">
-            <h2>Genres<span><a href="#">More genres...</a></span></h2>  
+            <h2>Genres<span><a href="#">More genres...</a></span></h2>
             <div class="sc-genre">
               <img src="https://www.sampletoolsbycr2.com/wp-content/uploads/2015/12/Sample-Tools-by-Cr2-Glitch-Hop-600x600.png">
             </div>
@@ -61,17 +61,50 @@
             </div>
             <div class="sc-genre">
               <img src="http://bernay-radio.fr/wp-content/uploads/2017/11/blues-rock-2.png">
-            </div>                       
-          </div>                            
+            </div>
+          </div>
         </div>
-  </div>  
-  <script type="text/javascript" src="./js/three.min.js"></script>
+  </div>
+  <script type="text/javascript" src="./js/lib/three.min.js"></script>
+  <script type="text/javascript" src="./js/lib/three-geojson-geometry.js"></script>  <!-- In order to draw country borders -->
   <script type="module">
     /* Typical instanciation of a world map */
     import MzkWorldMap from './js/MzkWorldMap.js';
+    // Useful variable and method needed by MzkWorldMap
+    const renderTo = document.querySelector('.worldmap');
+    const countryClicked = (renderTo, info) => {
+      const filled = document.querySelector('.toast');
+      renderTo.innerHTML = filled.innerHTML;
+      renderTo.querySelector('#sc-country-name').innerHTML = info.name;
+      renderTo.querySelector('#sc-flag').src = `/assets/img/flags/${info.trigram}.svg`;
+      console.log(info);
+    };
+    const CONST = {
+      CLOUDS: ['fair', 'africa', 'asia', 'australia', 'europe', 'na'],
+      RADIUS: {
+        EARTH: 0.5,
+        MOON: 0.25,
+        SUN: 2,
+        SCENE: 200
+      },
+      DISTANCE: {
+        MOON: 5,
+        SUN: 200
+      },
+      PIN: {
+        HEIGHT: 0.08,
+        WIDTH: 0.0033
+      }
+    };
+    // Build MzkWorldMap
     new MzkWorldMap({
-      renderTo: document.querySelector('.worldmap'),
-      worldDataPath: './assets/WorldData.json'
+      worldDataPath: './assets/WorldData.json', // WorldData is lat/long for all countries
+      libraryDataPath: './assets/LibraryData.json', // Must contain all artists per country (NAME/ID for each)
+      geoDataPath: './assets/GeojsonData.json', // All world geojson dataset must be loaded to draw boundaries properly
+      countryClicked: countryClicked,
+      renderTo: renderTo,
+      const: CONST,
+      debug: true
     });
   </script>
 </body>

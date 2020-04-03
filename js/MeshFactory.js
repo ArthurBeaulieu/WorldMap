@@ -7,21 +7,25 @@ class MeshFactory {
   }
 
 
-  new(type) {
-    if (type === 'earth') { // Earth sphere
+  new(args) {
+    if (args.type === 'earth') { // Earth sphere
       return this._buildEarthSphere();
-    } else if (type === 'clouds') { // Clouds layer for Earth
+    } else if (args.type === 'clouds') { // Clouds layer for Earth
       return this._buildCloudLayer();
-    } else if (type === 'boundaries') { // Political country boundaries
+    } else if (args.type === 'boundaries') { // Political country boundaries
       return this._buildBoundariesSphere();
-    } else if (type === 'sun') { // Sun sphere
+    } else if (args.type === 'sun') { // Sun sphere
       return this._buildSunSphere();
-    } else if (type === 'moon') { // Moon sphere
+    } else if (args.type === 'moon') { // Moon sphere
       return this._buildMoonSphere();
-    } else if (type === 'background') {
+    } else if (args.type === 'background') {
       return this._buildSpaceBackground();
-    } else if (type === 'earthpin') {
-      return this._buildEarthPin();
+    } else if (args.type === 'wireframe') {
+      return this._buildWireframe(args.geometry);
+    } else if (args.type === 'earthpin') {
+      return this._buildEarthPin(args.scale);
+    } else if (args.type === 'geoline') {
+      return this._buildGeoline(args.geometry);
     }
   }
 
@@ -55,7 +59,7 @@ class MeshFactory {
 
 
   _buildCloudLayer() {
-    let alphaMap = new THREE.TextureLoader().load(`assets/img/clouds/${this.CONST.CLOUDS[0]}.jpg`);    
+    let alphaMap = new THREE.TextureLoader().load(`assets/img/clouds/${this.CONST.CLOUDS[Math.floor(Math.random() * this.CONST.CLOUDS.length)]}.jpg`);
     alphaMap.wrapS = THREE.RepeatWrapping;
     alphaMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     return new THREE.Mesh(
@@ -97,7 +101,7 @@ class MeshFactory {
 
 
   _buildSunSphere() {
-    let map = new THREE.TextureLoader().load('assets/img/maps/sun.jpg');    
+    let map = new THREE.TextureLoader().load('assets/img/maps/sun.jpg');
     return new THREE.Mesh(
       new THREE.SphereGeometry(this.CONST.RADIUS.SUN, this._segments, this._segments),
       new THREE.MeshPhongMaterial({
@@ -125,7 +129,7 @@ class MeshFactory {
 
 
   _buildSpaceBackground() {
-    let map = new THREE.TextureLoader().load('assets/img/milkyway.jpg');    
+    let map = new THREE.TextureLoader().load('assets/img/milkyway.jpg');
     return new THREE.Mesh(
       new THREE.SphereGeometry(this.CONST.RADIUS.SCENE, this._segments, this._segments),
       new THREE.MeshBasicMaterial({
@@ -136,11 +140,45 @@ class MeshFactory {
   }
 
 
-  _buildEarthPin() {
+  _buildWireframe(geometry) {
+    return new THREE.LineSegments(
+      new THREE.EdgesGeometry(geometry, 30),
+      new THREE.LineBasicMaterial({
+        color: 0x000000,
+        opacity: 0.1,
+        transparent: true
+      })
+    );
+  }
+
+
+  _buildEarthPin(scale) {
+    // Limit min height to 25% of pin max height
+    if (scale < 0.25) {
+      scale = 0.25;
+    }
+    const width = this.CONST.PIN.WIDTH + (this.CONST.PIN.WIDTH * scale);
+    const height = this.CONST.PIN.HEIGHT * scale;
+    // Build mesh according to given height
     return new THREE.Mesh(
-      new THREE.BoxGeometry(0.003, 0.003, 0.05),
-      new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0x56d45b)
+      new THREE.CylinderGeometry(width, width, height, this._segments),
+      new THREE.MeshPhongMaterial({
+        color: new THREE.Color(0x56d45b),
+        specular: new THREE.Color(0x55FFAA),
+        shininess: 100,
+        reflectivity: 1
+      })
+    );
+  }
+
+
+  _buildGeoline(geometry) {
+    return new THREE.LineSegments(
+      new THREE.GeoJsonGeometry(geometry, this.CONST.RADIUS.EARTH, this._segments),
+      new THREE.LineBasicMaterial({
+        color: 'black',
+        opacity: 0.1,
+        transparent: true
       })
     );
   }
