@@ -7,78 +7,17 @@
   <link rel="stylesheet" href="./css/mzkworldmap.css">
 </head>
 <body>
-  <!--  Map textures come from http://www.shadedrelief.com/natural3/pages/extra.html -->
   <div class="worldmap"></div>
-  <div class="toast" style="opacity:0;">
-        <div class="sc-header">
-          <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/c3/Flag_of_France.svg/1200px-Flag_of_France.svg.png" id="sc-flag">
-          <h1 id="sc-country-name">Ethiopies</h1>
-        </div>
-        <div class="sc-content">
-          <div class="sc-artists">
-            <h2>Artists<span><a href="#">More artists...</a></span></h2>
-            <div class="sc-artist">
-              <img src="https://images.genius.com/e340c1afec79358374779e941abdf780.1000x1000x1.jpg">
-            </div>
-            <div class="sc-artist">
-              <img src="https://i1.sndcdn.com/avatars-000155942281-7wn56r-t500x500.jpg">
-            </div>
-            <div class="sc-artist">
-              <img src="https://i.scdn.co/image/387806e50ea12d16c6a66796d73be5abe04589e7">
-            </div>
-          </div>
-          <div class="sc-albums">
-            <h2>Albums<span><a href="#">More albums...</a></span></h2>
-            <div class="sc-album">
-              <img src="https://f4.bcbits.com/img/a1417778234_10.jpg">
-            </div>
-            <div class="sc-album">
-              <img src="https://manazeak.org/static/covers/b61342ca43c3b78954bdfd2f870b649b.jpg">
-            </div>
-            <div class="sc-album">
-              <img src="https://img.archambault.ca/images/PG/2042/2042294-gf.jpg?404=default&w=400">
-            </div>
-          </div>
-          <div class="sc-labels">
-            <h2>Labels<span><a href="#">More labels...</a></span></h2>
-            <div class="sc-label">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/UKF_basic_logo.svg/1200px-UKF_basic_logo.svg.png">
-            </div>
-            <div class="sc-label">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Atlantic_Records_logo.svg/200px-Atlantic_Records_logo.svg.png">
-            </div>
-            <div class="sc-label">
-              <img src="https://d1fuks2cnuq5t9.cloudfront.net/i/oLPR7tVwKlwhvUuMaUUtlHxKlgBIBCaar0Usyf3P.jpg">
-            </div>
-          </div>
-          <div class="sc-genres">
-            <h2>Genres<span><a href="#">More genres...</a></span></h2>
-            <div class="sc-genre">
-              <img src="https://www.sampletoolsbycr2.com/wp-content/uploads/2015/12/Sample-Tools-by-Cr2-Glitch-Hop-600x600.png">
-            </div>
-            <div class="sc-genre">
-              <img src="https://www.audiofemme.com/wp-content/uploads/2013/11/BigBeat.jpg">
-            </div>
-            <div class="sc-genre">
-              <img src="http://bernay-radio.fr/wp-content/uploads/2017/11/blues-rock-2.png">
-            </div>
-          </div>
-        </div>
-  </div>
+  <!--  Map textures come from http://www.shadedrelief.com/natural3/pages/extra.html -->
   <script type="text/javascript" src="./js/lib/three.min.js"></script>
   <script type="text/javascript" src="./js/lib/three-geojson-geometry.js"></script>  <!-- In order to draw country borders -->
+  <script type="text/javascript" src="./js/lib/three-geojson-conic-polygon-geometry.js"></script> <!-- In order to draw country surfaces -->
   <script type="module">
-    /* Typical instanciation of a world map */
+    /* Example of a world map creation */
     import MzkWorldMap from './js/MzkWorldMap.js';
     // Useful variable and method needed by MzkWorldMap
     const renderTo = document.querySelector('.worldmap');
-    const countryClicked = (renderTo, info) => {
-      const filled = document.querySelector('.toast');
-      renderTo.innerHTML = filled.innerHTML;
-      renderTo.querySelector('#sc-country-name').innerHTML = info.name;
-      renderTo.querySelector('#sc-flag').src = `/assets/img/flags/${info.trigram}.svg`;
-      console.log(info);
-    };
+    const countryClicked = info => { console.log(info); };
     const CONST = {
       CLOUDS: ['fair', 'africa', 'asia', 'australia', 'europe', 'na'],
       RADIUS: {

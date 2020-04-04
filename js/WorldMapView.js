@@ -10,7 +10,7 @@ class WorldMapView {
     // View options
     this.debug = options.debug;
     this._renderTo = options.renderTo;
-    this._countryClicked = options.countryClicked;
+    this._countryClickedCB = options.countryClicked;
     this._worldData = options.worldData;
     this._geoData = options.geoData;
     this.CONST = options.const;
@@ -42,12 +42,14 @@ class WorldMapView {
     // Scene DOM elements
     this._selectedCountry = null;
     this._selectedPin = null;
+    this._selectedSurface = null;
     this._buttons = {
       resetCamera: null,
       resetPositions: null
     };
     // Scene country pins
     this._geoLines = [];
+    this._geoSurfaces = [];
     this._pins = [];
     // Event bindings
     this._onResize = this._onResize.bind(this);
@@ -175,17 +177,31 @@ class WorldMapView {
         for (let i = 0; i < this._worldData.length; ++i) {
           const pin = Meshes.new({ type: 'earthpin', scale: this._worldData[i].scale });
           pin.info = this._worldData[i]; // Attach country information to the pin
-          // Add border using wireframe
-          const wireframe = Meshes.new({ type: 'wireframe', geometry: pin.geometry });
-          wireframe.renderOrder = 1;
+          const wireframe = Meshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
+          wireframe.renderOrder = 1; // Force wireframe render on top
           pin.add(wireframe);
           this._pins.push(pin);
         }
         // Build geolines for country boundaries
         for (let i = 0; i < this._geoData.features.length; ++i) {
           const geoLine = Meshes.new({ type: 'geoline', geometry: this._geoData.features[i].geometry });
-          geoLine.rotation.y -= Math.PI / 2; // Adjust rotation aroud y axis
           this._geoLines.push(geoLine);
+
+          // for (let j = 0; j < geoSurface.length; ++j) {
+          //   geoSurface[j].geoPart.rotation.y -= Math.PI / 2; // Adjust rotation aroud y axis
+          // }
+
+          const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
+          for (let j = 0; j < polygons.length; ++j) {
+            const geoSurface = Meshes.new({ type: 'geosurface', geometry: polygons[j] });
+            geoSurface.info = this._geoData.features[i].properties;
+            this._geoSurfaces.push(geoSurface);
+          }
+
+
+          // this._geoSurfaces.push({
+          //   country: geoSurface
+          // });
         }
 
         resolve();
@@ -261,7 +277,16 @@ class WorldMapView {
           this._pins[i].position.set(latlonpoint[0], latlonpoint[1], latlonpoint[2]);
           this._pins[i].lookAt(new THREE.Vector3(0, 0, 0)); // As referential is geocentric, we look at the earth's center
           this._pins[i].rotation.y += Math.PI / 2; // Rotate for cylinder to be orthonormal with earth surface
-          this._pins[i].clickCallback = this._pinClicked;
+          this._pins[i].clickCallback = this._countryClicked;
+        }
+
+        for (let i = 0; i < this._geoLines.length; ++i) {
+          this._geoLines[i].rotation.y -= Math.PI / 2;
+        }
+
+        for (let i = 0; i < this._geoSurfaces.length; ++i) {
+          this._geoSurfaces[i].rotation.x += (23.3 * Math.PI) / 180;
+          this._geoSurfaces[i].clickCallback = this._countryClicked;
         }
 
         resolve();
@@ -286,6 +311,10 @@ class WorldMapView {
       // Append geolines for every country
       for (let i = 0; i < this._geoLines.length; ++i) {
         this._meshes.earth.add(this._geoLines[i]);
+      }
+      // Append geosurfaces for every country
+      for (let i = 0; i < this._geoSurfaces.length; ++i) {
+        this._scene.add(this._geoSurfaces[i]);
       }
       // Append every stored pins according to given data
       for (let i = 0; i < this._pins.length; ++i) {
@@ -358,7 +387,8 @@ class WorldMapView {
     mouse.y =  - (event.clientY / this._renderer.domElement.clientHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, this._camera);
-    const intersects = raycaster.intersectObjects(this._pins);
+    // Ray cast againt pins
+    let intersects = raycaster.intersectObjects(this._pins);
     if (intersects.length > 0) {
       if (this._selectedPin !== null) {
         this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
@@ -376,21 +406,27 @@ class WorldMapView {
         this._selectedPin = null;
       }, 300);
     }
+    // Ray cast againt geosurfaces
+    intersects = raycaster.intersectObjects(this._geoSurfaces);
+    if (intersects.length > 0) {
+      if (this._selectedSurface !== null) {
+        this._selectedSurface.material.opacity = 0;
+      }
+
+      this._selectedSurface = intersects[0].object;
+      this._selectedSurface.material.opacity = 0.7;
+      this._selectedSurface.clickCallback(this);
+    }
   }
 
 
-  _pinClicked(WorldMapView) { // This is already binded to the target pin
-    if (WorldMapView._selectedCountry === null) {
-      WorldMapView._selectedCountry = document.createElement('DIV');
-      WorldMapView._selectedCountry.classList.add('selected-country');
-      WorldMapView._renderTo.appendChild(WorldMapView._selectedCountry);
-
-      setTimeout(() => {
-        WorldMapView._selectedCountry.style.left = '0';
-      }, 50);
+  _countryClicked(WorldMapView) { // This is already binded to the target pin
+    if (this.info.GEOUNIT) { // Country surface clicked, pin otherwise
+      this.info.name = this.info.NAME;
+      this.info.trigram = this.info.BRK_A3;
     }
 
-    WorldMapView._countryClicked(WorldMapView._selectedCountry, this.info);
+    WorldMapView._countryClickedCB(this.info);
   }
 
 

@@ -26,6 +26,8 @@ class MeshFactory {
       return this._buildEarthPin(args.scale);
     } else if (args.type === 'geoline') {
       return this._buildGeoline(args.geometry);
+    } else if (args.type === 'geosurface') {
+      return this._buildGeoSurface(args.geometry);
     }
   }
 
@@ -178,6 +180,20 @@ class MeshFactory {
       new THREE.LineBasicMaterial({
         color: 'black',
         opacity: 0.1,
+        transparent: true
+      })
+    );
+  }
+
+
+  // Returns an array of Meshes /!\
+  _buildGeoSurface(geometry) {
+    return new THREE.Mesh(
+      new THREE.ConicPolygonBufferGeometry(geometry, this.CONST.RADIUS.EARTH / 10, this.CONST.RADIUS.EARTH + 0.005),
+      new THREE.MeshLambertMaterial({
+        side: THREE.DoubleSide,
+        color: 'red',
+        opacity: 0,
         transparent: true
       })
     );
