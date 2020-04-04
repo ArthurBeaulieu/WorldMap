@@ -2,6 +2,9 @@ import TrackballControls from './TrackballControls.js';
 import MeshFactory from './MeshFactory.js';
 
 
+let Meshes = null;
+
+
 class WorldMapView {
 
 
@@ -40,9 +43,8 @@ class WorldMapView {
       moon: null
     };
     // Scene DOM elements
-    this._selectedCountry = null;
     this._selectedPin = null;
-    this._selectedSurface = null;
+    this._selectedSurfaces = [];
     this._buttons = {
       resetCamera: null,
       resetPositions: null
@@ -54,6 +56,11 @@ class WorldMapView {
     // Event bindings
     this._onResize = this._onResize.bind(this);
     this._onCanvasClicked = this._onCanvasClicked.bind(this);
+    // Define MeshFactory
+    Meshes = new MeshFactory({
+      CONST: this.CONST,
+      segments: 64
+    });
     // Init 3D viewer
     this.init();
   }
@@ -108,7 +115,6 @@ class WorldMapView {
       delete this._countryClicked;
       delete this._worldData;
       delete this._rafId;
-      delete this._selectedCountry;
       delete this._selectedPin;
       delete this._pins;
       delete this._buttons;
@@ -158,10 +164,6 @@ class WorldMapView {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._buildMeshes'); }
       try {
-        const Meshes = new MeshFactory({
-          CONST: this.CONST,
-          segments: 64
-        });
         // Pivots are for animating objects
         this._pivots.sun = new THREE.Object3D();
         this._pivots.moon = new THREE.Object3D();
@@ -173,42 +175,57 @@ class WorldMapView {
         this._meshes.starfield = Meshes.new({ type: 'background' });
         // Axis helper displayed on debug true
         this._meshes.axisHelper = new THREE.AxesHelper(this.CONST.RADIUS.SCENE);
-        // Build country pins on Earth
-        for (let i = 0; i < this._worldData.length; ++i) {
-          const pin = Meshes.new({ type: 'earthpin', scale: this._worldData[i].scale });
-          pin.info = this._worldData[i]; // Attach country information to the pin
-          const wireframe = Meshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
-          wireframe.renderOrder = 1; // Force wireframe render on top
-          pin.add(wireframe);
-          this._pins.push(pin);
-        }
-        // Build geolines for country boundaries
-        for (let i = 0; i < this._geoData.features.length; ++i) {
-          const geoLine = Meshes.new({ type: 'geoline', geometry: this._geoData.features[i].geometry });
-          this._geoLines.push(geoLine);
-
-          // for (let j = 0; j < geoSurface.length; ++j) {
-          //   geoSurface[j].geoPart.rotation.y -= Math.PI / 2; // Adjust rotation aroud y axis
-          // }
-
-          const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
-          for (let j = 0; j < polygons.length; ++j) {
-            const geoSurface = Meshes.new({ type: 'geosurface', geometry: polygons[j] });
-            geoSurface.info = this._geoData.features[i].properties;
-            this._geoSurfaces.push(geoSurface);
-          }
-
-
-          // this._geoSurfaces.push({
-          //   country: geoSurface
-          // });
-        }
-
+        // Build advanced data structures
+        this._buildCountryPins();
+        this._buildGeoMeshes();
         resolve();
       } catch (err) {
         reject(`WorldMapView._buildMeshes\n${err}`);
       }
     });
+  }
+
+
+  _buildCountryPins() {
+    for (let i = 0; i < this._worldData.length; ++i) { // Build country pins on Earth
+      const pin = Meshes.new({ type: 'earthpin', scale: this._worldData[i].scale });
+      const wireframe = Meshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
+
+      pin.info = this._worldData[i]; // Attach country information to the pin
+      wireframe.renderOrder = 1; // Force wireframe render on top
+
+      pin.add(wireframe);
+      this._pins.push(pin);
+    }
+  }
+
+
+  _buildGeoMeshes() {
+    // Build geolines for country boundaries
+    for (let i = 0; i < this._geoData.features.length; ++i) {
+      // Create geo line from feature geometry
+      const geoLine = Meshes.new({ type: 'geoline', geometry: this._geoData.features[i].geometry });
+      this._geoLines.push(geoLine);
+      // Check polygon type for feature
+      const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
+      for (let j = 0; j < polygons.length; ++j) {
+        const geoSurface = Meshes.new({ type: 'geosurface', geometry: polygons[j] });
+        // Attach info to mesh
+        geoSurface.info = this._geoData.features[i].properties;
+        geoSurface.info.hasArtists = false;
+        geoSurface.info.trigram = this._geoData.features[i].properties.BRK_A3;
+        // Find in world data the matching country data
+        for (let k = 0; k < this._worldData.length; ++k) {
+          if (this._worldData[k].trigram === this._geoData.features[i].properties.BRK_A3) {
+            geoSurface.info = this._worldData[k];
+            geoSurface.info.hasArtists = true;
+            break;
+          }
+        }
+        // Append surface to mesh array
+        this._geoSurfaces.push(geoSurface);
+      }
+    }
   }
 
 
@@ -397,25 +414,33 @@ class WorldMapView {
       this._selectedPin = intersects[0].object;
       this._selectedPin.material.color.setHex(0xFF6B67);
       this._selectedPin.clickCallback(this);
-    } else if (this._selectedCountry !== null && event.target.closest('div').classList.contains('worldmap')) {
-      this._selectedCountry.style.left = '-20%';
+    } else {
       this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
-      setTimeout(() => {
-        this._renderTo.removeChild(this._selectedCountry);
-        this._selectedCountry = null;
-        this._selectedPin = null;
-      }, 300);
+      this._selectedPin = null;
     }
     // Ray cast againt geosurfaces
     intersects = raycaster.intersectObjects(this._geoSurfaces);
     if (intersects.length > 0) {
-      if (this._selectedSurface !== null) {
-        this._selectedSurface.material.opacity = 0;
+      if (this._selectedSurfaces.length > null) {
+        this._selectedSurfaces.forEach(({ material }) => { material.opacity = 0; });
       }
 
-      this._selectedSurface = intersects[0].object;
-      this._selectedSurface.material.opacity = 0.7;
-      this._selectedSurface.clickCallback(this);
+      const countryParts = [];
+      const targetCountry = intersects[0].object;
+      // Check geosurfaces for same trigram parts
+      for (let i = 0; i < this._geoSurfaces.length; ++i) {
+        if (this._geoSurfaces[i].info.trigram === targetCountry.info.trigram) {
+          this._geoSurfaces[i].material.opacity = 0.7;
+          this._geoSurfaces[i].clickCallback(this);
+          countryParts.push(this._geoSurfaces[i]);
+        }
+      }
+
+      targetCountry.material.opacity = 0.7;
+      targetCountry.clickCallback(this);
+      countryParts.push(targetCountry);
+
+      this._selectedSurfaces = countryParts;
     }
   }
 
