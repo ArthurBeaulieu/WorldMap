@@ -101,7 +101,7 @@ button.toggle-light {
 
 .camera-controls-container {
   bottom: 10px;
-  left: calc(50% - 37.5px);
+  right: 10px;
   height: 75px;
   position: absolute;
   width: 75px;
@@ -144,11 +144,18 @@ button.toggle-light {
   top: calc(50% - 12.5px);
 }
 
-
 .camera-controls img.camera-center {
   cursor: pointer;
   height: 25px;
   left: calc(50% - 12.5px);
   position: absolute;
   top: calc(50% - 12.5px);
+}
+
+img.toggle-light {
+  cursor: pointer;
+  height: 25px;
+  right: 10px;
+  position: absolute;
+  top: 10px;
 }

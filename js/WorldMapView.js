@@ -53,14 +53,12 @@ class WorldMapView {
     this._selectedPin = null;
     this._selectedSurfaces = [];
     this._buttons = {
-      toggleLight: null,
-      controls: {
-        top: null,
-        left: null,
-        bottom: null,
-        right: null,
-        center: null
-      }
+      top: null,
+      left: null,
+      bottom: null,
+      right: null,
+      center: null,
+      toggleLight: null
     };
     this._isLightOn = false;
     // Scene country pins, surface and trigram
@@ -264,11 +262,6 @@ class WorldMapView {
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = this.CONST.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
         this._controls.maxDistance = this.CONST.DISTANCE.MOON + (this.CONST.RADIUS.MOON * 3); // Constraint dezoom to a little behind the moon
-        // Reset planet/sun/moon position button
-        this._buttons.toggleLight = document.createElement('BUTTON');
-        this._buttons.toggleLight.classList.add('toggle-light');
-        this._buttons.toggleLight.innerHTML = 'Toggle light';
-        this._renderTo.appendChild(this._buttons.toggleLight);
         // Camera control buttons
         this._buildCameraControls();
         resolve();
@@ -284,28 +277,37 @@ class WorldMapView {
     controlsContainer.classList.add('camera-controls-container');
     const controls = document.createElement('DIV');
     controls.classList.add('camera-controls');
-    this._buttons.controls.top = document.createElement('IMG');
-    this._buttons.controls.left = document.createElement('IMG');
-    this._buttons.controls.bottom = document.createElement('IMG');
-    this._buttons.controls.right = document.createElement('IMG');
-    this._buttons.controls.center = document.createElement('IMG');
-    this._buttons.controls.top.classList.add('camera-top');
-    this._buttons.controls.left.classList.add('camera-left');
-    this._buttons.controls.bottom.classList.add('camera-bottom');
-    this._buttons.controls.right.classList.add('camera-right');
-    this._buttons.controls.center.classList.add('camera-center');
-    this._buttons.controls.top.src = './assets/img/icons/nav-up.svg';
-    this._buttons.controls.left.src = './assets/img/icons/nav-left.svg';
-    this._buttons.controls.bottom.src = './assets/img/icons/nav-down.svg';
-    this._buttons.controls.right.src = './assets/img/icons/nav-right.svg';
-    this._buttons.controls.center.src = './assets/img/icons/nav-center.svg';
-    controls.appendChild(this._buttons.controls.top);
-    controls.appendChild(this._buttons.controls.left);
-    controls.appendChild(this._buttons.controls.bottom);
-    controls.appendChild(this._buttons.controls.right);
-    controls.appendChild(this._buttons.controls.center);
+
+    this._buttons.top = document.createElement('IMG');
+    this._buttons.left = document.createElement('IMG');
+    this._buttons.bottom = document.createElement('IMG');
+    this._buttons.right = document.createElement('IMG');
+    this._buttons.center = document.createElement('IMG');
+    this._buttons.toggleLight = document.createElement('IMG');
+
+    this._buttons.top.classList.add('camera-top');
+    this._buttons.left.classList.add('camera-left');
+    this._buttons.bottom.classList.add('camera-bottom');
+    this._buttons.right.classList.add('camera-right');
+    this._buttons.center.classList.add('camera-center');
+    this._buttons.toggleLight.classList.add('toggle-light');
+
+    this._buttons.top.src = './assets/img/icons/nav-up.svg';
+    this._buttons.left.src = './assets/img/icons/nav-left.svg';
+    this._buttons.bottom.src = './assets/img/icons/nav-down.svg';
+    this._buttons.right.src = './assets/img/icons/nav-right.svg';
+    this._buttons.center.src = './assets/img/icons/nav-center.svg';
+    this._buttons.toggleLight.src = './assets/img/icons/light.svg';
+
+    controls.appendChild(this._buttons.top);
+    controls.appendChild(this._buttons.left);
+    controls.appendChild(this._buttons.bottom);
+    controls.appendChild(this._buttons.right);
+    controls.appendChild(this._buttons.center);
+
     controlsContainer.appendChild(controls);
     this._renderTo.appendChild(controlsContainer);
+    this._renderTo.appendChild(this._buttons.toggleLight);
   }
 
 
@@ -390,35 +392,35 @@ class WorldMapView {
         window.addEventListener('click', this._onCanvasClicked, false);
 
         const cameraSpeed = Math.PI / 12;
-        this._buttons.controls.top.addEventListener('click', () => {
+        this._buttons.top.addEventListener('click', () => {
           const y = this._camera.position.y;
           const z = this._camera.position.z;
           this._camera.position.y = y * Math.cos(cameraSpeed) + z * Math.sin(cameraSpeed);
           this._camera.position.z = z * Math.cos(cameraSpeed) - y * Math.sin(cameraSpeed);
           this._camera.lookAt(this._scene.position);
         }, false);
-        this._buttons.controls.left.addEventListener('click', () => {
+        this._buttons.left.addEventListener('click', () => {
           const x = this._camera.position.x;
           const z = this._camera.position.z;
           this._camera.position.x = x * Math.cos(cameraSpeed) - z * Math.sin(cameraSpeed);
           this._camera.position.z = z * Math.cos(cameraSpeed) + x * Math.sin(cameraSpeed);
           this._camera.lookAt(this._scene.position);
         }, false);
-        this._buttons.controls.bottom.addEventListener('click', () => {
+        this._buttons.bottom.addEventListener('click', () => {
           const y = this._camera.position.y;
           const z = this._camera.position.z;
           this._camera.position.y = y * Math.cos(cameraSpeed) - z * Math.sin(cameraSpeed);
           this._camera.position.z = z * Math.cos(cameraSpeed) + y * Math.sin(cameraSpeed);
           this._camera.lookAt(this._scene.position);
         }, false);
-        this._buttons.controls.right.addEventListener('click', () => {
+        this._buttons.right.addEventListener('click', () => {
           const x = this._camera.position.x;
           const z = this._camera.position.z;
           this._camera.position.x = x * Math.cos(cameraSpeed) + z * Math.sin(cameraSpeed);
           this._camera.position.z = z * Math.cos(cameraSpeed) - x * Math.sin(cameraSpeed);
           this._camera.lookAt(this._scene.position);
         }, false);
-        this._buttons.controls.center.addEventListener('click', this._controls.targetOnCenter.bind(this._controls), false);
+        this._buttons.center.addEventListener('click', this._controls.targetOnCenter.bind(this._controls), false);
         this._buttons.toggleLight.addEventListener('click', this._toggleUniverseLight.bind(this), false);
 
         resolve();
