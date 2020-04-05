@@ -24,8 +24,6 @@ class MeshFactory {
       return this._buildWireframe(args.geometry);
     } else if (args.type === 'earthpin') {
       return this._buildEarthPin(args.scale);
-    } else if (args.type === 'geoline') {
-      return this._buildGeoline(args.geometry);
     } else if (args.type === 'geosurface') {
       return this._buildGeoSurface(args.geometry);
     }
@@ -34,9 +32,9 @@ class MeshFactory {
 
   _buildEarthSphere() {
     // Loading textures from img folder
-    let map = new THREE.TextureLoader().load('assets/img/maps/world.jpg');
-    let bumpMap = new THREE.TextureLoader().load('assets/img/maps/bump_elevation.png');
-    let specularMap = new THREE.TextureLoader().load('assets/img/maps/specular_water.png');
+    let map = new THREE.TextureLoader().load('assets/img/maps/worldarctic.jpg');
+    let bumpMap = new THREE.TextureLoader().load('assets/img/maps/bump.png');
+    let specularMap = new THREE.TextureLoader().load('assets/img/maps/specular.png');
     // Allow texture repetition
     map.wrapS = THREE.RepeatWrapping;
     bumpMap.wrapS = THREE.RepeatWrapping;
@@ -53,8 +51,8 @@ class MeshFactory {
         bumpMap: bumpMap,
         bumpScale: this.CONST.RADIUS.EARTH / 12,
         specularMap: specularMap,
-        specular: new THREE.Color('grey'),
-        shininess: 20 // Light reflexion on the specular map
+        specular: new THREE.Color(0xFFFFFF),
+        shininess: 15 // Light reflexion on the specular map
       })
     );
   }
@@ -77,9 +75,9 @@ class MeshFactory {
 
   _buildBoundariesSphere() {
     // Loading textures from img folder
-    let envMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.png`);
-    let alphaMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.png`);
-    let bumpMap = new THREE.TextureLoader().load(`assets/img/maps/mask_boundaries.png`);
+    let envMap = new THREE.TextureLoader().load(`assets/img/maps/boundaries.png`);
+    let alphaMap = new THREE.TextureLoader().load(`assets/img/maps/boundaries.png`);
+    let bumpMap = new THREE.TextureLoader().load(`assets/img/maps/boundaries.png`);
     // Allow texture repetition
     envMap.wrapS = THREE.RepeatWrapping;
     alphaMap.wrapS = THREE.RepeatWrapping;
@@ -132,7 +130,7 @@ class MeshFactory {
 
 
   _buildSpaceBackground() {
-    let map = new THREE.TextureLoader().load('assets/img/milkyway.jpg');
+    let map = new THREE.TextureLoader().load('assets/img/maps/milkyway.jpg');
     return new THREE.Mesh(
       new THREE.SphereGeometry(this.CONST.RADIUS.SCENE, this._segments, this._segments),
       new THREE.MeshBasicMaterial({
@@ -170,18 +168,6 @@ class MeshFactory {
         specular: new THREE.Color(0x55FFAA),
         shininess: 100,
         reflectivity: 1
-      })
-    );
-  }
-
-
-  _buildGeoline(geometry) {
-    return new THREE.LineSegments(
-      new THREE.GeoJsonGeometry(geometry, this.CONST.RADIUS.EARTH, this._segments),
-      new THREE.LineBasicMaterial({
-        color: 'black',
-        opacity: 0.1,
-        transparent: true
       })
     );
   }
