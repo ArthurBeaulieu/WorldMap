@@ -3,6 +3,11 @@ import MeshFactory from './MeshFactory.js';
 
 
 let Meshes = null;
+const AngularSpeeds = {
+  moon: (2 * Math.PI) / (27.3 * 60 * 60), // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
+  sun: (2 * Math.PI) / (365 * 10 * 60), // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
+  clouds: (2 * Math.PI) / (42 * 60 * 60)
+};
 
 
 class WorldMapView {
@@ -26,6 +31,7 @@ class WorldMapView {
     // Scene meshes
     this._meshes = {
       earth: null,
+      boundaries: null,
       clouds: null,
       sun: null,
       moon: null,
@@ -50,7 +56,6 @@ class WorldMapView {
       resetPositions: null
     };
     // Scene country pins
-    this._geoLines = [];
     this._geoSurfaces = [];
     this._pins = [];
     // Event bindings
@@ -169,6 +174,7 @@ class WorldMapView {
         this._pivots.moon = new THREE.Object3D();
         // Build scene elements (Earth, Clouds, Outter space)
         this._meshes.earth = Meshes.new({ type: 'earth' });
+        this._meshes.boundaries = Meshes.new({ type: 'boundaries' });
         this._meshes.clouds = Meshes.new({ type: 'clouds' });
         this._meshes.sun = Meshes.new({ type: 'sun' });
         this._meshes.moon = Meshes.new({ type: 'moon' });
@@ -201,11 +207,7 @@ class WorldMapView {
 
 
   _buildGeoMeshes() {
-    // Build geolines for country boundaries
     for (let i = 0; i < this._geoData.features.length; ++i) {
-      // Create geo line from feature geometry
-      const geoLine = Meshes.new({ type: 'geoline', geometry: this._geoData.features[i].geometry });
-      this._geoLines.push(geoLine);
       // Check polygon type for feature
       const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
       for (let j = 0; j < polygons.length; ++j) {
@@ -281,12 +283,14 @@ class WorldMapView {
         this._lights.sun.position.set(0, 0, this.CONST.DISTANCE.SUN - (this.CONST.RADIUS.SUN * 3)); // Place sunlight before sun sphere
         this._pivots.moon.position.set(0, 0, 0);
         this._pivots.sun.position.set(0, 0, 0);
-        // Place Earth facing Greenwich
+        // Anti-meridian alignement
         this._meshes.moon.rotation.y += Math.PI / 2; // Put dark side of the moon to the dark
         this._meshes.earth.rotation.y += Math.PI / 2; // Earth rotation to face Greenwich
+        this._meshes.boundaries.rotation.y += Math.PI / 2;
         this._meshes.clouds.rotation.y += Math.PI / 2;
         // Shift earth along its axis from 23.3° (average in between earth tilt axis extremums : 22.1° and 24.5°)
         this._meshes.earth.rotation.z += (23.3 * Math.PI) / 180; // Earth tilt
+        this._meshes.boundaries.rotation.z += (23.3 * Math.PI) / 180;
         this._pivots.moon.rotation.x += (5.145 * Math.PI) / 180; // 5.145° offset from the earth plane
         // Iterate over pins to configure their position
         for (let i = 0; i < this._pins.length; ++i) {
@@ -297,12 +301,8 @@ class WorldMapView {
           this._pins[i].clickCallback = this._countryClicked;
         }
 
-        for (let i = 0; i < this._geoLines.length; ++i) {
-          this._geoLines[i].rotation.y -= Math.PI / 2;
-        }
-
         for (let i = 0; i < this._geoSurfaces.length; ++i) {
-          this._geoSurfaces[i].rotation.x += (23.3 * Math.PI) / 180;
+          this._geoSurfaces[i].rotation.y -= Math.PI / 2;
           this._geoSurfaces[i].clickCallback = this._countryClicked;
         }
 
@@ -322,16 +322,13 @@ class WorldMapView {
       this._scene.add(this._pivots.moon);
       this._scene.add(this._pivots.sun);
       this._scene.add(this._meshes.earth);
+      this._scene.add(this._meshes.boundaries);
       this._scene.add(this._meshes.clouds);
       this._scene.add(this._meshes.starfield);
       this._scene.add(this._lights.ambient);
-      // Append geolines for every country
-      for (let i = 0; i < this._geoLines.length; ++i) {
-        this._meshes.earth.add(this._geoLines[i]);
-      }
       // Append geosurfaces for every country
       for (let i = 0; i < this._geoSurfaces.length; ++i) {
-        this._scene.add(this._geoSurfaces[i]);
+        this._meshes.earth.add(this._geoSurfaces[i]);
       }
       // Append every stored pins according to given data
       for (let i = 0; i < this._pins.length; ++i) {
@@ -372,11 +369,11 @@ class WorldMapView {
   }
 
 
-  _render() {
+  _render() { // Put const here, avoid any calculation to reduce CPU load
     // Angular speed are tweaked to see an actual animation on render loop
-    this._pivots.moon.rotation.y += (2 * Math.PI) / (27.3 * 60 * 60); // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
-    this._pivots.sun.rotation.y += (2 * Math.PI) / (365 * 10 * 60); // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
-    this._meshes.clouds.rotation.y += (2 * Math.PI) / (42 * 60 * 60);
+    this._pivots.moon.rotation.y += AngularSpeeds.moon; // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
+    this._pivots.sun.rotation.y += AngularSpeeds.sun; // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
+    this._meshes.clouds.rotation.y += AngularSpeeds.clouds;
     this._controls.update();
   }
 
@@ -415,13 +412,15 @@ class WorldMapView {
       this._selectedPin.material.color.setHex(0xFF6B67);
       this._selectedPin.clickCallback(this);
     } else {
-      this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
-      this._selectedPin = null;
+      if (this._selectedPin !== null) {
+        this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
+        this._selectedPin = null;
+      }
     }
     // Ray cast againt geosurfaces
     intersects = raycaster.intersectObjects(this._geoSurfaces);
     if (intersects.length > 0) {
-      if (this._selectedSurfaces.length > null) {
+      if (this._selectedSurfaces.length > 0) {
         this._selectedSurfaces.forEach(({ material }) => { material.opacity = 0; });
       }
 
@@ -441,6 +440,11 @@ class WorldMapView {
       countryParts.push(targetCountry);
 
       this._selectedSurfaces = countryParts;
+    } else {
+      if (this._selectedSurfaces.length > 0) {
+        this._selectedSurfaces.forEach(({ material }) => { material.opacity = 0; });
+        this._selectedSurfaces = [];
+      }
     }
   }
 

@@ -51,10 +51,10 @@ class MeshFactory {
       new THREE.MeshPhongMaterial({
         map: map,
         bumpMap: bumpMap,
-        bumpScale: this.CONST.RADIUS.EARTH / 20,
+        bumpScale: this.CONST.RADIUS.EARTH / 12,
         specularMap: specularMap,
         specular: new THREE.Color('grey'),
-        shininess: 10 // Light reflexion on the specular map
+        shininess: 20 // Light reflexion on the specular map
       })
     );
   }
@@ -84,7 +84,7 @@ class MeshFactory {
     envMap.wrapS = THREE.RepeatWrapping;
     alphaMap.wrapS = THREE.RepeatWrapping;
     bumpMap.wrapS = THREE.RepeatWrapping;
-    // Rotating the texture to match Lat/Long earth values
+    // Rotating the texture to match Lat/Long earth values - Anti-meridian alignement
     envMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     alphaMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
@@ -96,7 +96,8 @@ class MeshFactory {
         alphaMap: alphaMap,
         bumpMap: bumpMap,
         bumpScale: this.CONST.RADIUS.EARTH * 10,
-        transparent: true
+        transparent: true,
+        opacity: 0.7
       })
     );
   }
@@ -186,13 +187,12 @@ class MeshFactory {
   }
 
 
-  // Returns an array of Meshes /!\
   _buildGeoSurface(geometry) {
     return new THREE.Mesh(
-      new THREE.ConicPolygonBufferGeometry(geometry, this.CONST.RADIUS.EARTH / 10, this.CONST.RADIUS.EARTH + 0.005),
+      new THREE.ConicPolygonBufferGeometry(geometry, this.CONST.RADIUS.EARTH - 0.008, this.CONST.RADIUS.EARTH + 0.008),
       new THREE.MeshLambertMaterial({
         side: THREE.DoubleSide,
-        color: 'red',
+        color: new THREE.Color(0x56D45B),
         opacity: 0,
         transparent: true
       })
