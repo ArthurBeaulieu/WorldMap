@@ -55,7 +55,8 @@ class WorldMapView {
       resetCamera: null,
       resetPositions: null
     };
-    // Scene country pins
+    // Scene country pins, surface and trigram
+    this._selectedCountryTrigram = null;
     this._geoSurfaces = [];
     this._pins = [];
     // Event bindings
@@ -394,6 +395,7 @@ class WorldMapView {
 
   _onCanvasClicked(event) {
     event.preventDefault();
+    this._unselectAll();
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -404,58 +406,73 @@ class WorldMapView {
     // Ray cast againt pins
     let intersects = raycaster.intersectObjects(this._pins);
     if (intersects.length > 0) {
-      if (this._selectedPin !== null) {
-        this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
-      }
-
       this._selectedPin = intersects[0].object;
-      this._selectedPin.material.color.setHex(0xFF6B67);
+      this._selectedCountryTrigram = this._selectedPin.info.trigram;
       this._selectedPin.clickCallback(this);
-    } else {
-      if (this._selectedPin !== null) {
-        this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
-        this._selectedPin = null;
-      }
+      return; // We return there as selection occurs in callback to select both pins and surfaces
     }
     // Ray cast againt geosurfaces
     intersects = raycaster.intersectObjects(this._geoSurfaces);
     if (intersects.length > 0) {
-      if (this._selectedSurfaces.length > 0) {
-        this._selectedSurfaces.forEach(({ material }) => { material.opacity = 0; });
-      }
-
       const countryParts = [];
       const targetCountry = intersects[0].object;
       // Check geosurfaces for same trigram parts
       for (let i = 0; i < this._geoSurfaces.length; ++i) {
         if (this._geoSurfaces[i].info.trigram === targetCountry.info.trigram) {
-          this._geoSurfaces[i].material.opacity = 0.7;
-          this._geoSurfaces[i].clickCallback(this);
           countryParts.push(this._geoSurfaces[i]);
         }
       }
 
-      targetCountry.material.opacity = 0.7;
-      targetCountry.clickCallback(this);
       countryParts.push(targetCountry);
 
-      this._selectedSurfaces = countryParts;
-    } else {
-      if (this._selectedSurfaces.length > 0) {
-        this._selectedSurfaces.forEach(({ material }) => { material.opacity = 0; });
-        this._selectedSurfaces = [];
+      if (countryParts.length > 0) {
+        this._selectedSurfaces = countryParts;
+        this._selectedCountryTrigram = targetCountry.info.trigram;
+        // All selected surface match the same country, we take 0 as reference for cb
+        targetCountry.clickCallback(this);
       }
     }
   }
 
 
   _countryClicked(WorldMapView) { // This is already binded to the target pin
+    // Writtin straight into Meshe (this scope)
     if (this.info.GEOUNIT) { // Country surface clicked, pin otherwise
       this.info.name = this.info.NAME;
       this.info.trigram = this.info.BRK_A3;
     }
 
+    WorldMapView._selectedPin = null; // We reset selection bc we don't know if pin or surface clicked
+    for (let i = 0; i < WorldMapView._pins.length; ++i) {
+      if (WorldMapView._pins[i].info.trigram === WorldMapView._selectedCountryTrigram) {
+        WorldMapView._pins[i].material.color.setHex(0xFF6B67);
+        WorldMapView._selectedPin = WorldMapView._pins[i]; // Save pin in case evt comes from surface
+        break; // Break beacause we have one pin per country
+      }
+    }
+
+    WorldMapView._selectedSurfaces = [];
+    for (let i = 0; i < WorldMapView._geoSurfaces.length; ++i) {
+      if (WorldMapView._geoSurfaces[i].info.trigram === WorldMapView._selectedCountryTrigram) {
+        WorldMapView._geoSurfaces[i].material.opacity = 0.7;
+        WorldMapView._selectedSurfaces.push(WorldMapView._geoSurfaces[i]);
+      }
+    }
+
     WorldMapView._countryClickedCB(this.info);
+  }
+
+
+  _unselectAll() {
+    if (this._selectedPin !== null) {
+      this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
+      this._selectedPin = null;
+    }
+
+    if (this._selectedSurfaces.length > 0) {
+      this._selectedSurfaces.forEach(({ material }) => { material.opacity = 0; });
+      this._selectedSurfaces = [];
+    }
   }
 
 
