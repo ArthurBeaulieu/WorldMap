@@ -232,7 +232,7 @@ class TrackballControls {
     this.target.copy(this.target0);
     this.object.position.copy(this.position0);
     this.object.up.copy(this.up0);
-    this.object.position.z = 3; // TODO send this value when building trackball controls
+    this.object.position.z = 1.66; // TODO send this value when building trackball controls
     this._eye.subVectors(this.object.position, this.target);
     this.object.lookAt(this.target);
     this.lastPosition.copy(this.object.position);

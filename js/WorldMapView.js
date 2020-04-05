@@ -41,7 +41,8 @@ class WorldMapView {
     // Scene lights
     this._lights = {
       sun: null,
-      ambient: null
+      ambient: null,
+      enlightUniverse: null
     };
     // Animation pivots to simulate spheres orbiting
     this._pivots = {
@@ -52,9 +53,16 @@ class WorldMapView {
     this._selectedPin = null;
     this._selectedSurfaces = [];
     this._buttons = {
-      resetCamera: null,
-      resetPositions: null
+      toggleLight: null,
+      controls: {
+        top: null,
+        left: null,
+        bottom: null,
+        right: null,
+        center: null
+      }
     };
+    this._isLightOn = false;
     // Scene country pins, surface and trigram
     this._selectedCountryTrigram = null;
     this._geoSurfaces = [];
@@ -83,6 +91,7 @@ class WorldMapView {
       .then(this._fillScene.bind(this))
       .then(this._buildControls.bind(this))
       .then(this._events.bind(this))
+      .then(this._keyEvents.bind(this))
       .then(this.animate.bind(this))
       .then(() => { if (this.debug === false) { console.log = consolelog; } }) // Restore Js console.log behavior
       .catch(err => console.error(err) );
@@ -236,8 +245,9 @@ class WorldMapView {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._buildLights'); }
       try {
-        this._lights.ambient = new THREE.AmbientLight(0x101010);
         this._lights.sun = new THREE.PointLight(0xffee88, 3, 0);
+        this._lights.ambient = new THREE.AmbientLight(0x101010);
+        this._lights.enlightUniverse = new THREE.AmbientLight(0xFFFFFF);
         resolve();
       } catch (err) {
         reject(`WorldMapView._buildLights\n${err}`);
@@ -254,21 +264,48 @@ class WorldMapView {
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = this.CONST.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
         this._controls.maxDistance = this.CONST.DISTANCE.MOON + (this.CONST.RADIUS.MOON * 3); // Constraint dezoom to a little behind the moon
-        // Reset camera position button
-        this._buttons.resetCamera = document.createElement('BUTTON');
-        this._buttons.resetCamera.classList.add('reset-camera');
-        this._buttons.resetCamera.innerHTML = 'Reset camera';
-        this._renderTo.appendChild(this._buttons.resetCamera);
         // Reset planet/sun/moon position button
-        this._buttons.resetPositions = document.createElement('BUTTON');
-        this._buttons.resetPositions.classList.add('reset-positions');
-        this._buttons.resetPositions.innerHTML = 'Reset position';
-        this._renderTo.appendChild(this._buttons.resetPositions);
+        this._buttons.toggleLight = document.createElement('BUTTON');
+        this._buttons.toggleLight.classList.add('toggle-light');
+        this._buttons.toggleLight.innerHTML = 'Toggle light';
+        this._renderTo.appendChild(this._buttons.toggleLight);
+        // Camera control buttons
+        this._buildCameraControls();
         resolve();
       } catch (err) {
         reject(`WorldMapView._buildControls\n${err}`);
       }
     });
+  }
+
+
+  _buildCameraControls() {
+    const controlsContainer = document.createElement('DIV');
+    controlsContainer.classList.add('camera-controls-container');
+    const controls = document.createElement('DIV');
+    controls.classList.add('camera-controls');
+    this._buttons.controls.top = document.createElement('IMG');
+    this._buttons.controls.left = document.createElement('IMG');
+    this._buttons.controls.bottom = document.createElement('IMG');
+    this._buttons.controls.right = document.createElement('IMG');
+    this._buttons.controls.center = document.createElement('IMG');
+    this._buttons.controls.top.classList.add('camera-top');
+    this._buttons.controls.left.classList.add('camera-left');
+    this._buttons.controls.bottom.classList.add('camera-bottom');
+    this._buttons.controls.right.classList.add('camera-right');
+    this._buttons.controls.center.classList.add('camera-center');
+    this._buttons.controls.top.src = './assets/img/icons/nav-up.svg';
+    this._buttons.controls.left.src = './assets/img/icons/nav-left.svg';
+    this._buttons.controls.bottom.src = './assets/img/icons/nav-down.svg';
+    this._buttons.controls.right.src = './assets/img/icons/nav-right.svg';
+    this._buttons.controls.center.src = './assets/img/icons/nav-center.svg';
+    controls.appendChild(this._buttons.controls.top);
+    controls.appendChild(this._buttons.controls.left);
+    controls.appendChild(this._buttons.controls.bottom);
+    controls.appendChild(this._buttons.controls.right);
+    controls.appendChild(this._buttons.controls.center);
+    controlsContainer.appendChild(controls);
+    this._renderTo.appendChild(controlsContainer);
   }
 
 
@@ -352,14 +389,48 @@ class WorldMapView {
         window.addEventListener('resize', this._onResize, false);
         window.addEventListener('click', this._onCanvasClicked, false);
 
-        this._buttons.resetCamera.addEventListener('click', this._controls.targetOnCenter.bind(this._controls), false);
-        this._buttons.resetPositions.addEventListener('click', this._resetPositions.bind(this), false);
+        const cameraSpeed = Math.PI / 12;
+        this._buttons.controls.top.addEventListener('click', () => {
+          const y = this._camera.position.y;
+          const z = this._camera.position.z;
+          this._camera.position.y = y * Math.cos(cameraSpeed) + z * Math.sin(cameraSpeed);
+          this._camera.position.z = z * Math.cos(cameraSpeed) - y * Math.sin(cameraSpeed);
+          this._camera.lookAt(this._scene.position);
+        }, false);
+        this._buttons.controls.left.addEventListener('click', () => {
+          const x = this._camera.position.x;
+          const z = this._camera.position.z;
+          this._camera.position.x = x * Math.cos(cameraSpeed) - z * Math.sin(cameraSpeed);
+          this._camera.position.z = z * Math.cos(cameraSpeed) + x * Math.sin(cameraSpeed);
+          this._camera.lookAt(this._scene.position);
+        }, false);
+        this._buttons.controls.bottom.addEventListener('click', () => {
+          const y = this._camera.position.y;
+          const z = this._camera.position.z;
+          this._camera.position.y = y * Math.cos(cameraSpeed) - z * Math.sin(cameraSpeed);
+          this._camera.position.z = z * Math.cos(cameraSpeed) + y * Math.sin(cameraSpeed);
+          this._camera.lookAt(this._scene.position);
+        }, false);
+        this._buttons.controls.right.addEventListener('click', () => {
+          const x = this._camera.position.x;
+          const z = this._camera.position.z;
+          this._camera.position.x = x * Math.cos(cameraSpeed) + z * Math.sin(cameraSpeed);
+          this._camera.position.z = z * Math.cos(cameraSpeed) - x * Math.sin(cameraSpeed);
+          this._camera.lookAt(this._scene.position);
+        }, false);
+        this._buttons.controls.center.addEventListener('click', this._controls.targetOnCenter.bind(this._controls), false);
+        this._buttons.toggleLight.addEventListener('click', this._toggleUniverseLight.bind(this), false);
 
         resolve();
       } catch (err) {
         reject(`WorldMapView._events\n${err}`);
       }
     });
+  }
+
+
+  _keyEvents() {
+
   }
 
 
@@ -379,10 +450,14 @@ class WorldMapView {
   }
 
 
-  _resetPositions() {
-    this._pivots.moon.rotation.y = 0;
-    this._pivots.sun.rotation.y = 0;
-    this._meshes.clouds.rotation.y = 0;
+  _toggleUniverseLight() {
+    if (this._isLightOn === false) {
+      this._isLightOn = true;
+      this._scene.add(this._lights.enlightUniverse);
+    } else {
+      this._isLightOn = false;
+      this._scene.remove(this._lights.enlightUniverse);
+    }
   }
 
 

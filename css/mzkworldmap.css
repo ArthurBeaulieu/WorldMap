@@ -1,113 +1,154 @@
 div.worldmap {
-	color: white;
-	font-family: Segoe UI, Helvetica, sans-serif;
-	height: 100%;
-	width: 100%;
+  color: white;
+  font-family: Segoe UI, Helvetica, sans-serif;
+  height: 100%;
+  width: 100%;
 }
 
 div.selected-country {
-	background-color: rgba(255, 255, 255, 0.4);
-	border-top-right-radius: 3px;
-	border-bottom-right-radius: 3px;
-	width: 20%;
-	height: 80%;
-	position: absolute;
-	top: 10%;
-	left: -20%;
-	transition: left .3s ease-out 0s;
+  background-color: rgba(255, 255, 255, 0.4);
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  width: 20%;
+  height: 80%;
+  position: absolute;
+  top: 10%;
+  left: -20%;
+  transition: left .3s ease-out 0s;
 }
 
 div.sc-header {
-	align-items: center;
-	border-bottom: solid 1px white;
-	display: flex;
-	height: 10%;
+  align-items: center;
+  border-bottom: solid 1px white;
+  display: flex;
+  height: 10%;
 }
 
 div.sc-header img {
-	height: calc(100% - 3rem);
-	padding: 1rem;
+  height: calc(100% - 3rem);
+  padding: 1rem;
 }
 
 div.sc-header h1 {
-	margin: 0;
-	padding-right: 1rem;
-	white-space: nowrap;
+  margin: 0;
+  padding-right: 1rem;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 div.sc-content {
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-template-rows: repeat(4, 1fr);
-	height: 90%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(4, 1fr);
+  height: 90%;
 }
 
 div.sc-content h2 {
-	align-self: center;
-	display: flex;
-	justify-content: space-between;
-	grid-column: 1 / span 3;
-	margin: 0;
+  align-self: center;
+  display: flex;
+  justify-content: space-between;
+  grid-column: 1 / span 3;
+  margin: 0;
 }
 
 div.sc-content h2 span {
-	align-self: center;
-	float: right;
-	font-size: .9rem;
+  align-self: center;
+  float: right;
+  font-size: .9rem;
 }
 
 div.sc-content h2 span a {
-	color: white;
-	font-style: italic;
+  color: white;
+  font-style: italic;
 }
 
 div.sc-content img {
-	cursor: pointer;
-	max-height: 100px;
+  cursor: pointer;
+  max-height: 100px;
 }
 
 div.sc-content div.sc-artists,
 div.sc-content div.sc-albums,
 div.sc-content div.sc-labels,
 div.sc-content div.sc-genres {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	grid-template-rows: 1.6rem 1fr;
-	padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1.6rem 1fr;
+  padding: 1rem;
 }
 
 div.sc-artist, div.sc-album, div.sc-label, div.sc-genre {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
 }
 
-[class^="reset-"] {
+button.toggle-light {
   background-color: rgba(255, 255, 255, 0.2);
   border: none;
   border-radius: 3px;
-	color: white;
+  color: white;
   cursor: pointer;
   padding: 0.5em 1em;
   position: absolute;
-}
-
-button.reset-scene {
-  bottom: 90px;
-  right: 10px;
-}
-
-button.reset-positions {
-  bottom: 50px;
-  right: 10px;
-}
-
-button.reset-camera {
   bottom: 10px;
   right: 10px;
+}
+
+.camera-controls-container {
+  bottom: 10px;
+  left: calc(50% - 37.5px);
+  height: 75px;
+  position: absolute;
+  width: 75px;
+}
+
+.camera-controls {
+  height: 100%;
+  position: relative;
+}
+
+.camera-controls img.camera-top {
+  cursor: pointer;
+  height: 25px;
+  left: calc(50% - 12.5px);
+  position: absolute;
+  top: 0;
+}
+
+.camera-controls img.camera-left {
+  cursor: pointer;
+  height: 25px;
+  left: 0;
+  position: absolute;
+  top: calc(50% - 12.5px);
+}
+
+.camera-controls img.camera-bottom {
+  bottom: 0;
+  cursor: pointer;
+  height: 25px;
+  left: calc(50% - 12.5px);
+  position: absolute;
+}
+
+.camera-controls img.camera-right {
+  cursor: pointer;
+  height: 25px;
+  right: 0;
+  position: absolute;
+  top: calc(50% - 12.5px);
+}
+
+
+.camera-controls img.camera-center {
+  cursor: pointer;
+  height: 25px;
+  left: calc(50% - 12.5px);
+  position: absolute;
+  top: calc(50% - 12.5px);
 }
