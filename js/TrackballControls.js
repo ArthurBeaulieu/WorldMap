@@ -1,7 +1,5 @@
 /** @author Eberhard Graether / http://egraether.com/
  * This was modified to become an ES6 module. Also, pan movement have been removed since useless in here */
-
-
 class TrackballControls {
 
 
@@ -52,7 +50,8 @@ class TrackballControls {
     this.position0 = this.object.position.clone();
     this.up0 = this.object.up.clone();
 
-    this.enaled = true;
+    this.enabled = true;
+    this.hasMoved = false;
 
     this.init();
   }
@@ -232,7 +231,6 @@ class TrackballControls {
     this.target.copy(this.target0);
     this.object.position.copy(this.position0);
     this.object.up.copy(this.up0);
-    this.object.position.z = 1.66; // TODO send this value when building trackball controls
     this._eye.subVectors(this.object.position, this.target);
     this.object.lookAt(this.target);
     this.lastPosition.copy(this.object.position);
@@ -267,12 +265,15 @@ class TrackballControls {
 
     event.preventDefault();
     event.stopPropagation();
-
+    // Only update hasMoved flag if moving state is not none
     if (this._state === this.STATE.ROTATE && !this.noRotate) {
+      this.hasMoved = true;
       this._rotateEnd = this.getMouseProjectionOnBall(event.clientX, event.clientY);
     } else if (this._state === this.STATE.ZOOM && !this.noZoom) {
+      this.hasMoved = true;
       this._zoomEnd = this.getMouseOnScreen(event.clientX, event.clientY);
     } else if ( this._state === this.STATE.PAN && !this.noPan ) {
+      this.hasMoved = true;
       this._panEnd = this.getMouseOnScreen( event.clientX, event.clientY );
     }
   }
@@ -285,6 +286,10 @@ class TrackballControls {
     event.stopPropagation();
 
     this._state = this.STATE.NONE;
+
+    if (this.hasMoved === true) { // Restore hasMoved flag to free country click
+      setTimeout(() => { this.hasMoved = false; }, 10);
+    }
 
     document.removeEventListener('mousemove', this.mousemove.bind(this));
     document.removeEventListener('mouseup', this.mouseup.bind(this));
@@ -377,11 +382,6 @@ class TrackballControls {
 
   preventDefault(event) {
     event.preventDefault();
-  }
-
-
-  set enable(state) {
-    this.enable = state;
   }
 
 
