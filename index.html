@@ -3,46 +3,26 @@
 <head>
   <meta charset=utf-8>
   <title>MzkWorldMap</title>
-  <style>body{margin:0;overflow:hidden;}</style>
+  <style>body{background:black;margin:0;overflow:hidden;}</style>
   <link rel="stylesheet" href="./css/mzkworldmap.css">
 </head>
 <body>
   <div class="worldmap"></div>
-  <!--  Map textures come from http://www.shadedrelief.com/natural3/pages/extra.html -->
+  <!--  Map textures come from http://www.shadedrelief.com/natural3/extra.html and https://www.naturalearthdata.com/ -->
   <script type="text/javascript" src="./js/lib/three.min.js"></script>
   <script type="text/javascript" src="./js/lib/three-geojson-conic-polygon-geometry.js"></script> <!-- In order to draw country surfaces -->
   <script type="module">
     /* Example of a world map creation */
     import MzkWorldMap from './js/MzkWorldMap.js';
-    // Useful variable and method needed by MzkWorldMap
-    const renderTo = document.querySelector('.worldmap');
+    // Country clicked callback (plugin exit point)
     const countryClicked = info => { console.log(info.hasArtists, info); };
-    const CONST = {
-      CLOUDS: ['fair', 'africa', 'asia', 'australia', 'europe', 'na'],
-      RADIUS: {
-        EARTH: 0.5,
-        MOON: 0.25,
-        SUN: 2,
-        SCENE: 200
-      },
-      DISTANCE: {
-        MOON: 5,
-        SUN: 200
-      },
-      PIN: {
-        HEIGHT: 0.1,
-        WIDTH: 0.0033
-      }
-    };
     // Build MzkWorldMap
     new MzkWorldMap({
-      worldDataPath: './assets/WorldData.json', // WorldData is lat/long for all countries
+      baseUrl: './', // Must indicate the plugin base url to properly retrieve assets, must end with a slash, better absolute on prod env
+      renderTo: document.querySelector('.worldmap'),
       libraryDataPath: './assets/LibraryData.json', // Must contain all artists per country (NAME/ID for each)
-      geoDataPath: './assets/GeojsonData.json', // All world geojson dataset must be loaded to draw boundaries properly
       countryClicked: countryClicked,
-      renderTo: renderTo,
-      const: CONST,
-      debug: false
+      debug: true
     });
   </script>
 </body>

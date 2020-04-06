@@ -159,3 +159,58 @@ img.toggle-light {
   position: absolute;
   top: 10px;
 }
+
+.welcome-page-container {
+  align-items: center;
+  background: radial-gradient(#1D1E25, #0F1015);
+  box-sizing: border-box;
+  color: #E7E9E7;
+  display: flex;
+  flex-direction: column;
+  font-size: .9rem;
+  height: 100%;
+  justify-content: center;
+  opacity: 0;
+  overflow-y: auto;
+  padding: 0 20%;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+  z-index: 999;
+
+  transition: opacity 2.5s;
+}
+
+.welcome-page-container h1,
+.welcome-page-container h3,
+.welcome-page-container p {
+  margin: 10px 0;
+}
+
+.welcome-page-container p {
+  color: #AAAABE;
+}
+
+.welcome-page-container p span {
+  color: #FFAD67;
+  font-style: italic;
+}
+
+.welcome-page-container button {
+  /* https://github.com/ManaZeak/ManaZeak/blob/back/src/scss/utils/tools/_colors.scss */
+  background-color: #56D45B;
+  border: solid 1px #12B31D;
+  border-radius: 5px;
+  color: #1D1E25;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  margin: 40px 0 0 0;
+  padding: 5px 0;
+  width: 100px;
+}
+
+.welcome-page-container button:focus {
+  background-color: #48ABAF;
+  border: solid 1px #0F8489;
+}
