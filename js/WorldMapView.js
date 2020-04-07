@@ -12,8 +12,8 @@ const SceneConst = { // Scene constants, for consistent values across features
     SCENE: 200
   },
   DISTANCE: {
-    MOON: 5,
-    SUN: 200
+    MOON: 5, // 5
+    SUN: 200 // 200
   },
   PIN: {
     HEIGHT: 0.1,
@@ -49,6 +49,8 @@ class WorldMapView {
     this._camera = null;
     this._controls = null;
     this._renderer = null;
+    this._composer = null;
+    this._renderPass = null;
     this._rafId = -1;
     // Scene meshes
     this._meshes = {
@@ -115,9 +117,10 @@ class WorldMapView {
       .then(this._buildViewer.bind(this))
       .then(this._buildLights.bind(this))
       .then(this._buildMeshes.bind(this))
-      .then(this._placeElements.bind(this))
-      .then(this._fillScene.bind(this))
       .then(this._buildControls.bind(this))
+      .then(this._placeElements.bind(this))
+      .then(this._buildShaders.bind(this))
+      .then(this._fillScene.bind(this))
       .then(this._events.bind(this))
       .then(this._keyEvents.bind(this))
       .then(this.animate.bind(this))
@@ -190,19 +193,19 @@ class WorldMapView {
       // Texture loading complete
       this._manager.onLoad = () => {
         if (this.debug) { console.log( 'Loading complete!'); }
-        requestAnimationFrame(() => { container.style.opacity = 0; });
+        container.style.opacity = 0;
         setTimeout(() => { this._renderTo.removeChild(container); }, 500); // Delay according to CSS transition value
       };
       // Progress and error callbacks
       this._manager.onError = url => { console.log( `Error loading '${url}'`); };
       this._manager.onProgress = (url, loaded, total) => {
         if (this.debug) { console.log(`Loading file '${url}'.\nLoaded ${loaded} of ${total} files.`); }
-        requestAnimationFrame(() => { current.style.width = `${(loaded / total) * 100}%`});
+        current.style.width = `${(loaded / total) * 100}%`;
       };
       // Define loader to be sent in MeshFactory
       this._loader = new THREE.TextureLoader(this._manager);
 
-      setTimeout(resolve, 50);
+      setTimeout(resolve, 100);
     });
   }
 
@@ -220,13 +223,49 @@ class WorldMapView {
         this._renderer.gammaOutput = true;
         this._renderer.gammaFactor = 2.3;
         this._renderer.toneMapping = THREE.ReinhardToneMapping;
+        this._renderer.shadowMap.enabled	= true;
+
         this._renderer.setClearColor(0x040404, 1.0);
         this._renderer.setPixelRatio(window.devicePixelRatio);
         this._renderer.setSize(window.innerWidth, window.innerHeight);
         this._renderTo.appendChild(this._renderer.domElement);
+
+        this._composer = new THREE.EffectComposer(this._renderer);
+        this._renderPass = new THREE.RenderPass(this._scene, this._camera);
+        this._composer.addPass(this._renderPass);
+
         resolve();
       } catch (err) {
         reject(`WorldMapView._buildViewer\n${err}`);
+      }
+    });
+  }
+
+
+  _buildLights() {
+    return new Promise((resolve, reject) => {
+      if (this.debug) { console.log('WorldMapView._buildLights'); }
+      try {
+        //this._lights.sun = new THREE.PointLight(0xFFFFFF, 1.5, 0);
+        this._lights.sun = new THREE.DirectionalLight(0xFFFEEE, 2);
+        this._lights.ambient = new THREE.AmbientLight(0x070707);
+        this._lights.enlightUniverse = new THREE.AmbientLight(0xFFAAAA);
+
+        this._lights.sun.lookAt(new THREE.Vector3(0, 0, 0));
+        this._lights.sun.castShadow	= true
+
+        this._lights.sun.shadow.radius = 1.6;
+        this._lights.sun.shadow.mapSize.width = 8192;
+        this._lights.sun.shadow.mapSize.height = 8192;
+
+        this._lights.sun.shadow.camera.near = 0.01;
+        this._lights.sun.shadow.camera.far = 400;
+
+        var helper = new THREE.CameraHelper( this._lights.sun.shadow.camera );
+        this._scene.add( helper );
+        resolve();
+      } catch (err) {
+        reject(`WorldMapView._buildLights\n${err}`);
       }
     });
   }
@@ -249,6 +288,12 @@ class WorldMapView {
         // Axis helper displayed on debug true
         this._meshes.axisHelper = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
         // Build advanced data structures
+
+        this._meshes.moon.receiveShadow	= true;
+      	this._meshes.moon.castShadow = true;
+        this._meshes.earth.receiveShadow	= true;
+	      this._meshes.earth.castShadow = true;
+
         this._buildCountryPins();
         this._buildGeoMeshes();
         resolve();
@@ -298,21 +343,6 @@ class WorldMapView {
   }
 
 
-  _buildLights() {
-    return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._buildLights'); }
-      try {
-        this._lights.sun = new THREE.PointLight(0xFFFFFF, 1.5, 0);
-        this._lights.ambient = new THREE.AmbientLight(0x101010);
-        this._lights.enlightUniverse = new THREE.AmbientLight(0xFFAAAA);
-        resolve();
-      } catch (err) {
-        reject(`WorldMapView._buildLights\n${err}`);
-      }
-    });
-  }
-
-
   _buildControls() {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._buildControls'); }
@@ -320,7 +350,8 @@ class WorldMapView {
         // Camera controls
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = SceneConst.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
-        this._controls.maxDistance = SceneConst.DISTANCE.MOON + (SceneConst.RADIUS.MOON * 3); // Constraint dezoom to a little behind the moon
+        this._controls.maxDistance = 200; // Constraint dezoom to a little behind the moon
+        //this._controls.maxDistance = SceneConst.DISTANCE.MOON + (SceneConst.RADIUS.MOON * 3); // Constraint dezoom to a little behind the moon
         // Build toggle light switch
         this._buttons.toggleLight = document.createElement('IMG');
         this._buttons.toggleLight.classList.add('toggle-light');
@@ -341,6 +372,53 @@ class WorldMapView {
   }
 
 
+  _buildShaders() {
+    return new Promise(resolve => {
+      //TODO proper shader plan for sun, earth atmosphere, and film effects
+      // const vignettePass = new THREE.ShaderPass(THREE.VignetteShader);
+      // vignettePass.uniforms['darkness'].value = 1;
+      // this._composer.addPass(vignettePass);
+
+      // const atmosphereMaterial = new THREE.ShaderMaterial({
+      //   uniforms: {
+    	// 		"c":   { type: "f", value: 0.95 },
+    	// 		"p":   { type: "f", value: 3.4 },
+    	// 		glowColor: { type: "c", value: new THREE.Color(0x6b96ff) },
+    	// 		viewVector: { type: "v3", value: this._camera.position }
+    	// 	},
+      //   vertexShader: THREE.AtmosphereShader.vertexShader,
+      //   fragmentShader: THREE.AtmosphereShader.fragmentShader,
+      //   side: THREE.FrontSide,
+      //   blending: THREE.AdditiveBlending,
+      //   transparent: true
+      // });
+      // const atm = new THREE.Mesh(this._meshes.earth.geometry.clone(), atmosphereMaterial);
+      // atm.scale.multiplyScalar(1.024);
+      // this._scene.add(atm);
+
+      // const atmosphereMaterial2 = new THREE.ShaderMaterial({
+      //   uniforms: {
+    	// 		"c":   { type: "f", value: 0.95 },
+    	// 		"p":   { type: "f", value: 3.4 },
+    	// 		glowColor: { type: "c", value: new THREE.Color(0xFFFFFF) },
+    	// 		viewVector: { type: "v3", value: this._camera.position }
+    	// 	},
+      //   vertexShader: THREE.AtmosphereShader.vertexShader,
+      //   fragmentShader: THREE.AtmosphereShader.fragmentShader,
+      //   side: THREE.BackSide,
+      //   blending: THREE.AdditiveBlending,
+      //   transparent: true
+      // });
+      // const atm2 = new THREE.Mesh(this._meshes.sun.geometry.clone(), atmosphereMaterial2);
+      // atm2.position.set(this._meshes.sun.position.x, this._meshes.sun.position.y, this._meshes.sun.position.z)
+      // atm2.scale.multiplyScalar(1.014);
+      // this._scene.add(atm2);
+
+      resolve();
+    });
+  }
+
+
   _placeElements() {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._placeElements'); }
@@ -350,7 +428,7 @@ class WorldMapView {
         this._meshes.earth.position.set(0, 0, 0);
         this._meshes.moon.position.set(0, 0, -SceneConst.DISTANCE.MOON);
         this._meshes.sun.position.set(0, 0, SceneConst.DISTANCE.SUN);
-        this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN - (SceneConst.RADIUS.SUN * 3)); // Place sunlight before sun sphere
+        this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN /2); // Place sunlight before sun sphere
         this._pivots.moon.position.set(0, 0, 0);
         this._pivots.sun.position.set(0, 0, 0);
         // Anti-meridian alignement
@@ -482,7 +560,7 @@ class WorldMapView {
   animate() {
     TWEEN.update(); // Update Tween for animations
     this._rafId = requestAnimationFrame(this.animate.bind(this)); // Keep animation
-    this._renderer.render(this._scene, this._camera);
+    this._composer.render(this._scene, this._camera);
     this._render();
   }
 
@@ -492,6 +570,8 @@ class WorldMapView {
     this._pivots.moon.rotation.y += AngularSpeeds.moon;
     this._pivots.sun.rotation.y += AngularSpeeds.sun;
     this._meshes.clouds.rotation.y += AngularSpeeds.clouds;
+    // Update DayNightShader sun light direction according to light world matrix
+    this._meshes.earth.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
     this._controls.update();
   }
 

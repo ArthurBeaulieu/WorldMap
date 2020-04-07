@@ -252,5 +252,5 @@ img.configuration {
   height: 100%;
   width: 0;
 
-  transition: width .2s ease-out;
+  /*transition: width .2s ease-out;*/
 }

@@ -34,6 +34,7 @@ class MeshFactory {
 
   _buildEarthSphere(loader) {
     const map = loader.load(`${this._baseUrl}assets/img/maps/world_${this._quality}.jpg`);
+    const nightMap = loader.load(`${this._baseUrl}assets/img/maps/night_${this._quality}.jpg`);
     const bumpMap = loader.load(`${this._baseUrl}assets/img/maps/bump_${this._quality}.png`);
     const specularMap = loader.load(`${this._baseUrl}assets/img/maps/specular_${this._quality}.png`); // PNG is lighter on greyscale images
     // Allow texture repetition
@@ -44,18 +45,21 @@ class MeshFactory {
     map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     bumpMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     specularMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
-    // Creating the mesh
-    return new THREE.Mesh(
+    // Creating mesh
+    const mesh = new THREE.Mesh(
       new THREE.SphereGeometry(this.CONST.RADIUS.EARTH, this._segments, this._segments),
-      new THREE.MeshPhongMaterial({
-        map: map,
-        bumpMap: bumpMap,
-        bumpScale: this.CONST.RADIUS.EARTH / 1000,
-        specularMap: specularMap,
-        specular: new THREE.Color(0xFFFFFF),
-        shininess: 15 // Light reflexion on the specular map
+      new THREE.ShaderMaterial({
+        uniforms: {
+          sunDirection: { value: new THREE.Vector3(0, 0, 0) }, // Needs to be updated in render loop
+          dayTexture: { value: map },
+          nightTexture: { value: nightMap }
+        },
+        vertexShader: THREE.DayNightShader.vertexShader,
+        fragmentShader: THREE.DayNightShader.fragmentShader
       })
     );
+    // Creating the mesh
+    return mesh;
   }
 
 
