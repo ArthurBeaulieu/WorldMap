@@ -36,10 +36,14 @@ class WorldMapView {
     this.debug = options.debug;
     this._baseUrl = options.baseUrl;
     this._renderTo = options.renderTo;
-    this._countryClickedCB = options.countryClicked;
+    this._countryClickedCB = options.countryClickedCB;
+    this._configurationCB = options.configurationCB;
     this._worldData = options.libraryData; // TODO handle libData internal
     this._geoData = options.geoData;
     this._preferences = options.preferences;
+    // Texture loading management
+    this._manager = null;
+    this._loader = null;
     // 3D context internals
     this._scene = null;
     this._camera = null;
@@ -76,7 +80,8 @@ class WorldMapView {
       bottom: null,
       right: null,
       center: null,
-      toggleLight: null
+      toggleLight: null,
+      configuration: null
     };
     this._isLightOn = false; // Used with associated button
     this._cameraSpeed = Math.PI / 12; // Used with associated buttons
@@ -106,7 +111,8 @@ class WorldMapView {
     const consolelog = console.log; // Store Js console.log behavior
     if (this.debug === false) { console.log = () => {}; } // Remove THREE Js log message when not debugging
     // View build sequence
-    this._buildViewer()
+    this._createLoadingManager()
+      .then(this._buildViewer.bind(this))
       .then(this._buildLights.bind(this))
       .then(this._buildMeshes.bind(this))
       .then(this._placeElements.bind(this))
@@ -165,6 +171,42 @@ class WorldMapView {
 /*  ----------  WorldMapView creation  ----------  */
 
 
+  _createLoadingManager() {
+    return new Promise(resolve => {
+      const container = document.createElement('DIV');
+      container.classList.add('loading-container');
+
+      container.innerHTML = `
+        <h1>Loading world data...</h1>
+        <div id="track" class="track"><div id="current" class="current"></div></div>
+      `;
+
+      const current = container.querySelector('#current');
+
+      this._renderTo.appendChild(container);
+      requestAnimationFrame(() => container.style.opacity = 1);
+      // Now handling texture loader and loading completion
+      this._manager = new THREE.LoadingManager();
+      // Texture loading complete
+      this._manager.onLoad = () => {
+        if (this.debug) { console.log( 'Loading complete!'); }
+        requestAnimationFrame(() => { container.style.opacity = 0; });
+        setTimeout(() => { this._renderTo.removeChild(container); }, 500); // Delay according to CSS transition value
+      };
+      // Progress and error callbacks
+      this._manager.onError = url => { console.log( `Error loading '${url}'`); };
+      this._manager.onProgress = (url, loaded, total) => {
+        if (this.debug) { console.log(`Loading file '${url}'.\nLoaded ${loaded} of ${total} files.`); }
+        requestAnimationFrame(() => { current.style.width = `${(loaded / total) * 100}%`});
+      };
+      // Define loader to be sent in MeshFactory
+      this._loader = new THREE.TextureLoader(this._manager);
+
+      setTimeout(resolve, 50);
+    });
+  }
+
+
   _buildViewer() {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._buildViewer'); }
@@ -198,12 +240,12 @@ class WorldMapView {
         this._pivots.sun = new THREE.Object3D();
         this._pivots.moon = new THREE.Object3D();
         // Build scene elements (Earth, Clouds, Outter space)
-        this._meshes.earth = Meshes.new({ type: 'earth' });
-        this._meshes.boundaries = Meshes.new({ type: 'boundaries' });
-        this._meshes.clouds = Meshes.new({ type: 'clouds' });
-        this._meshes.sun = Meshes.new({ type: 'sun' });
-        this._meshes.moon = Meshes.new({ type: 'moon' });
-        this._meshes.milkyway = Meshes.new({ type: 'background' });
+        this._meshes.earth = Meshes.new({ type: 'earth', loader: this._loader });
+        this._meshes.boundaries = Meshes.new({ type: 'boundaries', loader: this._loader });
+        this._meshes.clouds = Meshes.new({ type: 'clouds', loader: this._loader });
+        this._meshes.sun = Meshes.new({ type: 'sun', loader: this._loader });
+        this._meshes.moon = Meshes.new({ type: 'moon', loader: this._loader });
+        this._meshes.milkyway = Meshes.new({ type: 'background', loader: this._loader });
         // Axis helper displayed on debug true
         this._meshes.axisHelper = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
         // Build advanced data structures
@@ -284,6 +326,11 @@ class WorldMapView {
         this._buttons.toggleLight.classList.add('toggle-light');
         this._buttons.toggleLight.src = './assets/img/icons/light.svg';
         this._renderTo.appendChild(this._buttons.toggleLight);
+        // Build toggle light switch
+        this._buttons.configuration = document.createElement('IMG');
+        this._buttons.configuration.classList.add('configuration');
+        this._buttons.configuration.src = './assets/img/icons/conf.svg';
+        this._renderTo.appendChild(this._buttons.configuration);
         // Camera control buttons
         this._buildCameraControls();
         resolve();
@@ -383,6 +430,7 @@ class WorldMapView {
         this._buttons.right.addEventListener('click', this._moveCameraRight.bind(this), false);
         this._buttons.center.addEventListener('click', this._moveCameraToInitPos.bind(this), false);
         this._buttons.toggleLight.addEventListener('click', this._toggleUniverseLight.bind(this), false);
+        this._buttons.configuration.addEventListener('click', this._configurationCB, false);
 
         resolve();
       } catch (err) {

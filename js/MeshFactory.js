@@ -11,17 +11,17 @@ class MeshFactory {
 
   new(args) {
     if (args.type === 'earth') { // Earth sphere
-      return this._buildEarthSphere();
+      return this._buildEarthSphere(args.loader);
     } else if (args.type === 'clouds') { // Clouds layer for Earth
-      return this._buildCloudLayer();
+      return this._buildCloudLayer(args.loader);
     } else if (args.type === 'boundaries') { // Political country boundaries
-      return this._buildBoundariesSphere();
+      return this._buildBoundariesSphere(args.loader);
     } else if (args.type === 'sun') { // Sun sphere
-      return this._buildSunSphere();
+      return this._buildSunSphere(args.loader);
     } else if (args.type === 'moon') { // Moon sphere
-      return this._buildMoonSphere();
+      return this._buildMoonSphere(args.loader);
     } else if (args.type === 'background') {
-      return this._buildMilkyWayBackground();
+      return this._buildMilkyWayBackground(args.loader);
     } else if (args.type === 'wireframe') {
       return this._buildWireframe(args.geometry);
     } else if (args.type === 'earthpin') {
@@ -32,11 +32,10 @@ class MeshFactory {
   }
 
 
-  _buildEarthSphere() {
-    // Loading textures from img folder
-    const map = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/world_${this._quality}.jpg`);
-    const bumpMap = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/bump_${this._quality}.png`);
-    const specularMap = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/specular_${this._quality}.png`); // PNG is lighter on greyscale images
+  _buildEarthSphere(loader) {
+    const map = loader.load(`${this._baseUrl}assets/img/maps/world_${this._quality}.jpg`);
+    const bumpMap = loader.load(`${this._baseUrl}assets/img/maps/bump_${this._quality}.png`);
+    const specularMap = loader.load(`${this._baseUrl}assets/img/maps/specular_${this._quality}.png`); // PNG is lighter on greyscale images
     // Allow texture repetition
     map.wrapS = THREE.RepeatWrapping;
     bumpMap.wrapS = THREE.RepeatWrapping;
@@ -60,8 +59,8 @@ class MeshFactory {
   }
 
 
-  _buildCloudLayer() {
-    const alphaMap = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/clouds_${this._quality}.jpg`);
+  _buildCloudLayer(loader) {
+    const alphaMap = loader.load(`${this._baseUrl}assets/img/maps/clouds_${this._quality}.jpg`);
     alphaMap.wrapS = THREE.RepeatWrapping;
     alphaMap.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     return new THREE.Mesh(
@@ -75,11 +74,11 @@ class MeshFactory {
   }
 
 
-  _buildBoundariesSphere() {
+  _buildBoundariesSphere(loader) {
     // Loading textures from img folder
-    const envMap = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
-    const alphaMap = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
-    const bumpMap = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
+    const envMap = loader.load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
+    const alphaMap = loader.load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
+    const bumpMap = loader.load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
     // Allow texture repetition
     envMap.wrapS = THREE.RepeatWrapping;
     alphaMap.wrapS = THREE.RepeatWrapping;
@@ -103,8 +102,8 @@ class MeshFactory {
   }
 
 
-  _buildSunSphere() {
-    let map = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/sun_${this._quality}.jpg`);
+  _buildSunSphere(loader) {
+    const map = loader.load(`${this._baseUrl}assets/img/maps/sun_${this._quality}.jpg`);
     return new THREE.Mesh(
       new THREE.SphereGeometry(this.CONST.RADIUS.SUN, this._segments, this._segments),
       new THREE.MeshPhongMaterial({
@@ -116,9 +115,9 @@ class MeshFactory {
   }
 
 
-  _buildMoonSphere() {
+  _buildMoonSphere(loader) {
     // Loading textures from img folder
-    let map = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/moon_${this._quality}.jpg`);
+    const map = loader.load(`${this._baseUrl}assets/img/maps/moon_${this._quality}.jpg`);
     map.wrapS = THREE.RepeatWrapping;
     map.offset = new THREE.Vector2((Math.PI) / (2 * Math.PI), 0);
     return new THREE.Mesh(
@@ -131,8 +130,8 @@ class MeshFactory {
   }
 
 
-  _buildMilkyWayBackground() {
-    let map = new THREE.TextureLoader().load(`${this._baseUrl}assets/img/maps/milkyway_${this._quality}.jpg`);
+  _buildMilkyWayBackground(loader) {
+    const map = loader.load(`${this._baseUrl}assets/img/maps/milkyway_${this._quality}.jpg`);
     return new THREE.Mesh(
       new THREE.SphereGeometry(this.CONST.RADIUS.SCENE, this._segments, this._segments),
       new THREE.MeshBasicMaterial({

@@ -12,6 +12,7 @@ class MzkWorldMap {
     this._countryClicked = options.countryClicked;
     this._debug = options.debug;
     this._preferences = this._getLocalPreferences();
+    this._view = null;
     // We must here invite the user to set texture quality and border precision settings
     if (!this._preferences.textureQuality || !this._preferences.borderPrecision || !this._preferences.sphereSegments) {
       this._buildWelcomePage();
@@ -32,41 +33,41 @@ class MzkWorldMap {
 
   _buildWelcomePage() {
     const container = document.createElement('DIV');
-    container.classList.add('welcome-page-container');
+    container.classList.add('configuration-form');
     // Less expensive in lines to HTML in Js
     container.innerHTML = `
-    <h1>MzkWorldMap configuration</h1>
-    <p>Please set the following preferences, according to your computer's specifications.<br>
-    <i>MzkWorldMap</i> requires a modern web browser that uses WebGL for 3D animation.</p>
-    <form>
-      <h3>Texture quality :</h3>
-      <p>Select the default resolution to be used when building world map.<br>
-      <span>Warning, this has a heavy network cost.</span></p>
-      <label for="2k">Low (2048 x 1024)</label>
-      <input type="radio" id="2k" name="textureQuality" value="2k"><br>
-      <label for="4k">Medium (4096 x 2048)</label>
-      <input type="radio" id="4k" name="textureQuality" value="4k" checked><br>
-      <label for="2k">High (8192 x 2048)</label>
-      <input type="radio" id="8k" name="textureQuality" value="8k">
-      <h3>Country border precision :</h3>
-      <p>Select the max distance between points to draw country borders.<br>
-      <span>Warning, this has a heavy CPU cost.</span></p>
-      <label for="2k">Low (110m)</label>
-      <input type="radio" id="110m" name="borderPrecision" value="110m"><br>
-      <label for="4k">Medium (50m)</label>
-      <input type="radio" id="50m" name="borderPrecision" value="50m" checked><br>
-      <label for="2k">High (10m)</label>
-      <input type="radio" id="10m" name="borderPrecision" value="10m">
-      <h3>Sphere segments :</h3>
-      <p>Select the number of segments needed to draw a sphere.</p>
-      <label for="2k">Low (32)</label>
-      <input type="radio" id="32" name="sphereSegments" value="32"><br>
-      <label for="4k">Medium (64)</label>
-      <input type="radio" id="64" name="sphereSegments" value="64" checked><br>
-      <label for="2k">High (128)</label>
-      <input type="radio" id="128" name="sphereSegments" value="128"><br>
-      <button type="submit">Save</button>
-    </form>
+      <h1>MzkWorldMap configuration</h1>
+      <p>Please set the following preferences, according to your computer's specifications.<br>
+      <i>MzkWorldMap</i> requires a modern web browser that uses WebGL for 3D animation.</p>
+      <form>
+        <h3>Texture quality :</h3>
+        <p>Select the default resolution to be used when building world map.<br>
+        <span>Warning, this has a heavy network cost.</span></p>
+        <label for="2k">Low (2048 x 1024)</label>
+        <input type="radio" id="2k" name="textureQuality" value="2k"><br>
+        <label for="4k">Medium (4096 x 2048)</label>
+        <input type="radio" id="4k" name="textureQuality" value="4k" checked><br>
+        <label for="2k">High (8192 x 2048)</label>
+        <input type="radio" id="8k" name="textureQuality" value="8k">
+        <h3>Country border precision :</h3>
+        <p>Select the max distance between points to draw country borders.<br>
+        <span>Warning, this has a heavy CPU cost.</span></p>
+        <label for="2k">Low (110m)</label>
+        <input type="radio" id="110m" name="borderPrecision" value="110m"><br>
+        <label for="4k">Medium (50m)</label>
+        <input type="radio" id="50m" name="borderPrecision" value="50m" checked><br>
+        <label for="2k">High (10m)</label>
+        <input type="radio" id="10m" name="borderPrecision" value="10m">
+        <h3>Sphere segments :</h3>
+        <p>Select the number of segments needed to draw a sphere.</p>
+        <label for="2k">Low (32)</label>
+        <input type="radio" id="32" name="sphereSegments" value="32"><br>
+        <label for="4k">Medium (64)</label>
+        <input type="radio" id="64" name="sphereSegments" value="64" checked><br>
+        <label for="2k">High (128)</label>
+        <input type="radio" id="128" name="sphereSegments" value="128"><br>
+        <button type="submit">Save</button>
+      </form>
     `;
     // Handle form submission
     const form = container.querySelector('form');
@@ -107,7 +108,8 @@ class MzkWorldMap {
                 this._view = new WorldMapView({
                   renderTo: this._renderTo,
                   baseUrl: this._baseUrl || './', // Fallback on local execution context
-                  countryClicked: this._countryClicked,
+                  countryClickedCB: this._countryClicked,
+                  configurationCB: this._congigurationClicked.bind(this), // Keep scope at definition
                   worldData: worldData,
                   libraryData: this._buildFinalData(worldData, libraryData),
                   geoData: geoData,
@@ -119,6 +121,15 @@ class MzkWorldMap {
           }).catch(err => console.error(err));
       }).catch(err => console.error(err));
     }).catch(err => console.error(err));
+  }
+
+
+  _congigurationClicked() {
+    this._view.destroy()
+      .then(() => {
+        this._view = null;
+        this._buildWelcomePage();
+      });
   }
 
 
