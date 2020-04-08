@@ -3,27 +3,32 @@ import MeshFactory from './MeshFactory.js';
 import TWEEN from './lib/tween.js';
 
 
-let Meshes = null; // Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
+let MzkMeshes = null; // Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
 const SceneConst = { // Scene constants, for consistent values across features
   RADIUS: {
     EARTH: 0.5,
     MOON: 0.25,
     SUN: 2,
-    SCENE: 200
+    SCENE: 220
   },
   DISTANCE: {
-    MOON: 5, // 5
-    SUN: 200 // 200
+    MOON: 5,
+    SUN: 200,
+    CLOUDS: 0.002,
+    ATMOSPHERE: 0.002,
+    COUNTRY: 0.01
   },
   PIN: {
     HEIGHT: 0.1,
     WIDTH: 0.0033
   }
 };
+
 const AngularSpeeds = { // Angular speed are tweaked to see an actual animation on render loop
   moon: (2 * Math.PI) / (27.3 * 60 * 60), // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
   sun: (2 * Math.PI) / (365 * 10 * 60), // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
-  clouds: (2 * Math.PI) / (20 * 60 * 60)
+  clouds: (2 * Math.PI) / (20 * 60 * 60),
+  camera: Math.PI / 6
 };
 
 
@@ -50,17 +55,17 @@ class WorldMapView {
     this._controls = null;
     this._renderer = null;
     this._composer = null;
-    this._renderPass = null;
     this._rafId = -1;
     // Scene meshes
     this._meshes = {
       earth: null,
-      boundaries: null,
-      clouds: null,
-      sun: null,
+      earthNight: null,
+      earthBoundaries: null,
+      earthClouds: null,
+      earthAtmosphere: null,
+      sun: 0,
       moon: null,
-      milkyway: null,
-      axisHelper: null
+      milkyway: null
     };
     // Scene lights
     this._lights = {
@@ -72,6 +77,11 @@ class WorldMapView {
     this._pivots = {
       sun: null,
       moon: null
+    };
+    // THREE helpers
+    this._helpers = {
+      worldAxis: null,
+      sunLightShadow: null
     };
     // Scene DOM elements
     this._selectedPin = null;
@@ -86,7 +96,7 @@ class WorldMapView {
       configuration: null
     };
     this._isLightOn = false; // Used with associated button
-    this._cameraSpeed = Math.PI / 12; // Used with associated buttons
+    this._cameraSpeed = AngularSpeeds.camera; // Used with associated buttons
     // Scene country pins, surface and trigram
     this._selectedCountryTrigram = null;
     this._geoSurfaces = [];
@@ -95,7 +105,7 @@ class WorldMapView {
     this._onResize = this._onResize.bind(this);
     this._onCanvasClicked = this._onCanvasClicked.bind(this);
     // Define MeshFactory
-    Meshes = new MeshFactory({
+    MzkMeshes = new MeshFactory({
       CONST: SceneConst,
       baseUrl: this._baseUrl,
       segments: this._preferences.sphereSegments, // 32, 64, 128 depending on pref
@@ -118,14 +128,15 @@ class WorldMapView {
       .then(this._buildLights.bind(this))
       .then(this._buildMeshes.bind(this))
       .then(this._buildControls.bind(this))
-      .then(this._placeElements.bind(this))
-      .then(this._buildShaders.bind(this))
+      .then(this._buildHelpers.bind(this))
+      .then(this._placeAndUpdateElements.bind(this))
       .then(this._fillScene.bind(this))
+      .then(this._shaderPass.bind(this))
       .then(this._events.bind(this))
       .then(this._keyEvents.bind(this))
       .then(this.animate.bind(this))
       .then(() => { if (this.debug === false) { console.log = consolelog; } }) // Restore Js console.log behavior
-      .catch(err => console.error(err) );
+      .catch(err => console.trace(err) );
   }
 
 
@@ -155,6 +166,7 @@ class WorldMapView {
       delete this._meshes;
       delete this._lights;
       delete this._pivots;
+      delete this._helpers;
       delete this._selectedPin;
       delete this._selectedSurfaces;
       delete this._buttons;
@@ -176,25 +188,28 @@ class WorldMapView {
 
   _createLoadingManager() {
     return new Promise(resolve => {
+      // Create UI feedback for loading sequence
       const container = document.createElement('DIV');
       container.classList.add('loading-container');
-
       container.innerHTML = `
         <h1>Loading world data...</h1>
         <div id="track" class="track"><div id="current" class="current"></div></div>
       `;
-
-      const current = container.querySelector('#current');
-
+      // Append loading container with progress bar
       this._renderTo.appendChild(container);
       requestAnimationFrame(() => container.style.opacity = 1);
+      const current = container.querySelector('#current');
       // Now handling texture loader and loading completion
       this._manager = new THREE.LoadingManager();
       // Texture loading complete
       this._manager.onLoad = () => {
         if (this.debug) { console.log( 'Loading complete!'); }
-        container.style.opacity = 0;
-        setTimeout(() => { this._renderTo.removeChild(container); }, 500); // Delay according to CSS transition value
+        requestAnimationFrame(() => {
+          // Loading screen can properly disapear with css transition
+          container.style.opacity = 0;
+          // Delay according to CSS transition value
+          setTimeout(() => { this._renderTo.removeChild(container); }, 1000);
+        });
       };
       // Progress and error callbacks
       this._manager.onError = url => { console.log( `Error loading '${url}'`); };
@@ -204,7 +219,7 @@ class WorldMapView {
       };
       // Define loader to be sent in MeshFactory
       this._loader = new THREE.TextureLoader(this._manager);
-
+      // Ensure all DOM manipulation are done by delaying resolve
       setTimeout(resolve, 100);
     });
   }
@@ -231,8 +246,7 @@ class WorldMapView {
         this._renderTo.appendChild(this._renderer.domElement);
 
         this._composer = new THREE.EffectComposer(this._renderer);
-        this._renderPass = new THREE.RenderPass(this._scene, this._camera);
-        this._composer.addPass(this._renderPass);
+        this._composer.addPass(new THREE.RenderPass(this._scene, this._camera));
 
         resolve();
       } catch (err) {
@@ -246,7 +260,6 @@ class WorldMapView {
     return new Promise((resolve, reject) => {
       if (this.debug) { console.log('WorldMapView._buildLights'); }
       try {
-        //this._lights.sun = new THREE.PointLight(0xFFFFFF, 1.5, 0);
         this._lights.sun = new THREE.DirectionalLight(0xFFFEEE, 2);
         this._lights.ambient = new THREE.AmbientLight(0x070707);
         this._lights.enlightUniverse = new THREE.AmbientLight(0xFFAAAA);
@@ -261,8 +274,6 @@ class WorldMapView {
         this._lights.sun.shadow.camera.near = 0.01;
         this._lights.sun.shadow.camera.far = 400;
 
-        var helper = new THREE.CameraHelper( this._lights.sun.shadow.camera );
-        this._scene.add( helper );
         resolve();
       } catch (err) {
         reject(`WorldMapView._buildLights\n${err}`);
@@ -278,22 +289,22 @@ class WorldMapView {
         // Pivots are for animating objects
         this._pivots.sun = new THREE.Object3D();
         this._pivots.moon = new THREE.Object3D();
-        // Build scene elements (Earth, Clouds, Outter space)
-        this._meshes.earth = Meshes.new({ type: 'earth', loader: this._loader });
-        this._meshes.boundaries = Meshes.new({ type: 'boundaries', loader: this._loader });
-        this._meshes.clouds = Meshes.new({ type: 'clouds', loader: this._loader });
-        this._meshes.sun = Meshes.new({ type: 'sun', loader: this._loader });
-        this._meshes.moon = Meshes.new({ type: 'moon', loader: this._loader });
-        this._meshes.milkyway = Meshes.new({ type: 'background', loader: this._loader });
-        // Axis helper displayed on debug true
-        this._meshes.axisHelper = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
-        // Build advanced data structures
+        // Build scene elements (Earthwith all its sub-meshes)
+        this._meshes.earth = MzkMeshes.new({ type: 'earth', loader: this._loader });
+        this._meshes.earthNight = MzkMeshes.new({ type: 'earthnight', loader: this._loader });
+        this._meshes.earthClouds = MzkMeshes.new({ type: 'earthclouds', loader: this._loader });
+        this._meshes.earthBoundaries = MzkMeshes.new({ type: 'earthboundaries', loader: this._loader });
+        this._meshes.earthAtmosphere = MzkMeshes.new({ type: 'earthatmosphere', loader: this._loader });
+        // Spherical meshes for sun, moon and milky way
+        this._meshes.sun = MzkMeshes.new({ type: 'sun', loader: this._loader });
+        this._meshes.moon = MzkMeshes.new({ type: 'moon', loader: this._loader });
+        this._meshes.milkyway = MzkMeshes.new({ type: 'background', loader: this._loader });
 
         this._meshes.moon.receiveShadow	= true;
       	this._meshes.moon.castShadow = true;
         this._meshes.earth.receiveShadow	= true;
 	      this._meshes.earth.castShadow = true;
-
+        // Build advanced data structures
         this._buildCountryPins();
         this._buildGeoMeshes();
         resolve();
@@ -306,12 +317,10 @@ class WorldMapView {
 
   _buildCountryPins() {
     for (let i = 0; i < this._worldData.length; ++i) { // Build country pins on Earth
-      const pin = Meshes.new({ type: 'earthpin', scale: this._worldData[i].scale });
-      const wireframe = Meshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
-
+      const pin = MzkMeshes.new({ type: 'earthpin', scale: this._worldData[i].scale });
+      const wireframe = MzkMeshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
       pin.info = this._worldData[i]; // Attach country information to the pin
       wireframe.renderOrder = 1; // Force wireframe render on top
-
       pin.add(wireframe);
       this._pins.push(pin);
     }
@@ -323,7 +332,7 @@ class WorldMapView {
       // Check polygon type for feature
       const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
       for (let j = 0; j < polygons.length; ++j) {
-        const geoSurface = Meshes.new({ type: 'geosurface', geometry: polygons[j] });
+        const geoSurface = MzkMeshes.new({ type: 'geosurface', geometry: polygons[j] });
         // Attach info to mesh
         geoSurface.info = this._geoData.features[i].properties;
         geoSurface.info.hasArtists = false;
@@ -350,8 +359,7 @@ class WorldMapView {
         // Camera controls
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = SceneConst.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
-        this._controls.maxDistance = 200; // Constraint dezoom to a little behind the moon
-        //this._controls.maxDistance = SceneConst.DISTANCE.MOON + (SceneConst.RADIUS.MOON * 3); // Constraint dezoom to a little behind the moon
+        this._controls.maxDistance = SceneConst.DISTANCE.SUN / 2; // Constraint dezoom
         // Build toggle light switch
         this._buttons.toggleLight = document.createElement('IMG');
         this._buttons.toggleLight.classList.add('toggle-light');
@@ -372,73 +380,45 @@ class WorldMapView {
   }
 
 
-  _buildShaders() {
+  _buildHelpers() {
     return new Promise(resolve => {
-      //TODO proper shader plan for sun, earth atmosphere, and film effects
-      // const vignettePass = new THREE.ShaderPass(THREE.VignetteShader);
-      // vignettePass.uniforms['darkness'].value = 1;
-      // this._composer.addPass(vignettePass);
+      if (this.debug) {
+        this._helpers.worldAxis = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
+        this._scene.add(this._helpers.worldAxis);
 
-      // const atmosphereMaterial = new THREE.ShaderMaterial({
-      //   uniforms: {
-    	// 		"c":   { type: "f", value: 0.95 },
-    	// 		"p":   { type: "f", value: 3.4 },
-    	// 		glowColor: { type: "c", value: new THREE.Color(0x6b96ff) },
-    	// 		viewVector: { type: "v3", value: this._camera.position }
-    	// 	},
-      //   vertexShader: THREE.AtmosphereShader.vertexShader,
-      //   fragmentShader: THREE.AtmosphereShader.fragmentShader,
-      //   side: THREE.FrontSide,
-      //   blending: THREE.AdditiveBlending,
-      //   transparent: true
-      // });
-      // const atm = new THREE.Mesh(this._meshes.earth.geometry.clone(), atmosphereMaterial);
-      // atm.scale.multiplyScalar(1.024);
-      // this._scene.add(atm);
+        this._helpers.sunLightShadow = new THREE.CameraHelper(this._lights.sun.shadow.camera);
+        this._scene.add(this._helpers.sunLightShadow);
 
-      // const atmosphereMaterial2 = new THREE.ShaderMaterial({
-      //   uniforms: {
-    	// 		"c":   { type: "f", value: 0.95 },
-    	// 		"p":   { type: "f", value: 3.4 },
-    	// 		glowColor: { type: "c", value: new THREE.Color(0xFFFFFF) },
-    	// 		viewVector: { type: "v3", value: this._camera.position }
-    	// 	},
-      //   vertexShader: THREE.AtmosphereShader.vertexShader,
-      //   fragmentShader: THREE.AtmosphereShader.fragmentShader,
-      //   side: THREE.BackSide,
-      //   blending: THREE.AdditiveBlending,
-      //   transparent: true
-      // });
-      // const atm2 = new THREE.Mesh(this._meshes.sun.geometry.clone(), atmosphereMaterial2);
-      // atm2.position.set(this._meshes.sun.position.x, this._meshes.sun.position.y, this._meshes.sun.position.z)
-      // atm2.scale.multiplyScalar(1.014);
-      // this._scene.add(atm2);
+        this._helpers.stats = new Stats();
+        this._helpers.stats.showPanel(0);
+        this._renderTo.appendChild(this._helpers.stats.dom);
+      }
 
       resolve();
     });
   }
 
 
-  _placeElements() {
+  _placeAndUpdateElements() {
     return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._placeElements'); }
+      if (this.debug) { console.log('WorldMapView._placeAndUpdateElements'); }
       try {
         this._camera.position.z = 1.66;
 
         this._meshes.earth.position.set(0, 0, 0);
         this._meshes.moon.position.set(0, 0, -SceneConst.DISTANCE.MOON);
-        this._meshes.sun.position.set(0, 0, SceneConst.DISTANCE.SUN);
-        this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN /2); // Place sunlight before sun sphere
+        // Light will hold sun meshes as lens flare must be related to light source
+        this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN);
         this._pivots.moon.position.set(0, 0, 0);
         this._pivots.sun.position.set(0, 0, 0);
         // Anti-meridian alignement
         this._meshes.moon.rotation.y += Math.PI / 2; // Put dark side of the moon to the dark
         this._meshes.earth.rotation.y += Math.PI / 2; // Earth rotation to face Greenwich
-        this._meshes.boundaries.rotation.y += Math.PI / 2;
-        this._meshes.clouds.rotation.y += Math.PI / 2;
+        this._meshes.earthBoundaries.rotation.y += Math.PI / 2;
+        this._meshes.earthClouds.rotation.y += Math.PI / 2;
         // Shift earth along its axis from 23.3° (average in between earth tilt axis extremums : 22.1° and 24.5°)
         this._meshes.earth.rotation.z += (23.3 * Math.PI) / 180; // Earth tilt
-        this._meshes.boundaries.rotation.z += (23.3 * Math.PI) / 180;
+        this._meshes.earthBoundaries.rotation.z += (23.3 * Math.PI) / 180;
         this._pivots.moon.rotation.x += (5.145 * Math.PI) / 180; // 5.145° offset from the earth plane
         // Iterate over pins to configure their position
         for (let i = 0; i < this._pins.length; ++i) {
@@ -456,7 +436,7 @@ class WorldMapView {
 
         resolve();
       } catch (err) {
-        reject(`WorldMapView._placeElements\n${err}`);
+        reject(`WorldMapView._placeAndUpdateElements\n${err}`);
       }
     });
   }
@@ -464,28 +444,40 @@ class WorldMapView {
 
   _fillScene() {
     return new Promise(resolve => {
+      // Shader must be placed on Earth mesh
+      this._meshes.earth.add(this._meshes.earthNight);
       this._pivots.moon.add(this._meshes.moon);
-      this._pivots.sun.add(this._meshes.sun);
+      this._lights.sun.add(this._meshes.sun);
       this._pivots.sun.add(this._lights.sun);
       this._scene.add(this._pivots.moon);
       this._scene.add(this._pivots.sun);
       this._scene.add(this._meshes.earth);
-      this._scene.add(this._meshes.boundaries);
-      this._scene.add(this._meshes.clouds);
+      this._scene.add(this._meshes.earthBoundaries);
+      this._scene.add(this._meshes.earthClouds);
+      this._scene.add(this._meshes.earthAtmosphere);
       this._scene.add(this._meshes.milkyway);
       this._scene.add(this._lights.ambient);
-      // Append geosurfaces for every country
-      for (let i = 0; i < this._geoSurfaces.length; ++i) {
-        this._meshes.earth.add(this._geoSurfaces[i]);
-      }
       // Append every stored pins according to given data
       for (let i = 0; i < this._pins.length; ++i) {
         this._meshes.earth.add(this._pins[i]);
       }
-      // In debug, append AxisHelper to the scene
-      if (this.debug) {
-        this._scene.add(this._meshes.axisHelper);
+      // Append geosurfaces for every country
+      for (let i = 0; i < this._geoSurfaces.length; ++i) {
+        this._meshes.earth.add(this._geoSurfaces[i]);
       }
+
+      resolve();
+    });
+  }
+
+
+  _shaderPass() {
+    return new Promise(resolve => {
+      // Apply light vignetting on scene for better focus on center
+      const vignettePass = new THREE.ShaderPass(THREE.VignetteShader);
+      vignettePass.uniforms['darkness'].value = 1.05;
+      this._composer.renderToScreen = true;
+      this._composer.addPass(vignettePass);
 
       resolve();
     });
@@ -558,10 +550,18 @@ class WorldMapView {
 
 
   animate() {
+    if (this.debug) {
+      this._helpers.stats.begin();
+    }
     TWEEN.update(); // Update Tween for animations
-    this._rafId = requestAnimationFrame(this.animate.bind(this)); // Keep animation
     this._composer.render(this._scene, this._camera);
     this._render();
+
+    if (this.debug) {
+      this._helpers.stats.end();
+    }
+
+    this._rafId = requestAnimationFrame(this.animate.bind(this)); // Keep animation
   }
 
 
@@ -569,9 +569,10 @@ class WorldMapView {
     // Put const here, avoid any calculation to reduce CPU load
     this._pivots.moon.rotation.y += AngularSpeeds.moon;
     this._pivots.sun.rotation.y += AngularSpeeds.sun;
-    this._meshes.clouds.rotation.y += AngularSpeeds.clouds;
-    // Update DayNightShader sun light direction according to light world matrix
-    this._meshes.earth.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
+    this._meshes.earthClouds.rotation.y += AngularSpeeds.clouds;
+    // Update DayNightShader sun light direction according to light world matrix, same for atmosphere view vector
+    this._meshes.earthNight.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
+    this._meshes.earthAtmosphere.material.uniforms.viewVector.value = this._camera.position;
     this._controls.update();
   }
 
@@ -581,6 +582,7 @@ class WorldMapView {
 
   _unselectAll() {
     if (this._selectedPin !== null) {
+      this._selectedPin.geometry.scale(1, 0.5, 1);
       this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
       this._selectedPin = null;
     }
@@ -654,6 +656,7 @@ class WorldMapView {
       if (WorldMapView._pins[i].info.trigram === WorldMapView._selectedCountryTrigram) {
         WorldMapView._pins[i].material.color.setHex(0xFF6B67);
         WorldMapView._selectedPin = WorldMapView._pins[i]; // Save pin in case evt comes from surface
+        WorldMapView._selectedPin.geometry.scale(1, 2, 1);
         break; // Break beacause we have one pin per country
       }
     }
@@ -661,7 +664,7 @@ class WorldMapView {
     WorldMapView._selectedSurfaces = [];
     for (let i = 0; i < WorldMapView._geoSurfaces.length; ++i) {
       if (WorldMapView._geoSurfaces[i].info.trigram === WorldMapView._selectedCountryTrigram) {
-        WorldMapView._geoSurfaces[i].material.opacity = 0.7;
+        WorldMapView._geoSurfaces[i].material.opacity = 0.4;
         WorldMapView._selectedSurfaces.push(WorldMapView._geoSurfaces[i]);
       }
     }

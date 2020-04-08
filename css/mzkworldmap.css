@@ -237,7 +237,7 @@ img.configuration {
   width: 100%;
   z-index: 999;
 
-  transition: opacity .5s;
+  transition: opacity 1s;
 }
 
 .loading-container .track {
