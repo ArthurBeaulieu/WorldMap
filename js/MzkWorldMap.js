@@ -1,6 +1,67 @@
 import WorldMapView from './WorldMapView.js';
 
 
+/* MzkWorldMap version 0.8 */
+const MzkWorldMapVersion = '0.8';
+// Configuration menu constants
+const ConfigurationHTML = `
+  <h1>MzkWorldMap configuration</h1>
+  <p>Please set the following preferences, according to your computer's specifications.<br>
+  <i>MzkWorldMap</i> requires a modern web browser that uses WebGL for 3D animation.</p>
+  <form>
+    <div>
+      <h3>Texture quality :</h3>
+      <p>Select the default resolution to be used when building world map.<br>
+      <span class="warning">Warning, this has a heavy network cost.</span></p>
+      <label for="2k">Low (2K, 2048 x 1024)</label>
+      <input type="radio" id="id-2k" name="textureQuality" value="2k"><br>
+      <label for="4k">Medium (4K, 4096 x 2048)</label>
+      <input type="radio" id="id-4k" name="textureQuality" value="4k" checked><br>
+      <label for="2k">High (8K, 8192 x 2048)</label>
+      <input type="radio" id="id-8k" name="textureQuality" value="8k">
+    </div><div>
+      <h3>Country border precision :</h3>
+      <p>Select the max distance between points to draw country borders.<br>
+      <span class="warning">Warning, this has a heavy CPU cost.</span></p>
+      <label for="110m">Low (110m)</label>
+      <input type="radio" id="id-110m" name="borderPrecision" value="110m"><br>
+      <label for="50m">Medium (50m)</label>
+      <input type="radio" id="id-50m" name="borderPrecision" value="50m" checked><br>
+      <label for="10m">High (10m)</label>
+      <input type="radio" id="id-10m" name="borderPrecision" value="10m">
+    </div><div>
+      <h3>Sphere segments :</h3>
+      <p>Select the number of segments needed to draw a sphere.<br>
+      <span class="info">Moderate impact on CPU.</span></p>
+      <label for="32">Low (32)</label>
+      <input type="radio" id="id-32" name="sphereSegments" value="32"><br>
+      <label for="64">Medium (64)</label>
+      <input type="radio" id="id-64" name="sphereSegments" value="64" checked><br>
+      <label for="128">High (128)</label>
+      <input type="radio" id="id-128" name="sphereSegments" value="128"><br>
+    </div><div>
+      <h3>Shadow resolution :</h3>
+      <p>Define the shadow map square resolution.<br>
+      <span class="warning">Warning, this has a heavy CPU cost.</span></p>
+      <label for="512">Low (512x512)</label>
+      <input type="radio" id="id-512" name="shadowResolution" value="512"><br>
+      <label for="2048">Medium (2048x2048)</label>
+      <input type="radio" id="id-2048" name="shadowResolution" value="2048" checked><br>
+      <label for="8192">High (8192x8192)</label>
+      <input type="radio" id="id-8192" name="shadowResolution" value="8192"><br>
+    </div>
+    <p class="mzkworldmap-debug"><label for="debug">Debug mode</label><input type="checkbox" id="id-debug" name="debug"></p>
+    <button type="submit">Start MzkWorldMap</button>
+  </form>
+`;
+const ConfigurationValues = {
+  textures: ['2k', '4k', '8k'],
+  borders: ['110m', '50m', '10m'],
+  segments: ['32', '64', '128'],
+  shadows: ['512', '2048', '8192']
+};
+
+
 class MzkWorldMap {
 
 
@@ -10,14 +71,13 @@ class MzkWorldMap {
     this._baseUrl = options.baseUrl;
     this._libraryDataPath = options.libraryDataPath
     this._countryClicked = options.countryClicked;
-    this._debug = options.debug;
-    this._preferences = this._getLocalPreferences();
+    this._preferences = this._getLocalPreferences(); // Check local storage for previous preferences
     this._view = null;
-    // We must here invite the user to set texture quality and border precision settings
-    if (!this._preferences.textureQuality || !this._preferences.borderPrecision || !this._preferences.sphereSegments) {
-      this._buildWelcomePage();
+    // Determine if session is user first connection
+    if (!this._hasLocalPreferences()) { // No local preferences or incorrect local preferences
+      this._buildConfigurationView({ emptyLocalStorage: true }); // Init with configuration to store preferences
     } else {
-      this._buildWorldMapView();
+      this._buildWorldMapView(); // Build WorldMapView with local preferences
     }
   }
 
@@ -25,53 +85,46 @@ class MzkWorldMap {
   destroy() {
     return new Promise(resolve => {
       this._view.destroy();
+      delete this._renderTo;
+      delete this._baseUrl;
+      delete this._libraryDataPath;
+      delete this._countryClicked;
+      delete this._preferences;
       delete this._view;
       resolve();
     });
   }
 
 
-  _buildWelcomePage() {
+  /*  ----------  WorlMapView handler and configurator  ----------  */
+
+
+  /** Build the configuration view either with local preferences or nothing
+   * The configuration view aim to modify the WorldMapView rendering according to graphical preferences.
+   * The method will render the ConfigurationHTML template to its parent (this._renderTo) full size and wait a <form> submission event.
+   * When submitted, preferences are saved in the local storage to skip this configuration view on user's next session.
+   * When true, the options.emptyLocalStorage flag will initialize radios and checkbox according to the local storage content.
+   * When false, it will keep the initial template radios (all radio checked with Medium, Debug unchecked).
+   * It provides preferences for texture resolution, geojson point distance, sphere segments and shadow map resolution.
+   * For each of these preferences, there are three levels ; Low, Medium and High.
+   * Finally, a debug checkbox allow to open map with THREE helpers displayed **/
+  _buildConfigurationView(options) {
+    // The container form container (mostly define padding on sides)
     const container = document.createElement('DIV');
     container.classList.add('configuration-form');
-    // Less expensive in lines to HTML in Js
-    container.innerHTML = `
-      <h1>MzkWorldMap configuration</h1>
-      <p>Please set the following preferences, according to your computer's specifications.<br>
-      <i>MzkWorldMap</i> requires a modern web browser that uses WebGL for 3D animation.</p>
-      <form>
-        <h3>Texture quality :</h3>
-        <p>Select the default resolution to be used when building world map.<br>
-        <span>Warning, this has a heavy network cost.</span></p>
-        <label for="2k">Low (2048 x 1024)</label>
-        <input type="radio" id="2k" name="textureQuality" value="2k"><br>
-        <label for="4k">Medium (4096 x 2048)</label>
-        <input type="radio" id="4k" name="textureQuality" value="4k" checked><br>
-        <label for="2k">High (8192 x 2048)</label>
-        <input type="radio" id="8k" name="textureQuality" value="8k">
-        <h3>Country border precision :</h3>
-        <p>Select the max distance between points to draw country borders.<br>
-        <span>Warning, this has a heavy CPU cost.</span></p>
-        <label for="2k">Low (110m)</label>
-        <input type="radio" id="110m" name="borderPrecision" value="110m"><br>
-        <label for="4k">Medium (50m)</label>
-        <input type="radio" id="50m" name="borderPrecision" value="50m" checked><br>
-        <label for="2k">High (10m)</label>
-        <input type="radio" id="10m" name="borderPrecision" value="10m">
-        <h3>Sphere segments :</h3>
-        <p>Select the number of segments needed to draw a sphere.</p>
-        <label for="2k">Low (32)</label>
-        <input type="radio" id="32" name="sphereSegments" value="32"><br>
-        <label for="4k">Medium (64)</label>
-        <input type="radio" id="64" name="sphereSegments" value="64" checked><br>
-        <label for="2k">High (128)</label>
-        <input type="radio" id="128" name="sphereSegments" value="128"><br>
-        <button type="submit">Save</button>
-      </form>
-    `;
+    container.innerHTML = ConfigurationHTML; // Import configuration HTML
+    // Set checked radio and checkbox according to local preferences if session has valid preferences
+    if (options.emptyLocalStorage === false) {
+      this._preferences = this._getLocalPreferences();
+      container.querySelector(`#id-${this._preferences.textureQuality}`).checked = true;
+      container.querySelector(`#id-${this._preferences.borderPrecision}`).checked = true;
+      container.querySelector(`#id-${this._preferences.sphereSegments}`).checked = true;
+      container.querySelector(`#id-${this._preferences.shadowResolution}`).checked = true;
+      container.querySelector(`#id-debug`).checked = this._preferences.debug;
+    }
     // Handle form submission
     const form = container.querySelector('form');
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', event => {
       event.preventDefault(); // Prevent location redirection with params
       const data = new FormData(form);
       const output = [];
@@ -79,78 +132,127 @@ class MzkWorldMap {
       for (const entry of data) {
         output.push(entry[1]);
       }
-      // Update local storage
-      localStorage.setItem('mzkworldmap-texture-quality', output[0]);
-      localStorage.setItem('mzkworldmap-border-precision', output[1]);
-      localStorage.setItem('mzkworldmap-sphere segments', output[2]);
-      // Update session preferences
+      // Set debug from checkbox state
+      let debug = false;
+      if (output[4] === 'on') {
+        debug = true;
+      }
+      // Update local storage and session preferences
+      this._setLocalPreferences(output, debug);
       this._preferences = this._getLocalPreferences();
-      // Remove form and open mzk view
+      // Remove configuration view and build WorldMapView
       requestAnimationFrame(() => { container.style.opacity = 0 });
-      setTimeout(() => { this._renderTo.removeChild(container); this._buildWorldMapView(); }, 2500); // Delay according to CSS transition value
+      setTimeout(() => { this._renderTo.removeChild(container); this._buildWorldMapView(); }, 2500); // 2.5s delay according to CSS transition value
     }, false);
-    // Append welcome page and start opacity transition
+    // Append configuration view and start opacity transition
     this._renderTo.appendChild(container);
     requestAnimationFrame(() => container.style.opacity = 1);
   }
 
 
+  /** Build a WorldMapView with local preferences.
+   * The wmv allows to navigate in 3D around Earth, click on countries and do stuff on caller to those country clicked.
+   * As this view is meant to be launched as a plugin, several data must be retrieved:
+   * - The ManaZeak WorldData, that contains all countries, with capital city and country center lat/long among others.
+   * - The Geo data (geojson) that will allow the country clicking part, also to render countries as unique meshes.
+   * - Finally, the library data is an external object that contains country with artists (the ones to be displayed with a bar).
+   * Graphical preferences must be sent through the wmv constructor (implying they are already set when calling new). **/
   _buildWorldMapView() {
     const worldDataPath = `${this._baseUrl}assets/json/WorldData.json` // WorldData is lat/long for all countries
     const geoPath = `${this._baseUrl}assets/json/GeojsonData_${this._preferences.borderPrecision}.json`; // All world geojson dataset must be loaded to draw boundaries properly
-
+    // Load ManaZeak WorldData and Geo data according to given base url and build WorldMapView with all parameters
     this._readJSONFile(worldDataPath)
       .then(worldData => {
         this._readJSONFile(geoPath)
           .then(geoData => {
-            this._readJSONFile(this._libraryDataPath)
+            this._readJSONFile(this._libraryDataPath) // To be replace by sent Js object
               .then(libraryData => {
                 this._view = new WorldMapView({
-                  renderTo: this._renderTo,
+                  renderTo: this._renderTo, // DOM element to render canva to
                   baseUrl: this._baseUrl || './', // Fallback on local execution context
-                  countryClickedCB: this._countryClicked,
+                  countryClickedCB: this._countryClicked, // Country clicked external callback
                   configurationCB: this._congigurationClicked.bind(this), // Keep scope at definition
-                  worldData: worldData,
-                  libraryData: this._buildFinalData(worldData, libraryData),
-                  geoData: geoData,
-                  preferences: this._preferences,
-                  debug: this._debug
+                  worldData: worldData, // Lat/Long for interresting points
+                  libraryData: this._buildFinalData(worldData, libraryData), // Extend library data with world data (only country that has artists will be filled)
+                  geoData: geoData, // Raw Geojson data
+                  preferences: this._preferences // Local storage preferences
                 });
                 // Clean WebGL and WorldMapView when user leave page
                 window.addEventListener('beforeunload', this.destroy.bind(this), false);
-          }).catch(err => console.error(err));
-      }).catch(err => console.error(err));
-    }).catch(err => console.error(err));
+              })
+              .catch(err => console.error(err));
+          }) // Catch for geojson data loading
+          .catch(err => console.error(err));
+      }) // Catch for world data loading
+      .catch(err => console.error(err));
   }
 
 
+  /** Callback that needs to be sent to WorldMapView, to open up the configuration view when clicked on gear icon.
+   * This allow to destroy the current WorldMapView to launch it again with new settings without reloading.
+   * Since this method is called from WorldMapView, and therefor testifies that preferences are set, we build the
+   * configuration view with the local storage content (emptyLocalStorage false). **/
   _congigurationClicked() {
     this._view.destroy()
       .then(() => {
         this._view = null;
-        this._buildWelcomePage();
+        this._buildConfigurationView({ emptyLocalStorage: false });
       });
   }
 
 
-  /*  ----------  Controller utils  ----------  */
+  /*  ----------  Local storage utils  ----------  */
 
 
+  /** Get local storage items and return as preferences object with these.
+   * Debug must be json parsed because local storage only contains string. **/
   _getLocalPreferences() {
     return {
       textureQuality: localStorage.getItem('mzkworldmap-texture-quality'),
       borderPrecision: localStorage.getItem('mzkworldmap-border-precision'),
-      sphereSegments: localStorage.getItem('mzkworldmap-sphere segments')
+      sphereSegments: localStorage.getItem('mzkworldmap-sphere-segments'),
+      shadowResolution: localStorage.getItem('mzkworldmap-shadow-resolution'),
+      debug: JSON.parse(localStorage.getItem('mzkworldmap-debug')) // Convert string to bool
     };
   }
 
 
+  /** Set local storage items according to submitted form values in configuration HTML. **/
+  _setLocalPreferences(preferences, debug) {
+    // Array order follows HTML template order
+    localStorage.setItem('mzkworldmap-texture-quality', preferences[0]);
+    localStorage.setItem('mzkworldmap-border-precision', preferences[1]);
+    localStorage.setItem('mzkworldmap-sphere-segments', preferences[2]);
+    localStorage.setItem('mzkworldmap-shadow-resolution', preferences[3]);
+    localStorage.setItem('mzkworldmap-debug', debug);
+  }
+
+
+  /** Return true only when local storage do contain every needed preferences, and with values
+   * that are valid to send in WorldMapView, return false otherwise. **/
+  _hasLocalPreferences() {
+    return ConfigurationValues.textures.indexOf(this._preferences.textureQuality) !== -1 &&
+           ConfigurationValues.borders.indexOf(this._preferences.borderPrecision) !== -1 &&
+           ConfigurationValues.segments.indexOf(this._preferences.sphereSegments) !== -1 &&
+           ConfigurationValues.shadows.indexOf(this._preferences.shadowResolution) !== -1 &&
+           typeof this._preferences.debug === 'boolean'; // Debug checkbox in necessarly a bool
+  }
+
+
+  /*  ----------  WorldMapView controller utils  ----------  */
+
+
+  /** This method prepare libraryData for WorldMapView. A height scale must be computed, according to artists count.
+   * The height scale factor represents the 'weight' of a country by its artists number. Countries with lot of artists
+   * will be rendered with a high cylinder on country center. Otherwise, the cylinder will remain low.
+   * Output array contains countries with artists, relative scale, and extend every property of their respective country from ManaZeak WorldData **/
   _buildFinalData(worldData, libraryData) {
     const output = []; // Output array that consist of all countries that has artists
     let maxArtistsCount = 0; // The maxArtistsCount is to know which country have the most artists, so it can be the high bound for pin height
     // First of, we only select contries that have artists
     for (let i = 0; i < libraryData.countries.length; ++i) {
       for (let j = 0; j < worldData.countries.length; ++j) {
+        // We found in world data, the country associated with the current library data country
         if (libraryData.countries[i].trigram === worldData.countries[j].trigram) {
           const country = worldData.countries[j];
           country.artists = libraryData.countries[i].artists; // Append artists in output
@@ -160,7 +262,7 @@ class MzkWorldMap {
             maxArtistsCount = libraryData.countries[i].artists.length;
           }
           output.push(country); // Completting output array with current artist
-          break; // Go one to next libraryData country
+          break; // Go on to next libraryData country, break worldData iteration
         }
       }
     }
@@ -173,6 +275,9 @@ class MzkWorldMap {
   }
 
 
+  /** Read JSON file with XMLHttpRequest.
+   * When running standalone, the browser cors policy must be disabled to load local JSON files.
+   * Please beware to set this cors policy back to its default when done playing with MzkWorldMap. **/
   _readJSONFile(path, callback) {
     return new Promise((resolve, reject) => {
       try {
@@ -184,13 +289,13 @@ class MzkWorldMap {
             if (request.status === 200) {
               resolve(JSON.parse(request.responseText));
             } else {
-              reject(`Error when loading ${path}.\nPlease contact support (request status: ${request.status}).`);
+              reject(`Error when loading ${path}.\nPlease contact support@manazeak.org (request status: ${request.status}).`);
             }
           }
         };
         request.send();
       } catch(err) {
-        reject(`Error when loading ${path}.\nPlease contact support (${err}).`);
+        reject(`Error when loading ${path}.\nPlease contact support@manazeak.org (${err}).`);
       }
     });
   }

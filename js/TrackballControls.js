@@ -1,5 +1,5 @@
 /** @author Eberhard Graether / http://egraether.com/
- * This was modified to become an ES6 module. Also, pan movement have been removed since useless in here */
+ * This was modified to become an ES6 module */
 class TrackballControls {
 
 

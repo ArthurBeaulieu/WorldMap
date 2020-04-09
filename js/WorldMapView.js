@@ -1,9 +1,9 @@
+import CustomThreeModule from './CustomThreeModule.js';
 import TrackballControls from './TrackballControls.js';
 import MeshFactory from './MeshFactory.js';
-import TWEEN from './lib/tween.js';
+import TWEEN from './Tween.js';
 
 
-let MzkMeshes = null; // Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
 const SceneConst = { // Scene constants, for consistent values across features
   RADIUS: {
     EARTH: 0.5,
@@ -23,13 +23,13 @@ const SceneConst = { // Scene constants, for consistent values across features
     WIDTH: 0.0033
   }
 };
-
 const AngularSpeeds = { // Angular speed are tweaked to see an actual animation on render loop
   moon: (2 * Math.PI) / (27.3 * 60 * 60), // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
   sun: (2 * Math.PI) / (365 * 10 * 60), // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
   clouds: (2 * Math.PI) / (20 * 60 * 60),
   camera: Math.PI / 6
 };
+let MzkMeshes = null; // Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
 
 
 class WorldMapView {
@@ -38,7 +38,6 @@ class WorldMapView {
   constructor(options) {
     THREE.TrackballControls = TrackballControls; // Override THREE TrackBallControl with provided module
     // View options
-    this.debug = options.debug;
     this._baseUrl = options.baseUrl;
     this._renderTo = options.renderTo;
     this._countryClickedCB = options.countryClickedCB;
@@ -70,8 +69,7 @@ class WorldMapView {
     // Scene lights
     this._lights = {
       sun: null,
-      ambient: null,
-      enlightUniverse: null
+      ambient: null
     };
     // Animation pivots to simulate spheres orbiting
     this._pivots = {
@@ -92,7 +90,6 @@ class WorldMapView {
       bottom: null,
       right: null,
       center: null,
-      toggleLight: null,
       configuration: null
     };
     this._isLightOn = false; // Used with associated button
@@ -116,12 +113,35 @@ class WorldMapView {
   }
 
 
-/*  ----------  Class init and destroy methods  ----------  */
+  destroy() {
+    return new Promise(resolve => {
+      // Kill animation process
+      cancelAnimationFrame(this._rafId);
+      // Remove all events in view
+      window.removeEventListener('resize', this._onResize, false);
+      window.removeEventListener('click', this._onCanvasClicked, false);
+      // Dispose, call for destructors and clean parent
+      MzkMeshes.destroy();
+      this._controls.destroy();
+      this._scene.dispose();
+      this._renderer.renderLists.dispose();
+      this._renderer.forceContextLoss();
+      this._renderer.dispose();
+      this._renderTo.innerHTML = '';
+      // Delete object attributes
+      Object.keys(this).forEach(key => { delete this[key]; });
+      // Resolve Promise to notify that View has been completely destroyed
+      resolve();
+    });
+  }
+
+
+/*  ----------  Class init  ----------  */
 
 
   init() {
     const consolelog = console.log; // Store Js console.log behavior
-    if (this.debug === false) { console.log = () => {}; } // Remove THREE Js log message when not debugging
+    if (this._preferences.debug === false) { console.log = () => {}; } // Remove THREE Js log message when not debugging
     // View build sequence
     this._createLoadingManager()
       .then(this._buildViewer.bind(this))
@@ -135,51 +155,8 @@ class WorldMapView {
       .then(this._events.bind(this))
       .then(this._keyEvents.bind(this))
       .then(this.animate.bind(this))
-      .then(() => { if (this.debug === false) { console.log = consolelog; } }) // Restore Js console.log behavior
+      .then(() => { if (this._preferences.debug === false) { console.log = consolelog; } }) // Restore Js console.log behavior
       .catch(err => console.trace(err) );
-  }
-
-
-  destroy() {
-    return new Promise(resolve => {
-      // Kill animation process
-      cancelAnimationFrame(this._rafId);
-      // Remove all events in view
-      window.removeEventListener('resize', this._onResize, false);
-      window.removeEventListener('click', this._onCanvasClicked, false);
-      // Dispose, call for destructors and clean parent
-      this._controls.destroy();
-      this._scene.dispose();
-      this._renderer.dispose();
-      this._renderTo.innerHTML = '';
-      // Delete object attributes
-      delete this.debug;
-      delete this._renderTo;
-      delete this._countryClickedCB;
-      delete this._worldData;
-      delete this._geoData;
-      delete this._scene;
-      delete this._camera;
-      delete this._controls;
-      delete this._renderer;
-      delete this._rafId;
-      delete this._meshes;
-      delete this._lights;
-      delete this._pivots;
-      delete this._helpers;
-      delete this._selectedPin;
-      delete this._selectedSurfaces;
-      delete this._buttons;
-      delete this._isLightOn;
-      delete this._cameraSpeed;
-      delete this._selectedCountryTrigram;
-      delete this._geoSurfaces;
-      delete this._pins;
-      delete this._onResize;
-      delete this._onCanvasClicked;
-      // Resolve Promise to notify that View has been completely destroyed
-      resolve();
-    });
   }
 
 
@@ -188,6 +165,7 @@ class WorldMapView {
 
   _createLoadingManager() {
     return new Promise(resolve => {
+      if (this._preferences.debug) { console.log('WorldMapView._createLoadingManager'); }
       // Create UI feedback for loading sequence
       const container = document.createElement('DIV');
       container.classList.add('loading-container');
@@ -203,7 +181,7 @@ class WorldMapView {
       this._manager = new THREE.LoadingManager();
       // Texture loading complete
       this._manager.onLoad = () => {
-        if (this.debug) { console.log( 'Loading complete!'); }
+        if (this._preferences.debug) { console.log( 'WorldMapView._createLoadingManager: Loading complete, waiting for browser to render'); }
         requestAnimationFrame(() => {
           // Loading screen can properly disapear with css transition
           container.style.opacity = 0;
@@ -212,9 +190,9 @@ class WorldMapView {
         });
       };
       // Progress and error callbacks
-      this._manager.onError = url => { console.log( `Error loading '${url}'`); };
+      this._manager.onError = url => { console.log( `WorldMapView._createLoadingManager: Error loading ${url}`); };
       this._manager.onProgress = (url, loaded, total) => {
-        if (this.debug) { console.log(`Loading file '${url}'.\nLoaded ${loaded} of ${total} files.`); }
+        if (this._preferences.debug) { console.log(`WorldMapView._createLoadingManager: Loading file ${url} (${loaded}/${total} loaded)`); }
         current.style.width = `${(loaded / total) * 100}%`;
       };
       // Define loader to be sent in MeshFactory
@@ -227,7 +205,7 @@ class WorldMapView {
 
   _buildViewer() {
     return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._buildViewer'); }
+      if (this._preferences.debug) { console.log('WorldMapView._buildViewer'); }
       try {
         // Viewer utils
         this._scene = new THREE.Scene();
@@ -245,8 +223,8 @@ class WorldMapView {
         this._renderer.setSize(window.innerWidth, window.innerHeight);
         this._renderTo.appendChild(this._renderer.domElement);
 
-        this._composer = new THREE.EffectComposer(this._renderer);
-        this._composer.addPass(new THREE.RenderPass(this._scene, this._camera));
+        this._composer = new CustomThreeModule.EffectComposer(this._renderer);
+        this._composer.addPass(new CustomThreeModule.RenderPass(this._scene, this._camera));
 
         resolve();
       } catch (err) {
@@ -258,18 +236,17 @@ class WorldMapView {
 
   _buildLights() {
     return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._buildLights'); }
+      if (this._preferences.debug) { console.log('WorldMapView._buildLights'); }
       try {
         this._lights.sun = new THREE.DirectionalLight(0xFFFEEE, 2);
         this._lights.ambient = new THREE.AmbientLight(0x070707);
-        this._lights.enlightUniverse = new THREE.AmbientLight(0xFFAAAA);
 
         this._lights.sun.lookAt(new THREE.Vector3(0, 0, 0));
         this._lights.sun.castShadow	= true
 
-        this._lights.sun.shadow.radius = 1.6;
-        this._lights.sun.shadow.mapSize.width = 8192;
-        this._lights.sun.shadow.mapSize.height = 8192;
+        this._lights.sun.shadow.radius = 5;
+        this._lights.sun.shadow.mapSize.width = this._preferences.shadowResolution;
+        this._lights.sun.shadow.mapSize.height = this._preferences.shadowResolution;
 
         this._lights.sun.shadow.camera.near = 0.01;
         this._lights.sun.shadow.camera.far = 400;
@@ -284,7 +261,7 @@ class WorldMapView {
 
   _buildMeshes() {
     return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._buildMeshes'); }
+      if (this._preferences.debug) { console.log('WorldMapView._buildMeshes'); }
       try {
         // Pivots are for animating objects
         this._pivots.sun = new THREE.Object3D();
@@ -316,6 +293,7 @@ class WorldMapView {
 
 
   _buildCountryPins() {
+    if (this._preferences.debug) { console.log('WorldMapView._buildCountryPins'); }
     for (let i = 0; i < this._worldData.length; ++i) { // Build country pins on Earth
       const pin = MzkMeshes.new({ type: 'earthpin', scale: this._worldData[i].scale });
       const wireframe = MzkMeshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
@@ -328,6 +306,7 @@ class WorldMapView {
 
 
   _buildGeoMeshes() {
+    if (this._preferences.debug) { console.log('WorldMapView._buildGeoMeshes'); }
     for (let i = 0; i < this._geoData.features.length; ++i) {
       // Check polygon type for feature
       const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
@@ -354,18 +333,13 @@ class WorldMapView {
 
   _buildControls() {
     return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._buildControls'); }
+      if (this._preferences.debug) { console.log('WorldMapView._buildControls'); }
       try {
         // Camera controls
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = SceneConst.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
         this._controls.maxDistance = SceneConst.DISTANCE.SUN / 2; // Constraint dezoom
-        // Build toggle light switch
-        this._buttons.toggleLight = document.createElement('IMG');
-        this._buttons.toggleLight.classList.add('toggle-light');
-        this._buttons.toggleLight.src = './assets/img/icons/light.svg';
-        this._renderTo.appendChild(this._buttons.toggleLight);
-        // Build toggle light switch
+        // Build configuration panel
         this._buttons.configuration = document.createElement('IMG');
         this._buttons.configuration.classList.add('configuration');
         this._buttons.configuration.src = './assets/img/icons/conf.svg';
@@ -380,16 +354,53 @@ class WorldMapView {
   }
 
 
+  _buildCameraControls() {
+    if (this._preferences.debug) { console.log('WorldMapView._buildCameraControls'); }
+    const controlsContainer = document.createElement('DIV');
+    controlsContainer.classList.add('camera-controls-container');
+    const controls = document.createElement('DIV');
+    controls.classList.add('camera-controls');
+
+    this._buttons.top = document.createElement('IMG');
+    this._buttons.left = document.createElement('IMG');
+    this._buttons.bottom = document.createElement('IMG');
+    this._buttons.right = document.createElement('IMG');
+    this._buttons.center = document.createElement('IMG');
+
+    this._buttons.top.classList.add('camera-top');
+    this._buttons.left.classList.add('camera-left');
+    this._buttons.bottom.classList.add('camera-bottom');
+    this._buttons.right.classList.add('camera-right');
+    this._buttons.center.classList.add('camera-center');
+
+    this._buttons.top.src = './assets/img/icons/nav-up.svg';
+    this._buttons.left.src = './assets/img/icons/nav-left.svg';
+    this._buttons.bottom.src = './assets/img/icons/nav-down.svg';
+    this._buttons.right.src = './assets/img/icons/nav-right.svg';
+    this._buttons.center.src = './assets/img/icons/nav-center.svg';
+
+    controls.appendChild(this._buttons.top);
+    controls.appendChild(this._buttons.left);
+    controls.appendChild(this._buttons.bottom);
+    controls.appendChild(this._buttons.right);
+    controls.appendChild(this._buttons.center);
+
+    controlsContainer.appendChild(controls);
+    this._renderTo.appendChild(controlsContainer);
+  }
+
+
   _buildHelpers() {
     return new Promise(resolve => {
-      if (this.debug) {
+      if (this._preferences.debug) {
+        console.log('WorldMapView._buildHelpers');
         this._helpers.worldAxis = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
         this._scene.add(this._helpers.worldAxis);
 
         this._helpers.sunLightShadow = new THREE.CameraHelper(this._lights.sun.shadow.camera);
         this._scene.add(this._helpers.sunLightShadow);
 
-        this._helpers.stats = new Stats();
+        this._helpers.stats = new CustomThreeModule.Stats();
         this._helpers.stats.showPanel(0);
         this._renderTo.appendChild(this._helpers.stats.dom);
       }
@@ -401,7 +412,7 @@ class WorldMapView {
 
   _placeAndUpdateElements() {
     return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._placeAndUpdateElements'); }
+      if (this._preferences.debug) { console.log('WorldMapView._placeAndUpdateElements'); }
       try {
         this._camera.position.z = 1.66;
 
@@ -444,6 +455,7 @@ class WorldMapView {
 
   _fillScene() {
     return new Promise(resolve => {
+      if (this._preferences.debug) { console.log('WorldMapView._fillScene'); }
       // Shader must be placed on Earth mesh
       this._meshes.earth.add(this._meshes.earthNight);
       this._pivots.moon.add(this._meshes.moon);
@@ -473,9 +485,10 @@ class WorldMapView {
 
   _shaderPass() {
     return new Promise(resolve => {
+      if (this._preferences.debug) { console.log('WorldMapView._shaderPass'); }
       // Apply light vignetting on scene for better focus on center
-      const vignettePass = new THREE.ShaderPass(THREE.VignetteShader);
-      vignettePass.uniforms['darkness'].value = 1.05;
+      const vignettePass = MzkMeshes.new({ type: 'vignette' });
+      vignettePass.uniforms.darkness.value = 1.05;
       this._composer.renderToScreen = true;
       this._composer.addPass(vignettePass);
 
@@ -489,7 +502,7 @@ class WorldMapView {
 
   _events() {
     return new Promise((resolve, reject) => {
-      if (this.debug) { console.log('WorldMapView._events'); }
+      if (this._preferences.debug) { console.log('WorldMapView._events'); }
       try {
         window.addEventListener('resize', this._onResize, false);
         window.addEventListener('click', this._onCanvasClicked, false);
@@ -499,7 +512,6 @@ class WorldMapView {
         this._buttons.bottom.addEventListener('click', this._moveCameraBottom.bind(this), false);
         this._buttons.right.addEventListener('click', this._moveCameraRight.bind(this), false);
         this._buttons.center.addEventListener('click', this._moveCameraToInitPos.bind(this), false);
-        this._buttons.toggleLight.addEventListener('click', this._toggleUniverseLight.bind(this), false);
         this._buttons.configuration.addEventListener('click', this._configurationCB, false);
 
         resolve();
@@ -512,6 +524,7 @@ class WorldMapView {
 
   _keyEvents() {
     return new Promise(resolve => {
+      if (this._preferences.debug) { console.log('WorldMapView._keyEvents'); }
       window.addEventListener('keyup', event => {
         if (event.key === 'ArrowUp' || event.key === 'z') {
           this._moveCameraTop();
@@ -529,20 +542,10 @@ class WorldMapView {
 
 
   _onResize() {
+    if (this._preferences.debug) { console.log('WorldMapView._onResize'); }
     this._camera.aspect = window.innerWidth / window.innerHeight;
     this._camera.updateProjectionMatrix();
     this._renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-
-
-  _toggleUniverseLight() {
-    if (this._isLightOn === false) {
-      this._isLightOn = true;
-      this._scene.add(this._lights.enlightUniverse);
-    } else {
-      this._isLightOn = false;
-      this._scene.remove(this._lights.enlightUniverse);
-    }
   }
 
 
@@ -550,14 +553,15 @@ class WorldMapView {
 
 
   animate() {
-    if (this.debug) {
+    if (this._preferences.debug) {
       this._helpers.stats.begin();
     }
+
     TWEEN.update(); // Update Tween for animations
     this._composer.render(this._scene, this._camera);
     this._render();
 
-    if (this.debug) {
+    if (this._preferences.debug) {
       this._helpers.stats.end();
     }
 
@@ -581,6 +585,7 @@ class WorldMapView {
 
 
   _unselectAll() {
+    if (this._preferences.debug) { console.log('WorldMapView._unselectAll'); }
     if (this._selectedPin !== null) {
       this._selectedPin.geometry.scale(1, 0.5, 1);
       this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
@@ -595,6 +600,7 @@ class WorldMapView {
 
 
   _onCanvasClicked(event) {
+    if (this._preferences.debug) { console.log('WorldMapView._onCanvasClicked'); }
     // Only check for clicked country if user is not moving in scene
     if (this._controls.hasMoved === false) {
       event.preventDefault();
@@ -644,7 +650,8 @@ class WorldMapView {
   }
 
 
-  _countryClicked(WorldMapView, point) { // This is already binded to the target pin
+  _countryClicked(WorldMapView, point) { // This is already binded to the target
+    if (WorldMapView._preferences.debug) { console.log('WorldMapView._countryClicked'); }
     // Writtin straight into Meshes (this scope)
     if (this.info.GEOUNIT) { // Country surface clicked, pin otherwise
       this.info.name = this.info.NAME;
@@ -687,42 +694,8 @@ class WorldMapView {
 /*  ----------  Camera controls and manipulation  ----------  */
 
 
-  _buildCameraControls() {
-    const controlsContainer = document.createElement('DIV');
-    controlsContainer.classList.add('camera-controls-container');
-    const controls = document.createElement('DIV');
-    controls.classList.add('camera-controls');
-
-    this._buttons.top = document.createElement('IMG');
-    this._buttons.left = document.createElement('IMG');
-    this._buttons.bottom = document.createElement('IMG');
-    this._buttons.right = document.createElement('IMG');
-    this._buttons.center = document.createElement('IMG');
-
-    this._buttons.top.classList.add('camera-top');
-    this._buttons.left.classList.add('camera-left');
-    this._buttons.bottom.classList.add('camera-bottom');
-    this._buttons.right.classList.add('camera-right');
-    this._buttons.center.classList.add('camera-center');
-
-    this._buttons.top.src = './assets/img/icons/nav-up.svg';
-    this._buttons.left.src = './assets/img/icons/nav-left.svg';
-    this._buttons.bottom.src = './assets/img/icons/nav-down.svg';
-    this._buttons.right.src = './assets/img/icons/nav-right.svg';
-    this._buttons.center.src = './assets/img/icons/nav-center.svg';
-
-    controls.appendChild(this._buttons.top);
-    controls.appendChild(this._buttons.left);
-    controls.appendChild(this._buttons.bottom);
-    controls.appendChild(this._buttons.right);
-    controls.appendChild(this._buttons.center);
-
-    controlsContainer.appendChild(controls);
-    this._renderTo.appendChild(controlsContainer);
-  }
-
-
   _animateCameraPosition(from, to) {
+    if (this._preferences.debug) { console.log('WorldMapView._animateCameraPosition'); }
     return new TWEEN.Tween(from).to(to, 500)
       .easing(TWEEN.Easing.Quadratic.InOut)
       .onUpdate(() => {
@@ -735,6 +708,7 @@ class WorldMapView {
 
 
   _moveCameraTop() {
+    if (this._preferences.debug) { console.log('WorldMapView._moveCameraTop'); }
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -748,6 +722,7 @@ class WorldMapView {
 
 
   _moveCameraLeft() {
+    if (this._preferences.debug) { console.log('WorldMapView._moveCameraLeft'); }
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -761,6 +736,7 @@ class WorldMapView {
 
 
   _moveCameraBottom() {
+    if (this._preferences.debug) { console.log('WorldMapView._moveCameraBottom'); }
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -774,6 +750,7 @@ class WorldMapView {
 
 
   _moveCameraRight() {
+    if (this._preferences.debug) { console.log('WorldMapView._moveCameraRight'); }
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -787,6 +764,7 @@ class WorldMapView {
 
 
   _moveCameraToInitPos() {
+    if (this._preferences.debug) { console.log('WorldMapView._moveCameraToInitPos'); }
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -802,7 +780,6 @@ class WorldMapView {
 /*  ----------  Utils  ----------  */
 
 
-  // Move in utils or some kind of
   getPosFromLatLonRad(lat, lon, radius) {
     // 'member old spherical to cartesian ?
     const phi = (90 - lat) * (Math.PI / 180);

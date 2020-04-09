@@ -1,3 +1,4 @@
+/* MzkWorldMap version 0.8 */
 div.worldmap {
   color: white;
   font-family: Segoe UI, Helvetica, sans-serif;
@@ -189,19 +190,46 @@ img.configuration {
   transition: opacity 2.5s;
 }
 
+.configuration-form form {
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: repeat(2,1fr);
+}
+
+.configuration-form form div {
+  border: solid 1px white;
+  border-radius: 5px;
+  margin: 10px;
+  padding: 20px;
+}
+
 .configuration-form h1,
 .configuration-form h3,
 .configuration-form p {
-  margin: 10px 0;
+  margin: 0 0 10px 0;
 }
 
 .configuration-form p {
   color: #AAAABE;
 }
 
-.configuration-form p span {
+.configuration-form p span.warning {
   color: #FFAD67;
   font-style: italic;
+}
+
+.configuration-form p span.info {
+  color: #48ABAF;
+  font-style: italic;
+}
+
+.configuration-form p.mzkworldmap-debug {
+  grid-column: 1 / span 2;
+}
+
+.configuration-form p.mzkworldmap-debug input {
+  margin: 0 7px;
+  vertical-align: middle;
 }
 
 .configuration-form button {
@@ -213,9 +241,9 @@ img.configuration {
   cursor: pointer;
   font-size: 1em;
   font-weight: bold;
-  margin: 40px 0 0 0;
-  padding: 5px 0;
-  width: 100px;
+  grid-column: 1 / span 2;
+  margin: auto;
+  padding: 10px;
 }
 
 .configuration-form button:focus {
@@ -251,6 +279,4 @@ img.configuration {
   background-color: #56D45B;
   height: 100%;
   width: 0;
-
-  /*transition: width .2s ease-out;*/
 }

@@ -1,5 +1,7 @@
 # MzkWorldMap
 
+![](https://badgen.net/badge/version/0.8/blue)
+
 This project's main goal is to simulate a 3D Earth, on which one can browse the planet to discover music from all over the world.
 This ThreeJS bedrock is the core of the MzkWorldMap plugin, since this projet require a track database to perform well.
 
@@ -13,8 +15,8 @@ Coming Milestones can be found on the [Trello board](https://trello.com/b/ONoFwD
 - [x] Sun and Moon ;
 - [x] Space navigation ;
 - [x] Loading country data from json ;
-- [ ] Display country data with details when selected ;
-- [ ] Mzk plugin formatting.
+- [x] Callback on country clicked ;
+- [ ] Mzk plugin formatting (single module).
 
 ## Techno
 

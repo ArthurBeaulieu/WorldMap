@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>MzkWorldMap plugin</title>
+  <link rel="stylesheet" href="./css/mzkworldmap.css">
+</head>
+<body style="background:black;margin:0;overflow:hidden;">
+  <div class="worldmap"></div> <!-- The MzkWorldMap parent DOM element -->
+  <script type="module">
+/*  ----------  Example of a world map creation  ----------  */
+//Map textures come from http://www.shadedrelief.com/natural3/extra.html and https://www.naturalearthdata.com/
+
+
+  // Don't forget to add mzkworldmap.css to the project you plug this in
+  import MzkWorldMap from './js/MzkWorldMap.js';
+  /** Country clicked callback (plugin exit point)
+   * @param {String} info.name - The country name
+   * @param {String} info.trigram - The country NATO country code (TRIGRAM)
+   * @param {Boolean} info.hasArtists - does the clicked country has artists
+   * @param {Array} info.artists - The clicked country artists
+   * These are the main info attributes, but it does contains several other information.
+   * - From MzkWorldMap data, the capital city and country center coordinates are embedded in info.
+   * - From geojson data, there are a lot more information you can exploit in here. */
+  const countryClicked = info => { console.log(info.hasArtists, info); };
+  // Build MzkWorldMap
+  const map = new MzkWorldMap({
+    baseUrl: './', // Must indicate the plugin base url to properly retrieve its own assets, must end with a slash, better absolute on prod env
+    renderTo: document.querySelector('.worldmap'), // The parent div to render the canvas to
+    libraryDataPath: './assets/LibraryData.json', // Must contain all artists per country (NAME/ID for each)
+    countryClicked: countryClicked // The callback that is trigger each time a country is clicked
+  });
+  // When done with module, destroy it
+  // map.destroy();
+
+
+/*  ----------  Et voila !  ----------  */
+  </script>
+</body>
+</html>
