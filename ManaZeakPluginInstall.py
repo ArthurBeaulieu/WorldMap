@@ -32,7 +32,7 @@ def main():
     ap.add_argument('-u', '--uninstall', help='Uninstall plugin in given path', action='store_true')
     args = vars(ap.parse_args())
     # Preventing path from missing its trailing slash
-    if not args['staticpath'].endswith('\\'):
+    if not args['staticpath'].endswith('/'):
         print('The path \'{}\' is invalid\n> Exiting installer'.format(args['staticpath']))
         sys.exit(-1)
     # Handle install/uninstall plugin
