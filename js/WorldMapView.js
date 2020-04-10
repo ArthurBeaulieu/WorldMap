@@ -12,7 +12,7 @@ const SceneConst = { // Scene constants, for consistent values across features
     SCENE: 220
   },
   DISTANCE: {
-    MOON: 5,
+    MOON: 8,
     SUN: 200,
     CLOUDS: 0.002,
     ATMOSPHERE: 0.002,
@@ -42,7 +42,7 @@ class WorldMapView {
     this._renderTo = options.renderTo;
     this._countryClickedCB = options.countryClickedCB;
     this._configurationCB = options.configurationCB;
-    this._worldData = options.libraryData; // TODO handle libData internal
+    this._worldData = options.userData;
     this._geoData = options.geoData;
     this._preferences = options.preferences;
     // Texture loading management
@@ -84,6 +84,7 @@ class WorldMapView {
     // Scene DOM elements
     this._selectedPin = null;
     this._selectedSurfaces = [];
+    this._controlsContainer = null;
     this._buttons = {
       top: null,
       left: null,
@@ -120,6 +121,13 @@ class WorldMapView {
       // Remove all events in view
       window.removeEventListener('resize', this._onResize, false);
       window.removeEventListener('click', this._onCanvasClicked, false);
+      // Remove all internal DOM elements
+      this._renderTo.removeChild(this._renderer.domElement);
+      this._renderTo.removeChild(this._buttons.configuration);
+      this._renderTo.removeChild(this._controlsContainer);
+      if (this._preferences.debug) {
+        this._renderTo.removeChild(this._helpers.stats.dom);
+      }
       // Dispose, call for destructors and clean parent
       MzkMeshes.destroy();
       this._controls.destroy();
@@ -127,9 +135,6 @@ class WorldMapView {
       this._renderer.renderLists.dispose();
       this._renderer.forceContextLoss();
       this._renderer.dispose();
-      this._renderTo.innerHTML = '';
-      // Delete object attributes
-      Object.keys(this).forEach(key => { delete this[key]; });
       // Resolve Promise to notify that View has been completely destroyed
       resolve();
     });
@@ -170,35 +175,36 @@ class WorldMapView {
       const container = document.createElement('DIV');
       container.classList.add('loading-container');
       container.innerHTML = `
-        <h1>Loading world data...</h1>
+        <h1>ManaZeak World Map</h1>
+        <h2>Loading world data...</h2>
         <div id="track" class="track"><div id="current" class="current"></div></div>
       `;
       // Append loading container with progress bar
       this._renderTo.appendChild(container);
-      requestAnimationFrame(() => container.style.opacity = 1);
-      const current = container.querySelector('#current');
-      // Now handling texture loader and loading completion
-      this._manager = new THREE.LoadingManager();
-      // Texture loading complete
-      this._manager.onLoad = () => {
-        if (this._preferences.debug) { console.log( 'WorldMapView._createLoadingManager: Loading complete, waiting for browser to render'); }
-        requestAnimationFrame(() => {
+      requestAnimationFrame(() => { // We raf to ensure the fade in of loading screen is gonna occur
+        container.style.opacity = 1;
+        const current = container.querySelector('#current');
+        // Now handling texture loader and loading completion
+        this._manager = new THREE.LoadingManager();
+        // Texture loading complete
+        this._manager.onLoad = () => {
+          if (this._preferences.debug) { console.log( 'WorldMapView._createLoadingManager: Loading complete, waiting for browser to render'); }
           // Loading screen can properly disapear with css transition
           container.style.opacity = 0;
-          // Delay according to CSS transition value
-          setTimeout(() => { this._renderTo.removeChild(container); }, 1000);
-        });
-      };
-      // Progress and error callbacks
-      this._manager.onError = url => { console.log( `WorldMapView._createLoadingManager: Error loading ${url}`); };
-      this._manager.onProgress = (url, loaded, total) => {
-        if (this._preferences.debug) { console.log(`WorldMapView._createLoadingManager: Loading file ${url} (${loaded}/${total} loaded)`); }
-        current.style.width = `${(loaded / total) * 100}%`;
-      };
-      // Define loader to be sent in MeshFactory
-      this._loader = new THREE.TextureLoader(this._manager);
-      // Ensure all DOM manipulation are done by delaying resolve
-      setTimeout(resolve, 100);
+          // Delay according to CSS transition value with extra timing
+          setTimeout(() => { this._renderTo.removeChild(container); resolve(); }, 1000);
+        };
+        // Progress and error callbacks
+        this._manager.onError = url => { console.log( `WorldMapView._createLoadingManager: Error loading ${url}`); };
+        this._manager.onProgress = (url, loaded, total) => {
+          if (this._preferences.debug) { console.log(`WorldMapView._createLoadingManager: Loading file ${url} (${loaded}/${total} loaded)`); }
+          current.style.width = `${(loaded / total) * 100}%`;
+        };
+        // Define loader to be sent in MeshFactory
+        this._loader = new THREE.TextureLoader(this._manager);
+        // Ensure all DOM manipulation are done by delaying resolve from animation time
+        setTimeout(resolve, 1000);
+      });
     });
   }
 
@@ -211,7 +217,7 @@ class WorldMapView {
         this._scene = new THREE.Scene();
         this._camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 25000);
         // Renderer parameters
-        this._renderer = new THREE.WebGLRenderer({ antialias: true });
+        this._renderer = new THREE.WebGLRenderer(); // Anti aliasing is handled by FXAA shader pass
         this._renderer.gammaInput = true;
         this._renderer.gammaOutput = true;
         this._renderer.gammaFactor = 2.3;
@@ -356,8 +362,8 @@ class WorldMapView {
 
   _buildCameraControls() {
     if (this._preferences.debug) { console.log('WorldMapView._buildCameraControls'); }
-    const controlsContainer = document.createElement('DIV');
-    controlsContainer.classList.add('camera-controls-container');
+    this._controlsContainer = document.createElement('DIV');
+    this._controlsContainer.classList.add('camera-controls-container');
     const controls = document.createElement('DIV');
     controls.classList.add('camera-controls');
 
@@ -373,6 +379,12 @@ class WorldMapView {
     this._buttons.right.classList.add('camera-right');
     this._buttons.center.classList.add('camera-center');
 
+    this._buttons.top.alt = 'move-camera-top';
+    this._buttons.left.alt = 'move-camera-left';
+    this._buttons.bottom.alt = 'move-camera-bottom';
+    this._buttons.right.alt = 'move-camera-right';
+    this._buttons.center.alt = 'move-camera-center';
+
     this._buttons.top.src = './assets/img/icons/nav-up.svg';
     this._buttons.left.src = './assets/img/icons/nav-left.svg';
     this._buttons.bottom.src = './assets/img/icons/nav-down.svg';
@@ -385,8 +397,8 @@ class WorldMapView {
     controls.appendChild(this._buttons.right);
     controls.appendChild(this._buttons.center);
 
-    controlsContainer.appendChild(controls);
-    this._renderTo.appendChild(controlsContainer);
+    this._controlsContainer.appendChild(controls);
+    this._renderTo.appendChild(this._controlsContainer);
   }
 
 
@@ -486,6 +498,12 @@ class WorldMapView {
   _shaderPass() {
     return new Promise(resolve => {
       if (this._preferences.debug) { console.log('WorldMapView._shaderPass'); }
+      // Anti aliasing with FXAA
+      const pixelRatio = this._renderer.getPixelRatio();
+      const fxaaPass = MzkMeshes.new({ type: 'fxaa' });
+      fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
+      fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
+      this._composer.addPass(fxaaPass);
       // Apply light vignetting on scene for better focus on center
       const vignettePass = MzkMeshes.new({ type: 'vignette' });
       vignettePass.uniforms.darkness.value = 1.05;

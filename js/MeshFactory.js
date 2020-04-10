@@ -34,13 +34,8 @@ class MeshFactory {
         this._materials[i].dispose();
       }
 
-      delete this.CONST;
-      delete this._baseUrl;
-      delete this._segments;
-      delete this._quality;
-      delete this._textures;
-      delete this._geometries;
-      delete this._materials;
+      // Delete object attributes
+      Object.keys(this).forEach(key => { delete this[key]; });
     });
   }
 
@@ -70,6 +65,8 @@ class MeshFactory {
       return this._buildGeoSurface(args.geometry);
     } else if (args.type === 'vignette') {
       return this._buildVignettePass();
+    } else if (args.type === 'fxaa') {
+      return this._buildFXAAPass();
     }
   }
 
@@ -100,7 +97,7 @@ class MeshFactory {
     const meshMaterial = new THREE.MeshPhongMaterial({
       map: map,
       bumpMap: bumpMap,
-      bumpScale: 0.0005,
+      bumpScale: 0.0008,
       specularMap: specularMap,
       specular: new THREE.Color(0xDDDDFF),
       shininess: 13
@@ -225,11 +222,12 @@ class MeshFactory {
     this._textures.push(flareHexangle);
 
     const mesh = new CustomThreeModule.Lensflare();
-    mesh.addElement(new CustomThreeModule.LensflareElement(flareSource, 500, 0));
-    mesh.addElement(new CustomThreeModule.LensflareElement(flareCircle, 60, 0.4));
-    mesh.addElement(new CustomThreeModule.LensflareElement(flareHexangle, 70, 0.5));
-    mesh.addElement(new CustomThreeModule.LensflareElement(flareCircle, 45, 0.66));
-    mesh.addElement(new CustomThreeModule.LensflareElement(flareHexangle, 40, 0.8));
+    mesh.addElement(new CustomThreeModule.LensflareElement(flareSource, 666, 0));
+    mesh.addElement(new CustomThreeModule.LensflareElement(flareCircle, 60, 0.38, new THREE.Color(0xFFAD67)));
+    mesh.addElement(new CustomThreeModule.LensflareElement(flareHexangle, 40, 0.4, new THREE.Color(0xE37517)));
+    mesh.addElement(new CustomThreeModule.LensflareElement(flareHexangle, 70, 0.53, new THREE.Color(0x56D45B)));
+    mesh.addElement(new CustomThreeModule.LensflareElement(flareCircle, 45, 0.57, new THREE.Color(0x12B31D)));
+    mesh.addElement(new CustomThreeModule.LensflareElement(flareCircle, 40, 0.8, new THREE.Color(0x48ABAF)));
 
     return mesh;
   }
@@ -343,6 +341,12 @@ class MeshFactory {
   _buildVignettePass() {
     return new CustomThreeModule.ShaderPass(CustomThreeModule.VignetteShader);
   }
+
+
+  _buildFXAAPass() {
+    return new CustomThreeModule.ShaderPass(CustomThreeModule.FXAAShader);
+  }
+
 
 }
 

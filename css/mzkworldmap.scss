@@ -1,0 +1,190 @@
+/* MzkWorldMap version 0.8 */
+div.worldmap {
+  --margin: 10px;
+  --icon-size: 25px;
+  /* https://github.com/ManaZeak/ManaZeak/wiki/%5BDEV%5D-Color-convention */
+  --color-bg-light: #1D1E25;
+  --color-bg-dark: #0F1015;
+  --color-text: #E7E9E7;
+  --color-icon: #AAAABE;
+  --color-green: #56D45B;
+  --color-green-dark: #12B31D;
+  --color-blue: #48ABAF;
+  --color-blue-dark: #0F8489;
+  --color-orange: #FFAD67;
+
+  color: var(--color-text);
+  font-family: Helvetica, sans-serif;
+  height: 100%;
+  width: 100%;
+
+  img.configuration {
+    cursor: pointer;
+    height: var(--icon-size);
+    right: var(--margin);
+    position: absolute;
+    top: var(--margin);
+  }
+
+  .camera-controls-container {
+    bottom: var(--margin);
+    right: var(--margin);
+    height: calc(var(--icon-size) * 3);
+    position: absolute;
+    width: calc(var(--icon-size) * 3);
+
+    .camera-controls {
+      height: 100%;
+      position: relative;
+
+      img {
+        cursor: pointer;
+        height: var(--icon-size);
+        position: absolute;
+
+        &.camera-top {
+          left: calc(50% - (var(--icon-size) / 2));
+          top: 0;
+        }
+
+        &.camera-left {
+          left: 0;
+          top: calc(50% - (var(--icon-size) / 2));
+        }
+
+        &.camera-bottom {
+          bottom: 0;
+          left: calc(50% - (var(--icon-size) / 2));
+        }
+
+        &.camera-right {
+          right: 0;
+          top: calc(50% - (var(--icon-size) / 2));
+        }
+
+        &.camera-center {
+          left: calc(50% - (var(--icon-size) / 2));
+          top: calc(50% - (var(--icon-size) / 2));
+        }
+      }
+    }
+  }
+
+  .configuration-form {
+    align-items: center;
+    background: radial-gradient(var(--color-bg-light), var(--color-bg-dark));
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    font-size: .9rem;
+    height: 100%;
+    justify-content: center;
+    opacity: 0;
+    overflow-y: auto;
+    padding: 0 20%;
+    position: absolute;
+    text-align: center;
+    top: 0;
+    width: 100%;
+    z-index: 999;
+
+    transition: opacity 1s;
+
+    h1, h3, p {
+      margin: 0 0 var(--margin) 0;
+    }
+
+    p {
+      color: var(--color-icon);
+
+      span.warning {
+        color: var(--color-orange);
+        font-style: italic;
+      }
+
+      span.info {
+        color: var(--color-blue);
+        font-style: italic;
+      }
+
+      &.mzkworldmap-debug {
+        grid-column: 1 / span 2;
+
+        input {
+          margin: 0 var(--margin);
+          vertical-align: middle;
+        }
+      }
+    }
+
+    form {
+      display: grid;
+      grid-gap: var(--margin);
+      grid-template-columns: repeat(2, 1fr);
+
+      div {
+        border: solid 1px var(--color-icon);
+        border-radius: calc(var(--margin) / 2);
+        margin: var(--margin);
+        padding: calc(var(--margin) * 2);
+      }
+
+      button {
+        background-color: var(--color-green);
+        border: solid 1px var(--color-green-dark);
+        border-radius: calc(var(--margin) / 2);
+        color: var(--color-bg-light);
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: bold;
+        grid-column: 1 / span 2;
+        margin: auto;
+        padding: var(--margin);
+
+        &:focus {
+          background-color: var(--color-blue);
+          border: solid 1px var(--color-blue-dark);
+        }
+      }
+    }
+  }
+
+  .loading-container {
+    align-items: center;
+    background: radial-gradient(var(--color-bg-light), var(--color-bg-dark));
+    display: flex;
+    flex-direction: column;
+    font-size: .9rem;
+    height: 100%;
+    justify-content: center;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    z-index: 999;
+
+    transition: opacity 1s;
+
+    h1 {
+      font-size: 2.6em;
+      margin: calc(var(--margin) / 2) 0;
+    }
+
+    h2 {
+      font-style: italic;
+      margin: 0;
+    }
+
+    .track {
+      bottom: 0;
+      height: calc(var(--margin) / 2);
+      position: absolute;
+      width: 100%;
+    }
+
+    .current {
+      background-color: var(--color-green);
+      height: 100%;
+      width: 0;
+    }
+  }
+}

@@ -2,33 +2,62 @@
 <html>
 <head>
   <meta charset=utf-8>
-  <title>MzkWorldMap plugin</title>
-  <link rel="stylesheet" href="./css/mzkworldmap.css">
+  <title>MzkWorldMap plugin 0.8</title>
+  <link rel="stylesheet" href="./dist/mzkworldmap.min.css">
 </head>
 <body style="background:black;margin:0;overflow:hidden;">
   <div class="worldmap"></div> <!-- The MzkWorldMap parent DOM element -->
   <script type="module">
-/*  ----------  Example of a world map creation  ----------  */
-//Map textures come from http://www.shadedrelief.com/natural3/extra.html and https://www.naturalearthdata.com/
+  /** @author Arthur Beaulieu - https://github.com/ArthurBeaulieu
+   * MzkWorldMap 2019-2020 **/
 
 
-  // Don't forget to add mzkworldmap.css to the project you plug this in
+  /** Run MzkWorldMap standalone (this example.html file)
+   * - Disable CORS policy on browser (temporarly), to allow the assets/json files to be loaded
+   * - Go ahead, play around with it and when done, please enable CORS policy on your browser. *
+   * Otherwise, run a local web server to bypass this limitation. **/
+
+
+   /** Run MzkWorldMap as a plugin (module import)
+    * - Ensure you've added the 'dist/mzkworldmap.min.css' file in the destination project,
+    *   or if you're using a bundler, you must make a conditionnal entry point like so :
+    *     var fs = require('fs');
+    *     if (fs.existsSync('path/to/MzkWorldMap/')) { // Add 'js/MzkWorldMap.js' and 'css/mzkworldmap.scss' as entry point  }
+    * - The base url sent in the constructor must be routed in the web server, so assets can be served during construction
+    * When set, MzkWorldMap instanciation should work flawless. For support, contact support@manazeak.org
+    * **/
+
+
+  /*  ----------  MzkWorldMap usage  ----------  */
+
+
   import MzkWorldMap from './js/MzkWorldMap.js';
   /** Country clicked callback (plugin exit point)
    * @param {String} info.name - The country name
    * @param {String} info.trigram - The country NATO country code (TRIGRAM)
    * @param {Boolean} info.hasArtists - does the clicked country has artists
-   * @param {Array} info.artists - The clicked country artists
+   * @param {Array} info.artists - The clicked country artists (same format as in libraryData)
    * These are the main info attributes, but it does contains several other information.
    * - From MzkWorldMap data, the capital city and country center coordinates are embedded in info.
    * - From geojson data, there are a lot more information you can exploit in here. */
   const countryClicked = info => { console.log(info.hasArtists, info); };
-  // Build MzkWorldMap
+  // Sample data that need to be sent to MzkWorldMap to display country with artists
+  const userData = {
+    type: 'artists',
+    countries: [{
+      trigram: 'FRA',
+      artists: [{
+        name: 'Habstrakt',
+        id: '42'
+      }]
+    }]
+  };
+  // Build MzkWorldMap with required data
   const map = new MzkWorldMap({
     baseUrl: './', // Must indicate the plugin base url to properly retrieve its own assets, must end with a slash, better absolute on prod env
     renderTo: document.querySelector('.worldmap'), // The parent div to render the canvas to
-    libraryDataPath: './assets/LibraryData.json', // Must contain all artists per country (NAME/ID for each)
-    countryClicked: countryClicked // The callback that is trigger each time a country is clicked
+    countryClicked: countryClicked, // Optional, the callback that is trigger each time a country is clicked
+    data: userData // Optional, must contain all artists per country (NAME/ID for each)
   });
   // When done with module, destroy it
   // map.destroy();

@@ -65,14 +65,25 @@ const ConfigurationValues = {
 class MzkWorldMap {
 
 
+  /** @author Arthur Beaulieu
+   * @param {object} options
+   * @param {string} options.baseUrl - URL to locate 'assets/' folder
+   * @param {object} options.renderTo - The DOM element to render MzkWorldMap to
+   * @param {function} [options.countryClicked] - The callback to call when a country is clicked
+   * @param {object} [options.userData] - User 'object per country' data, see README.md **/
   constructor(options) {
     // Save options in controller
-    this._renderTo = options.renderTo;
-    this._baseUrl = options.baseUrl;
-    this._libraryDataPath = options.libraryDataPath
-    this._countryClicked = options.countryClicked;
-    this._preferences = this._getLocalPreferences(); // Check local storage for previous preferences
-    this._view = null;
+    this._baseUrl = options.baseUrl || null;
+    this._renderTo = options.renderTo || null;
+    if (this._renderTo === null || this._baseUrl === null) {
+      console.error('Missing arguments in new MzkWorldMap()'); return;
+    }
+    // Optional arguments
+    this._countryClicked = options.countryClicked || (() => {});
+    this._userData = options.data || { type: 'default', countries: [] };
+    // Check local storage for previous preferences
+    this._preferences = this._getLocalPreferences();
+    this._view = null; // Active WorldMapView
     // Determine if session is user first connection
     if (!this._hasLocalPreferences()) { // No local preferences or incorrect local preferences
       this._buildConfigurationView({ emptyLocalStorage: true }); // Init with configuration to store preferences
@@ -82,15 +93,12 @@ class MzkWorldMap {
   }
 
 
+  /** Destroy view and all internals **/
   destroy() {
     return new Promise(resolve => {
       this._view.destroy();
-      delete this._renderTo;
-      delete this._baseUrl;
-      delete this._libraryDataPath;
-      delete this._countryClicked;
-      delete this._preferences;
-      delete this._view;
+      // Delete object attributes
+      Object.keys(this).forEach(key => { delete this[key]; });
       resolve();
     });
   }
@@ -141,8 +149,13 @@ class MzkWorldMap {
       this._setLocalPreferences(output, debug);
       this._preferences = this._getLocalPreferences();
       // Remove configuration view and build WorldMapView
-      requestAnimationFrame(() => { container.style.opacity = 0 });
-      setTimeout(() => { this._renderTo.removeChild(container); this._buildWorldMapView(); }, 2500); // 2.5s delay according to CSS transition value
+      requestAnimationFrame(() => {
+        container.style.opacity = 0
+        setTimeout(() => {
+          this._renderTo.removeChild(container);
+          this._buildWorldMapView();
+        }, 1000); // 2.5s delay according to CSS transition value
+      });
     }, false);
     // Append configuration view and start opacity transition
     this._renderTo.appendChild(container);
@@ -165,22 +178,18 @@ class MzkWorldMap {
       .then(worldData => {
         this._readJSONFile(geoPath)
           .then(geoData => {
-            this._readJSONFile(this._libraryDataPath) // To be replace by sent Js object
-              .then(libraryData => {
-                this._view = new WorldMapView({
-                  renderTo: this._renderTo, // DOM element to render canva to
-                  baseUrl: this._baseUrl || './', // Fallback on local execution context
-                  countryClickedCB: this._countryClicked, // Country clicked external callback
-                  configurationCB: this._congigurationClicked.bind(this), // Keep scope at definition
-                  worldData: worldData, // Lat/Long for interresting points
-                  libraryData: this._buildFinalData(worldData, libraryData), // Extend library data with world data (only country that has artists will be filled)
-                  geoData: geoData, // Raw Geojson data
-                  preferences: this._preferences // Local storage preferences
-                });
-                // Clean WebGL and WorldMapView when user leave page
-                window.addEventListener('beforeunload', this.destroy.bind(this), false);
-              })
-              .catch(err => console.error(err));
+            this._view = new WorldMapView({
+              renderTo: this._renderTo, // DOM element to render canva to
+              baseUrl: this._baseUrl || './', // Fallback on local execution context
+              countryClickedCB: this._countryClicked, // Country clicked external callback
+              configurationCB: this._congigurationClicked.bind(this), // Keep scope at definition
+              worldData: worldData, // Lat/Long for interresting points
+              userData: this._buildFinalData(worldData, this._userData, geoData), // Extend library data with world data (only country that has artists will be filled)
+              geoData: geoData, // Raw Geojson data
+              preferences: this._preferences // Local storage preferences
+            });
+            // Clean WebGL and WorldMapView when user leave page
+            window.addEventListener('beforeunload', this.destroy.bind(this), false);
           }) // Catch for geojson data loading
           .catch(err => console.error(err));
       }) // Catch for world data loading
@@ -193,11 +202,10 @@ class MzkWorldMap {
    * Since this method is called from WorldMapView, and therefor testifies that preferences are set, we build the
    * configuration view with the local storage content (emptyLocalStorage false). **/
   _congigurationClicked() {
-    this._view.destroy()
-      .then(() => {
-        this._view = null;
-        this._buildConfigurationView({ emptyLocalStorage: false });
-      });
+    this._buildConfigurationView({ emptyLocalStorage: false });
+    setTimeout(() => {
+      this._view.destroy().then(() => this._view = null);
+    }, 2000); // Delay view destruction to let fade in animation end
   }
 
 
@@ -246,29 +254,37 @@ class MzkWorldMap {
    * The height scale factor represents the 'weight' of a country by its artists number. Countries with lot of artists
    * will be rendered with a high cylinder on country center. Otherwise, the cylinder will remain low.
    * Output array contains countries with artists, relative scale, and extend every property of their respective country from ManaZeak WorldData **/
-  _buildFinalData(worldData, libraryData) {
+  _buildFinalData(worldData, userData, geoData) {
     const output = []; // Output array that consist of all countries that has artists
-    let maxArtistsCount = 0; // The maxArtistsCount is to know which country have the most artists, so it can be the high bound for pin height
+    const type = userData.type; // Get data object type per country
+    let maxCount = 0; // The maxArtistsCount is to know which country have the most artists, so it can be the high bound for pin height
     // First of, we only select contries that have artists
-    for (let i = 0; i < libraryData.countries.length; ++i) {
+    for (let i = 0; i < userData.countries.length; ++i) {
       for (let j = 0; j < worldData.countries.length; ++j) {
         // We found in world data, the country associated with the current library data country
-        if (libraryData.countries[i].trigram === worldData.countries[j].trigram) {
+        if (userData.countries[i].trigram === worldData.countries[j].trigram) {
           const country = worldData.countries[j];
-          country.artists = libraryData.countries[i].artists; // Append artists in output
-          country.artistsCount = libraryData.countries[i].artists.length;
+          country[type] = userData.countries[i][type]; // Append objects in output
           // Update country that has the most artists if needed
-          if (maxArtistsCount < libraryData.countries[i].artists.length) {
-            maxArtistsCount = libraryData.countries[i].artists.length;
+          if (maxCount < userData.countries[i][type].length) {
+            maxCount = userData.countries[i][type].length;
           }
           output.push(country); // Completting output array with current artist
-          break; // Go on to next libraryData country, break worldData iteration
+          break; // Go on to next data country, break worldData iteration
         }
       }
     }
-    // Then we compute their associated height on map in percentage
+    // Then we fill each selected countries with geojson properties
     for (let i = 0; i < output.length; ++i) {
-      output[i].scale = output[i].artists.length / maxArtistsCount;
+      // Then we compute their associated height on map in percentage      
+      output[i].scale = output[i][type].length / maxCount;
+      for (let j = 0; j < geoData.features.length; ++j) {
+        if (output[i].trigram === geoData.features[j].properties.GU_A3) {
+          // Extend geojson properties
+          output[i] = { ...output[i], ...geoData.features[j].properties };
+          break;
+        }
+      }
     }
     // Finally return data object
     return output;

@@ -89,7 +89,7 @@ class TrackballControls {
     this.domElement.removeEventListener('DOMMouseScroll', this.mousewheel, false);
     this.domElement.removeEventListener('touchstart', this.touchstart, false);
     this.domElement.removeEventListener('touchend', this.touchend, false);
-    this.domElement.removeEventListener('touchmove', this.touchmove, false);
+    this.domElement.removeEventListener('touchmove', this.touchmove, false);    
   }
 
 
