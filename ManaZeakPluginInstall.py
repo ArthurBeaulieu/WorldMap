@@ -68,7 +68,7 @@ def uninstallPlugin(staticpath):
 # Copy MzkWorldMap assets to 'staticpath/plugins/MzkWorldMap'
 def addPluginAssets(staticpath):
     try: # Try to copy MzkWorldMap assets directory into argPath/plugins/MzkWorldMap
-        shutil.copytree('./assets/', '{}plugins/MzkWorldMap/'.format(staticpath))
+        shutil.copytree('plugins/MzkWorldMap/assets/', '{}plugins/MzkWorldMap/'.format(staticpath))
     except OSError as error:
         print('{}'.format(error))
         sys.exit(-1)
