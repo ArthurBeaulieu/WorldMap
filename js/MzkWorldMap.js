@@ -67,15 +67,15 @@ class MzkWorldMap {
 
   /** @author Arthur Beaulieu
    * @param {object} options
-   * @param {string} options.baseUrl - URL to locate 'assets/' folder
+   * @param {string} options.baseUrl - URL to for 'assets/' folder
    * @param {object} options.renderTo - The DOM element to render MzkWorldMap to
    * @param {function} [options.countryClicked] - The callback to call when a country is clicked
    * @param {object} [options.userData] - User 'object per country' data, see README.md **/
   constructor(options) {
     // Save options in controller
-    this._baseUrl = options.baseUrl || null;
+    this._assetsUrl = options.assetsUrl || null;
     this._renderTo = options.renderTo || null;
-    if (this._renderTo === null || this._baseUrl === null) {
+    if (this._renderTo === null || this._assetsUrl === null) {
       console.error('Missing arguments in new MzkWorldMap()'); return;
     }
     // Optional arguments
@@ -171,8 +171,8 @@ class MzkWorldMap {
    * - Finally, the library data is an external object that contains country with artists (the ones to be displayed with a bar).
    * Graphical preferences must be sent through the wmv constructor (implying they are already set when calling new). **/
   _buildWorldMapView() {
-    const worldDataPath = `${this._baseUrl}assets/json/WorldData.json` // WorldData is lat/long for all countries
-    const geoPath = `${this._baseUrl}assets/json/GeojsonData_${this._preferences.borderPrecision}.json`; // All world geojson dataset must be loaded to draw boundaries properly
+    const worldDataPath = `${this._assetsUrl}json/WorldData.json` // WorldData is lat/long for all countries
+    const geoPath = `${this._assetsUrl}json/GeojsonData_${this._preferences.borderPrecision}.json`; // All world geojson dataset must be loaded to draw boundaries properly
     // Load ManaZeak WorldData and Geo data according to given base url and build WorldMapView with all parameters
     this._readJSONFile(worldDataPath)
       .then(worldData => {
@@ -180,7 +180,7 @@ class MzkWorldMap {
           .then(geoData => {
             this._view = new WorldMapView({
               renderTo: this._renderTo, // DOM element to render canva to
-              baseUrl: this._baseUrl || './', // Fallback on local execution context
+              assetsUrl: this._assetsUrl || './', // Fallback on local execution context
               countryClickedCB: this._countryClicked, // Country clicked external callback
               configurationCB: this._congigurationClicked.bind(this), // Keep scope at definition
               worldData: worldData, // Lat/Long for interresting points

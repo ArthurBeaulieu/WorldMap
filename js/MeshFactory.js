@@ -11,7 +11,7 @@ class MeshFactory {
 
   constructor(options) {
     this.CONST = options.CONST;
-    this._baseUrl = options.baseUrl;
+    this._assetsUrl = options.assetsUrl;
     this._segments = options.segments;
     this._quality = options.quality;
     this._textures = [];
@@ -75,9 +75,9 @@ class MeshFactory {
 
 
   _buildEarthSphere(loader) {
-    const map = loader.load(`${this._baseUrl}assets/img/maps/world_${this._quality}.jpg`);
-    const bumpMap = loader.load(`${this._baseUrl}assets/img/maps/bump_${this._quality}.png`);
-    const specularMap = loader.load(`${this._baseUrl}assets/img/maps/specular_${this._quality}.png`);
+    const map = loader.load(`${this._assetsUrl}img/maps/world_${this._quality}.jpg`);
+    const bumpMap = loader.load(`${this._assetsUrl}img/maps/bump_${this._quality}.png`);
+    const specularMap = loader.load(`${this._assetsUrl}img/maps/specular_${this._quality}.png`);
     // Allow texture repetition
     map.wrapS = THREE.RepeatWrapping;
     bumpMap.wrapS = THREE.RepeatWrapping;
@@ -110,7 +110,7 @@ class MeshFactory {
 
   _buildEarthNightSphere(loader) {
     // Anti meridian rotation of night map is made in shader code
-    const nightMap = loader.load(`${this._baseUrl}assets/img/maps/night_${this._quality}.jpg`);
+    const nightMap = loader.load(`${this._assetsUrl}img/maps/night_${this._quality}.jpg`);
     // Allow texture repetition
     nightMap.wrapS = THREE.RepeatWrapping;
     this._textures.push(nightMap);
@@ -136,7 +136,7 @@ class MeshFactory {
 
 
   _buildEarthCloudSphere(loader) {
-    const alphaMap = loader.load(`${this._baseUrl}assets/img/maps/clouds_${this._quality}.jpg`);
+    const alphaMap = loader.load(`${this._assetsUrl}img/maps/clouds_${this._quality}.jpg`);
     // Allow texture repetition
     alphaMap.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values
@@ -159,8 +159,8 @@ class MeshFactory {
 
   _buildEarthBoundariesSphere(loader) {
     // Loading textures from img folder
-    const envMap = loader.load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
-    const alphaMap = loader.load(`${this._baseUrl}assets/img/maps/boundaries_${this._quality}.png`);
+    const envMap = loader.load(`${this._assetsUrl}img/maps/boundaries_${this._quality}.png`);
+    const alphaMap = loader.load(`${this._assetsUrl}img/maps/boundaries_${this._quality}.png`);
     // Allow texture repetition
     envMap.wrapS = THREE.RepeatWrapping;
     alphaMap.wrapS = THREE.RepeatWrapping;
@@ -192,11 +192,11 @@ class MeshFactory {
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.ShaderMaterial({
       uniforms: {
-  			c: { type: 'f', value: 0.95 },
-  			p: { type: 'f', value: 3.4 },
-  			glowColor: { type: 'c', value: new THREE.Color(0x6b96ff) },
-  			viewVector: { type: 'v', value: new THREE.Vector3(0, 0, 0) } // To be set in render loop
-  		},
+        c: { type: 'f', value: 0.95 },
+        p: { type: 'f', value: 3.4 },
+        glowColor: { type: 'c', value: new THREE.Color(0x6b96ff) },
+        viewVector: { type: 'v', value: new THREE.Vector3(0, 0, 0) } // To be set in render loop
+      },
       vertexShader: CustomThreeModule.AtmosphereShader.vertexShader,
       fragmentShader: CustomThreeModule.AtmosphereShader.fragmentShader,
       side: THREE.FrontSide,
@@ -213,9 +213,9 @@ class MeshFactory {
 
 
   _buildSunSphere(loader) {
-    const flareSource = loader.load(`${this._baseUrl}assets/img/flares/flare_source.png`);
-    const flareCircle = loader.load(`${this._baseUrl}assets/img/flares/flare_circle.png`);
-    const flareHexangle = loader.load(`${this._baseUrl}assets/img/flares/flare_hexangle.png`);
+    const flareSource = loader.load(`${this._assetsUrl}img/flares/flare_source.png`);
+    const flareCircle = loader.load(`${this._assetsUrl}img/flares/flare_circle.png`);
+    const flareHexangle = loader.load(`${this._assetsUrl}img/flares/flare_hexangle.png`);
 
     this._textures.push(flareSource);
     this._textures.push(flareCircle);
@@ -234,7 +234,7 @@ class MeshFactory {
 
 
   _buildMoonSphere(loader) {
-    const map = loader.load(`${this._baseUrl}assets/img/maps/moon_${this._quality}.jpg`);
+    const map = loader.load(`${this._assetsUrl}img/maps/moon_${this._quality}.jpg`);
     // Allow texture repetition
     map.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values
@@ -255,7 +255,7 @@ class MeshFactory {
 
 
   _buildMilkyWayBackground(loader) {
-    const map = loader.load(`${this._baseUrl}assets/img/maps/milkyway_${this._quality}.jpg`);
+    const map = loader.load(`${this._assetsUrl}img/maps/milkyway_${this._quality}.jpg`);
     // Allow texture repetition
     map.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values

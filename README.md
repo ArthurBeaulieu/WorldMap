@@ -33,7 +33,7 @@ To use as a module (with `import` statement), you must copy `assets/`, `css/` an
 import MzkWorldMap from 'path/to/MzkWorldMap.js';
 // Simple 3D scene to browse the map and click on countries
 const map = new MzkWorldMap({
-  baseUrl: 'path/to/MzkWorldMap/', // The path that contains the `assets/` folder
+  assetsUrl: 'path/to/MzkWorldMap/assets/', // The path to `./assets/` folder
   renderTo: document.body // The DOM element to insert MzkWorldMap
 });
 ```
@@ -53,7 +53,7 @@ You can also integrate MzkWorldMap to be globally available in your project. In 
   <script type="text/javascript">
     // Simple 3D scene to browse the map and click on countries
     const map = new window.MzkWorldMap({ // window optional
-      baseUrl: 'path/to/MzkWorldMap/', // The path that contains the `assets/` folder
+      assetsUrl: 'path/to/MzkWorldMap/assets/', // The path to `./assets/` folder
       renderTo: document.body // The DOM element to insert MzkWorldMap
     });
   </script>
@@ -79,7 +79,7 @@ const myData = {
 };
 // Full example with data and click callback
 const map = new MzkWorldMap({
-  baseUrl: 'path/to/MzkWorldMap/', // The path that contains the `assets/` folder
+  assetsUrl: 'path/to/MzkWorldMap/assets/', // The path to `./assets/` folder
   renderTo: document.body, // The DOM element to insert MzkWorldMap
   countryClicked: info => alert(info), // The country clicked callback
   data: myData // The object per country data

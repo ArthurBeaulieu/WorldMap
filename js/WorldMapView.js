@@ -38,7 +38,7 @@ class WorldMapView {
   constructor(options) {
     THREE.TrackballControls = TrackballControls; // Override THREE TrackBallControl with provided module
     // View options
-    this._baseUrl = options.baseUrl;
+    this._assetsUrl = options.assetsUrl;
     this._renderTo = options.renderTo;
     this._countryClickedCB = options.countryClickedCB;
     this._configurationCB = options.configurationCB;
@@ -105,7 +105,7 @@ class WorldMapView {
     // Define MeshFactory
     MzkMeshes = new MeshFactory({
       CONST: SceneConst,
-      baseUrl: this._baseUrl,
+      assetsUrl: this._assetsUrl,
       segments: this._preferences.sphereSegments, // 32, 64, 128 depending on pref
       quality: this._preferences.textureQuality // 2k, 4k, 8k depending on pref
     });
@@ -284,9 +284,9 @@ class WorldMapView {
         this._meshes.milkyway = MzkMeshes.new({ type: 'background', loader: this._loader });
 
         this._meshes.moon.receiveShadow	= true;
-      	this._meshes.moon.castShadow = true;
+        this._meshes.moon.castShadow = true;
         this._meshes.earth.receiveShadow	= true;
-	      this._meshes.earth.castShadow = true;
+        this._meshes.earth.castShadow = true;
         // Build advanced data structures
         this._buildCountryPins();
         this._buildGeoMeshes();
@@ -348,7 +348,7 @@ class WorldMapView {
         // Build configuration panel
         this._buttons.configuration = document.createElement('IMG');
         this._buttons.configuration.classList.add('configuration');
-        this._buttons.configuration.src = './assets/img/icons/conf.svg';
+        this._buttons.configuration.src = `${this._assetsUrl}img/icons/conf.svg`;
         this._renderTo.appendChild(this._buttons.configuration);
         // Camera control buttons
         this._buildCameraControls();
@@ -385,11 +385,11 @@ class WorldMapView {
     this._buttons.right.alt = 'move-camera-right';
     this._buttons.center.alt = 'move-camera-center';
 
-    this._buttons.top.src = './assets/img/icons/nav-up.svg';
-    this._buttons.left.src = './assets/img/icons/nav-left.svg';
-    this._buttons.bottom.src = './assets/img/icons/nav-down.svg';
-    this._buttons.right.src = './assets/img/icons/nav-right.svg';
-    this._buttons.center.src = './assets/img/icons/nav-center.svg';
+    this._buttons.top.src = `${this._assetsUrl}img/icons/nav-up.svg`;
+    this._buttons.left.src = `${this._assetsUrl}img/icons/nav-left.svg`;
+    this._buttons.bottom.src = `${this._assetsUrl}img/icons/nav-down.svg`;
+    this._buttons.right.src = `${this._assetsUrl}img/icons/nav-right.svg`;
+    this._buttons.center.src = `${this._assetsUrl}img/icons/nav-center.svg`;
 
     controls.appendChild(this._buttons.top);
     controls.appendChild(this._buttons.left);

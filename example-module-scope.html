@@ -47,7 +47,7 @@ HTML file. However, the css file must be linked in HTMM head to properly set sty
   };
   // Build MzkWorldMap with required data
   const map = new MzkWorldMap({
-    baseUrl: './', // Must indicate the plugin base url to properly retrieve its own assets, must end with a slash, better absolute on prod env
+    assetsUrl: './assets/', // Must indicate the assets path to properly retrieve its own assets, must end with a slash
     renderTo: document.querySelector('.worldmap'), // The parent div to render the canvas to
     countryClicked: countryClicked, // Optional, the callback that is trigger each time a country is clicked
     data: userData // Optional, must contain all artists per country (NAME/ID for each)
