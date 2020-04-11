@@ -10,30 +10,60 @@ Browse a 3D interactive Earth globe to navigate around and select countries. Fee
 
 ### Get started
 
-To quickly play with this module, there is an `example.html` file which can be opened in any modern web browser (that has WebGL support). This *out of the box* method doesn't require a web server, but since *MzkWorldMap* needs to fetch its ressources, you have to disable the CORS policy of your browser*:
+To quickly play with this module, open either `example-global-scope.html` or `example-global-scope.html` in any modern web browser (that has WebGL support). This *out of the box* method doesn't require a web server, but since *MzkWorldMap* needs to fetch its ressources, you have to disable the CORS policy of your browser*:
 
 - Firefox (*about:config*) : `security.fileuri.strict_origin_policy = false`
 - Chrome (*argument to pass*) : `--disable-web-security`
 
-\**For firefox, you must restore this settings when done playing with *MzkWorldMap*, as it makes you vulnerable to downloaded HTML documents. For chrome, just close instance and reopen it without `--disable-web-security` argument.*
+\*For firefox, you must restore this settings when done playing with *MzkWorldMap*, as it makes you vulnerable to downloaded HTML documents. For chrome, just close instance and reopen it without `--disable-web-security` argument.*
 
-### ManaZeak plugin integration
+##### *ManaZeak plugin integration*
 
 This module was mainly designed to be included in [ManaZeak](https://github.com/ManaZeak/ManaZeak) as a plugin. If you administrate a ManaZeak instance and wish to install this plugin, refer to the ManaZeak's wiki [Plugin management](https://github.com/ManaZeak/ManaZeak/wiki/[ADM]-Plugins) entry.
 
-### Integrate this anywhere
+### Basic usage
 
-You can also integrate this on any website. In the `./dist/` folder, you will find both minified css and javascript. Reference those files in your project, and ensure that the `./assets/` folder is routed in your web application, so *MzkWorldMap* can properly load its ressources. Then create a basic instance of the world :
+You can also use this piece of software on any website you want. MzkWorldMap was mainly designed to be used in two ways : as an es6 module or attached to the `window` global scope. If running on a web server, you must ensure that the `./assets/` folder is routed in your web application, so *MzkWorldMap* can properly load its ressources. You can then create a basic instance of the world :
+
+#### As a module
+
+To use as a module (with `import` statement), you must copy `assets/`, `css/` and `js/` to your project, keeping the same tree structure. If you want a custom tree structure, you may make a pass in each Js class to check that import path is correct. That's it, now you can create an instance like this :
 
 ```javascript
+import MzkWorldMap from 'path/to/MzkWorldMap.js';
 // Simple 3D scene to browse the map and click on countries
 const map = new MzkWorldMap({
   baseUrl: 'path/to/MzkWorldMap/', // The path that contains the `assets/` folder
-  renderTo: window // The DOM element to insert MzkWorldMap
+  renderTo: document.body // The DOM element to insert MzkWorldMap
 });
 ```
 
-Or a more advanced one, that will analyze given data (object per country) to represent these objects with scaled heights, and call back when a country is clicked :
+#### As a globally available plugin
+
+You can also integrate MzkWorldMap to be globally available in your project. In the `./dist/` folder, you will find both minified css and javascript. Reference those files in your HTML file like so :
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="./dist/mzkworldmap.min.css">
+</head>
+<body>
+  <script src="./dist/mzkworldmap.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    // Simple 3D scene to browse the map and click on countries
+    const map = new window.MzkWorldMap({ // window optional
+      baseUrl: 'path/to/MzkWorldMap/', // The path that contains the `assets/` folder
+      renderTo: document.body // The DOM element to insert MzkWorldMap
+    });
+  </script>
+</body>
+</html>
+```
+
+### Advanced usage
+
+To make statistical representation for each country, MzkWorldMap will process given data (object per country style) to represent these objects with scaled heights, and call back when a country is clicked :
 
 ```javascript
 // Your custom dataset of object (here artists) per country
@@ -50,7 +80,7 @@ const myData = {
 // Full example with data and click callback
 const map = new MzkWorldMap({
   baseUrl: 'path/to/MzkWorldMap/', // The path that contains the `assets/` folder
-  renderTo: window, // The DOM element to insert MzkWorldMap
+  renderTo: document.body, // The DOM element to insert MzkWorldMap
   countryClicked: info => alert(info), // The country clicked callback
   data: myData // The object per country data
 });

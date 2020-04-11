@@ -2,36 +2,29 @@
 <html>
 <head>
   <meta charset=utf-8>
-  <title>MzkWorldMap plugin 0.8</title>
+  <title>MzkWorldMap 0.8 - Module scope</title>
   <link rel="stylesheet" href="./dist/mzkworldmap.min.css">
 </head>
+<!--
+
+
+MzkWorldMap 2019-2020
+@author Arthur Beaulieu - https://github.com/ArthurBeaulieu
+
+Module scope implementation mean you use MzkWorldMap as a module for your app. You must ensure
+that assets, css and js folder keep the same tree structure (or change yourself import path in classes)
+THREE js is already shipped in CustomThreeModule.js, and you don't need to add any script import to your
+HTML file. However, the css file must be linked in HTMM head to properly set style rules.
+
+
+-->
 <body style="background:black;margin:0;overflow:hidden;">
   <div class="worldmap"></div> <!-- The MzkWorldMap parent DOM element -->
   <script type="module">
-  /** @author Arthur Beaulieu - https://github.com/ArthurBeaulieu
-   * MzkWorldMap 2019-2020 **/
-
-
-  /** Run MzkWorldMap standalone (this example.html file)
-   * - Disable CORS policy on browser (temporarly), to allow the assets/json files to be loaded
-   * - Go ahead, play around with it and when done, please enable CORS policy on your browser. *
-   * Otherwise, run a local web server to bypass this limitation. **/
-
-
-   /** Run MzkWorldMap as a plugin (module import)
-    * - Ensure you've added the 'dist/mzkworldmap.min.css' file in the destination project,
-    *   or if you're using a bundler, you must make a conditionnal entry point like so :
-    *     var fs = require('fs');
-    *     if (fs.existsSync('path/to/MzkWorldMap/')) { // Add 'js/MzkWorldMap.js' and 'css/mzkworldmap.scss' as entry point  }
-    * - The base url sent in the constructor must be routed in the web server, so assets can be served during construction
-    * When set, MzkWorldMap instanciation should work flawless. For support, contact support@manazeak.org
-    * **/
-
-
-  /*  ----------  MzkWorldMap usage  ----------  */
-
-
+  /*  ----------  MzkWorldMap usage as a module  ----------  */
   import MzkWorldMap from './js/MzkWorldMap.js';
+
+
   /** Country clicked callback (plugin exit point)
    * @param {String} info.name - The country name
    * @param {String} info.trigram - The country NATO country code (TRIGRAM)

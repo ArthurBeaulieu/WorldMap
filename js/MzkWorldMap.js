@@ -276,7 +276,7 @@ class MzkWorldMap {
     }
     // Then we fill each selected countries with geojson properties
     for (let i = 0; i < output.length; ++i) {
-      // Then we compute their associated height on map in percentage      
+      // Then we compute their associated height on map in percentage
       output[i].scale = output[i][type].length / maxCount;
       for (let j = 0; j < geoData.features.length; ++j) {
         if (output[i].trigram === geoData.features[j].properties.GU_A3) {
@@ -320,4 +320,5 @@ class MzkWorldMap {
 }
 
 
+window.MzkWorldMap = MzkWorldMap; // Global scope attachment will be made when bundling this file
 export default MzkWorldMap;
