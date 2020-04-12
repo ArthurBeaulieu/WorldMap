@@ -30,6 +30,7 @@ def main():
     # Install/Desinstall modes
     ap.add_argument('-i', '--install', help='Install plugin in given path', action='store_true')
     ap.add_argument('-u', '--uninstall', help='Uninstall plugin in given path', action='store_true')
+    ap.add_argument('-p', '--pull', help='Update plugin to the latest master commit', action='store_true')
     args = vars(ap.parse_args())
     # Preventing path from missing its trailing slash
     if not args['staticpath'].endswith('/'):
@@ -44,6 +45,10 @@ def main():
         print('Uninstall MzkWorldMap plugin...')
         uninstallPlugin(args['staticpath'])
         print('Uninstallation complete in \'{}\''.format(args['staticpath']))
+    elif args['pull']:
+        print('Update MzkWorldMap plugin...')
+        installPlugin(args['staticpath'])
+        print('Update complete in \'{}\''.format(args['staticpath']))
     else:
         print('Missing arguments. See --help')
 
