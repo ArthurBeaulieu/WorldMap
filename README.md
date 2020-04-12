@@ -10,7 +10,7 @@ Browse a 3D interactive Earth globe to navigate around and select countries. Fee
 
 ### Get started
 
-To quickly play with this module, open either `example-global-scope.html` or `example-global-scope.html` in any modern web browser (that has WebGL support). This *out of the box* method doesn't require a web server, but since *MzkWorldMap* needs to fetch its ressources, you have to disable the CORS policy of your browser*:
+To quickly play with this module, open either `example-global-scope.html` or `example-module-scope.html` in any modern web browser (that has WebGL support). This *out of the box* method doesn't require a web server, but since *MzkWorldMap* needs to fetch its ressources, you have to disable the CORS policy of your browser*:
 
 - Firefox (*about:config*) : `security.fileuri.strict_origin_policy = false`
 - Chrome (*argument to pass*) : `--disable-web-security`
