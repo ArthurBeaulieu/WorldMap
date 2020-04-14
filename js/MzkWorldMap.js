@@ -84,6 +84,8 @@ class MzkWorldMap {
     // Check local storage for previous preferences
     this._preferences = this._getLocalPreferences();
     this._view = null; // Active WorldMapView
+    // Init parent with css base style for views to be properly rendered
+    this._renderTo.classList.add('mzkworldmap');
     // Determine if session is user first connection
     if (!this._hasLocalPreferences()) { // No local preferences or incorrect local preferences
       this._buildConfigurationView({ emptyLocalStorage: true }); // Init with configuration to store preferences
@@ -171,7 +173,6 @@ class MzkWorldMap {
    * - Finally, the library data is an external object that contains country with artists (the ones to be displayed with a bar).
    * Graphical preferences must be sent through the wmv constructor (implying they are already set when calling new). **/
   _buildWorldMapView() {
-    this._renderTo.classList.add('mzkworldmap');
     const worldDataPath = `${this._assetsUrl}json/WorldData.json` // WorldData is lat/long for all countries
     const geoPath = `${this._assetsUrl}json/GeojsonData_${this._preferences.borderPrecision}.json`; // All world geojson dataset must be loaded to draw boundaries properly
     // Load ManaZeak WorldData and Geo data according to given base url and build WorldMapView with all parameters
