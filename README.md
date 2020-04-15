@@ -82,7 +82,8 @@ const map = new MzkWorldMap({
   assetsUrl: 'path/to/MzkWorldMap/assets/', // The path to `./assets/` folder
   renderTo: document.body, // The DOM element to insert MzkWorldMap
   countryClicked: info => alert(info), // The country clicked callback
-  data: myData // The object per country data
+  data: myData, // The object per country data
+  centerOn: 'FRA' // Start view with France centered on
 });
 ```
 

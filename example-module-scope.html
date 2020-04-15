@@ -50,7 +50,8 @@ HTML file. However, the css file must be linked in HTMM head to properly set sty
     assetsUrl: './assets/', // Must indicate the assets path to properly retrieve its own assets, must end with a slash
     renderTo: document.querySelector('.worldmap'), // The parent div to render the canvas to
     countryClicked: countryClicked, // Optional, the callback that is trigger each time a country is clicked
-    data: userData // Optional, must contain all artists per country (NAME/ID for each)
+    data: userData, // Optional, must contain all artists per country (NAME/ID for each)
+    centerOn: 'FRA' // Optional, the country NATO trigram to center at MzkWorldMap init
   });
   // When done with module, destroy it
   // map.destroy();

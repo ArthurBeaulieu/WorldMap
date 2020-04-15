@@ -55,8 +55,10 @@ class MeshFactory {
       return this._buildSunSphere(args.loader);
     } else if (args.type === 'moon') { // Moon sphere
       return this._buildMoonSphere(args.loader);
-    } else if (args.type === 'background') { // Milkyway
+    } else if (args.type === 'milkyway') { // Milkyway
       return this._buildMilkyWayBackground(args.loader);
+    } else if (args.type === 'particles') {
+      return this._buildParticles(args.loader);
     } else if (args.type === 'wireframe') { // Wireframe of a given geometry
       return this._buildWireframe(args.geometry);
     } else if (args.type === 'earthpin') { // Earth pin to locate country center
@@ -222,7 +224,7 @@ class MeshFactory {
     this._textures.push(flareHexangle);
 
     const mesh = new CustomThreeModule.Lensflare();
-    mesh.addElement(new CustomThreeModule.LensflareElement(flareSource, 666, 0));
+    mesh.addElement(new CustomThreeModule.LensflareElement(flareSource, 333, 0));
     mesh.addElement(new CustomThreeModule.LensflareElement(flareCircle, 60, 0.38, new THREE.Color(0xFFAD67)));
     mesh.addElement(new CustomThreeModule.LensflareElement(flareHexangle, 40, 0.4, new THREE.Color(0xE37517)));
     mesh.addElement(new CustomThreeModule.LensflareElement(flareHexangle, 70, 0.53, new THREE.Color(0x56D45B)));
@@ -278,6 +280,35 @@ class MeshFactory {
   /*  ----------  Space utils Meshes  ----------  */
 
 
+  _buildParticles(loader) {
+    const geometry = new THREE.Geometry();
+    for (let i = 0; i < 100000; ++i) {
+      const vertex = new THREE.Vector3();
+      vertex.x = Math.random() * 200 - 100;
+      vertex.y = Math.random() * 200 - 100;
+      vertex.z = Math.random() * 200 - 100;
+      geometry.vertices.push(vertex);
+    }
+
+    const map = loader.load(`${this._assetsUrl}img/flares/flare_circle.png`);
+    const material = new THREE.PointsMaterial({
+      size: 0.2,
+      sizeAttenuation: true,
+      map: map,
+      transparent: true,
+      depthWrite: false
+    });
+    // Enable transparency of texture
+    material.transparent = true;
+    material.blending = THREE.AdditiveBlending;
+    material.blendSrc = THREE['SrcAlphaFactor'];
+    material.blendDst = THREE['DstAlphaColor'];
+    material.blendEquation = THREE.AddEquation;
+
+    return new THREE.Points(geometry, material);
+  }
+
+
   _buildEarthPin(scale) {
     // Limit min height to 25% of pin max height
     if (scale < 0.25) {
@@ -290,7 +321,7 @@ class MeshFactory {
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.MeshPhongMaterial({
-      color: new THREE.Color(0x56d45b),
+      color: new THREE.Color(0x12B31D),
       specular: new THREE.Color(0x55FFAA),
       shininess: 50,
       reflectivity: 1
@@ -312,7 +343,8 @@ class MeshFactory {
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.MeshLambertMaterial({
       side: THREE.DoubleSide,
-      color: new THREE.Color(0x56D45B),
+      color: new THREE.Color(0x333333),
+      emissive: new THREE.Color(0x12B31D),
       opacity: 0,
       transparent: true
     });

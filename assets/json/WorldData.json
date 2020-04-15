@@ -1,5 +1,7 @@
 {
-	"lastRevision": "2019-06-06",
+	"revision": "2",
+	"lastRevision": "2020-04-15",
+	"firstRevision": "2019-06-06",
 	"countries": [{
 		"trigram": "AFG",
 		"name": "Afghanistan",
@@ -85,6 +87,18 @@
 			"long": "45.025668"
 		}
 	}, {
+		"trigram": "ATA",
+		"name": "Antartica",
+		"capitalCity": {
+			"name": "None",
+			"lat": "-90",
+			"long": "0"
+		},
+		"countryCenter": {
+			"lat": "-90",
+			"long": "0"
+		}
+	}, {
 		"trigram": "ATG",
 		"name": "Antigua And Barbuda",
 		"capitalCity": {
@@ -102,7 +116,7 @@
 		"capitalCity": {
 			"name": "Canberra",
 			"lat": "-35.308093",
-			"long": ",149.124424"
+			"long": "149.124424"
 		},
 		"countryCenter": {
 			"lat": "-25.274399",
@@ -863,6 +877,18 @@
 		"countryCenter": {
 			"lat": "12.117947",
 			"long": "-61.684519"
+		}
+	}, {
+		"trigram": "GRL",
+		"name": "Greenland",
+		"capitalCity": {
+			"name": "Nuuk",
+			"lat": "64.181412",
+			"long": "-51.694138"
+		},
+		"countryCenter": {
+			"lat": "74.235878",
+			"long": "-40.569775"
 		}
 	}, {
 		"trigram": "GTM",
@@ -1837,6 +1863,18 @@
 			"long": "29.961853"
 		}
 	}, {
+		"trigram": "SDS",
+		"name": "South Sudan",
+		"capitalCity": {
+			"name": "Juba",
+			"lat": "4.859363",
+			"long": "31.571251"
+		},
+		"countryCenter": {
+			"lat": "7.324330",
+			"long": "30.205856"
+		}
+	}, {
 		"trigram": "SEN",
 		"name": "Senegal",
 		"capitalCity": {
@@ -2125,7 +2163,7 @@
 			"long": "9.381060"
 		}
 	}, {
-		"trigram": "TUV",
+		"trigram": "TUR",
 		"name": "Turkey",
 		"capitalCity": {
 			"name": "Ankara",
@@ -2149,7 +2187,7 @@
 			"long": "121.000357"
 		}
 	}, {
-		"trigram": "TZN",
+		"trigram": "TZA",
 		"name": "Tanzania",
 		"capitalCity": {
 			"name": "Dodoma",

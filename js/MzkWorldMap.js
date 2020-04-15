@@ -81,6 +81,7 @@ class MzkWorldMap {
     // Optional arguments
     this._countryClicked = options.countryClicked || (() => {});
     this._userData = options.data || { type: 'default', countries: [] };
+    this._centerOn = options.centerOn;
     // Check local storage for previous preferences
     this._preferences = this._getLocalPreferences();
     this._view = null; // Active WorldMapView
@@ -187,6 +188,7 @@ class MzkWorldMap {
               configurationCB: this._congigurationClicked.bind(this), // Keep scope at definition
               worldData: worldData, // Lat/Long for interresting points
               userData: this._buildFinalData(worldData, this._userData, geoData), // Extend library data with world data (only country that has artists will be filled)
+              centerOn: this._centerOn,
               geoData: geoData, // Raw Geojson data
               preferences: this._preferences // Local storage preferences
             });

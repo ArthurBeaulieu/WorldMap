@@ -14,20 +14,21 @@ const SceneConst = { // Scene constants, for consistent values across features
   DISTANCE: {
     MOON: 8,
     SUN: 200,
-    CLOUDS: 0.002,
-    ATMOSPHERE: 0.002,
+    CLOUDS: 0.004,
+    ATMOSPHERE: 0.004,
     COUNTRY: 0.01
   },
   PIN: {
     HEIGHT: 0.1,
-    WIDTH: 0.0033
+    WIDTH: 0.002
   }
 };
 const AngularSpeeds = { // Angular speed are tweaked to see an actual animation on render loop
   moon: (2 * Math.PI) / (27.3 * 60 * 60), // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
   sun: (2 * Math.PI) / (365 * 10 * 60), // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
   clouds: (2 * Math.PI) / (20 * 60 * 60),
-  camera: Math.PI / 6
+  camera: Math.PI / 6,
+  particles: (2 * -Math.PI) / (365 * 60)
 };
 let MzkMeshes = null; // Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
 
@@ -42,7 +43,9 @@ class WorldMapView {
     this._renderTo = options.renderTo;
     this._countryClickedCB = options.countryClickedCB;
     this._configurationCB = options.configurationCB;
-    this._worldData = options.userData;
+    this._worldData = options.worldData;
+    this._userData = options.userData;
+    this._centerOn = options.centerOn;
     this._geoData = options.geoData;
     this._preferences = options.preferences;
     // Texture loading management
@@ -64,7 +67,8 @@ class WorldMapView {
       earthAtmosphere: null,
       sun: 0,
       moon: null,
-      milkyway: null
+      milkyway: null,
+      particles: null
     };
     // Scene lights
     this._lights = {
@@ -74,7 +78,8 @@ class WorldMapView {
     // Animation pivots to simulate spheres orbiting
     this._pivots = {
       sun: null,
-      moon: null
+      moon: null,
+      particles: null
     };
     // THREE helpers
     this._helpers = {
@@ -272,6 +277,7 @@ class WorldMapView {
         // Pivots are for animating objects
         this._pivots.sun = new THREE.Object3D();
         this._pivots.moon = new THREE.Object3D();
+        this._pivots.particles = new THREE.Object3D();
         // Build scene elements (Earthwith all its sub-meshes)
         this._meshes.earth = MzkMeshes.new({ type: 'earth', loader: this._loader });
         this._meshes.earthNight = MzkMeshes.new({ type: 'earthnight', loader: this._loader });
@@ -281,7 +287,8 @@ class WorldMapView {
         // Spherical meshes for sun, moon and milky way
         this._meshes.sun = MzkMeshes.new({ type: 'sun', loader: this._loader });
         this._meshes.moon = MzkMeshes.new({ type: 'moon', loader: this._loader });
-        this._meshes.milkyway = MzkMeshes.new({ type: 'background', loader: this._loader });
+        this._meshes.milkyway = MzkMeshes.new({ type: 'milkyway', loader: this._loader });
+        this._meshes.particles = MzkMeshes.new({ type: 'particles', loader: this._loader });
 
         this._meshes.moon.receiveShadow	= true;
         this._meshes.moon.castShadow = true;
@@ -300,10 +307,10 @@ class WorldMapView {
 
   _buildCountryPins() {
     if (this._preferences.debug) { console.log('WorldMapView._buildCountryPins'); }
-    for (let i = 0; i < this._worldData.length; ++i) { // Build country pins on Earth
-      const pin = MzkMeshes.new({ type: 'earthpin', scale: this._worldData[i].scale });
+    for (let i = 0; i < this._userData.length; ++i) { // Build country pins on Earth
+      const pin = MzkMeshes.new({ type: 'earthpin', scale: this._userData[i].scale });
       const wireframe = MzkMeshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
-      pin.info = this._worldData[i]; // Attach country information to the pin
+      pin.info = this._userData[i]; // Attach country information to the pin
       wireframe.renderOrder = 1; // Force wireframe render on top
       pin.add(wireframe);
       this._pins.push(pin);
@@ -323,9 +330,9 @@ class WorldMapView {
         geoSurface.info.hasArtists = false;
         geoSurface.info.trigram = this._geoData.features[i].properties.GU_A3;
         // Find in world data the matching country data
-        for (let k = 0; k < this._worldData.length; ++k) {
-          if (this._worldData[k].trigram === this._geoData.features[i].properties.GU_A3) {
-            geoSurface.info = this._worldData[k];
+        for (let k = 0; k < this._userData.length; ++k) {
+          if (this._userData[k].trigram === this._geoData.features[i].properties.GU_A3) {
+            geoSurface.info = this._userData[k];
             geoSurface.info.hasArtists = true;
             break;
           }
@@ -344,7 +351,10 @@ class WorldMapView {
         // Camera controls
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = SceneConst.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
-        this._controls.maxDistance = SceneConst.DISTANCE.SUN / 2; // Constraint dezoom
+        this._controls.maxDistance = SceneConst.DISTANCE.SUN / 2; // Constraint dezoom to half scene
+        if (this._preferences.debug) {
+          this._controls.maxDistance = SceneConst.DISTANCE.SUN; // Constraint dezoom to scene size
+        }
         // Build configuration panel
         this._buttons.configuration = document.createElement('IMG');
         this._buttons.configuration.classList.add('configuration');
@@ -426,34 +436,51 @@ class WorldMapView {
     return new Promise((resolve, reject) => {
       if (this._preferences.debug) { console.log('WorldMapView._placeAndUpdateElements'); }
       try {
-        this._camera.position.z = 1.66;
-
+        // Position camera to face centerOn country
+        let cameraPos = null;
+        let sunPos = null;
+        for (let i = 0; i < this._worldData.countries.length; ++i) {
+          if (this._worldData.countries[i].trigram === this._centerOn) {
+            const latLon = {
+              lat: this._worldData.countries[i].countryCenter.lat,
+              long: this._worldData.countries[i].countryCenter.long
+            };
+            const cameraCartesian = this.getPosFromLatLonRad(latLon.lat, latLon.long, 1);
+            const sunCartesian = this.getPosFromLatLonRad(23.3, latLon.long, 1); // Offset 23.3 for earth average tilt angle
+            cameraPos = new THREE.Vector3(cameraCartesian[0], cameraCartesian[1], cameraCartesian[2]);
+            sunPos = new THREE.Vector3(sunCartesian[0], sunCartesian[1], sunCartesian[2]);
+          }
+        }
+        this._camera.position.x = cameraPos.normalize().multiplyScalar(1.66).x;
+        this._camera.position.y = cameraPos.normalize().multiplyScalar(1.66).y;
+        this._camera.position.z = cameraPos.normalize().multiplyScalar(1.66).z;
+        // Center pivots as referential is geocentric
+        this._pivots.moon.position.set(0, 0, 0);
+        this._pivots.sun.position.set(0, 0, 0);
+        this._pivots.particles.position.set(0, 0, 0);
+        // Place earth, moon and sun to their initial position
         this._meshes.earth.position.set(0, 0, 0);
         this._meshes.moon.position.set(0, 0, -SceneConst.DISTANCE.MOON);
         // Light will hold sun meshes as lens flare must be related to light source
-        this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN);
-        this._pivots.moon.position.set(0, 0, 0);
-        this._pivots.sun.position.set(0, 0, 0);
-        // Anti-meridian alignement
+        const sunDistance = this._lights.sun.position.length();
+        this._lights.sun.position.x = sunPos.normalize().multiplyScalar(SceneConst.DISTANCE.SUN).x;
+        this._lights.sun.position.y = sunPos.normalize().multiplyScalar(SceneConst.DISTANCE.SUN).y;
+        this._lights.sun.position.z = sunPos.normalize().multiplyScalar(SceneConst.DISTANCE.SUN).z;
+        // Misc alignement
         this._meshes.moon.rotation.y += Math.PI / 2; // Put dark side of the moon to the dark
-        this._meshes.earth.rotation.y += Math.PI / 2; // Earth rotation to face Greenwich
-        this._meshes.earthBoundaries.rotation.y += Math.PI / 2;
-        this._meshes.earthClouds.rotation.y += Math.PI / 2;
-        // Shift earth along its axis from 23.3° (average in between earth tilt axis extremums : 22.1° and 24.5°)
-        this._meshes.earth.rotation.z += (23.3 * Math.PI) / 180; // Earth tilt
-        this._meshes.earthBoundaries.rotation.z += (23.3 * Math.PI) / 180;
+        this._meshes.earthClouds.rotation.y += Math.PI / 2; // Align clouds on day/night bound
         this._pivots.moon.rotation.x += (5.145 * Math.PI) / 180; // 5.145° offset from the earth plane
         // Iterate over pins to configure their position
         for (let i = 0; i < this._pins.length; ++i) {
-          const latlonpoint = this.getPosFromLatLonRad(this._pins[i].info.countryCenter.lat, this._pins[i].info.countryCenter.long, SceneConst.RADIUS.EARTH);
-          this._pins[i].position.set(latlonpoint[0], latlonpoint[1], latlonpoint[2]);
+          const pos = this.getPosFromLatLonRad(this._pins[i].info.countryCenter.lat, this._pins[i].info.countryCenter.long, SceneConst.RADIUS.EARTH);
+          this._pins[i].position.set(pos[0], pos[1], pos[2]);
           this._pins[i].lookAt(new THREE.Vector3(0, 0, 0)); // As referential is geocentric, we look at the earth's center
           this._pins[i].rotation.y += Math.PI / 2; // Rotate for cylinder to be orthonormal with earth surface
           this._pins[i].clickCallback = this._countryClicked;
         }
 
         for (let i = 0; i < this._geoSurfaces.length; ++i) {
-          this._geoSurfaces[i].rotation.y -= Math.PI / 2;
+          this._geoSurfaces[i].rotation.y -= Math.PI / 2; // Texture anti-meridian alignement
           this._geoSurfaces[i].clickCallback = this._countryClicked;
         }
 
@@ -473,14 +500,16 @@ class WorldMapView {
       this._pivots.moon.add(this._meshes.moon);
       this._lights.sun.add(this._meshes.sun);
       this._pivots.sun.add(this._lights.sun);
+      this._pivots.particles.add(this._meshes.particles);
+      this._scene.add(this._lights.ambient);
       this._scene.add(this._pivots.moon);
       this._scene.add(this._pivots.sun);
+      this._scene.add(this._pivots.particles);
       this._scene.add(this._meshes.earth);
       this._scene.add(this._meshes.earthBoundaries);
       this._scene.add(this._meshes.earthClouds);
       this._scene.add(this._meshes.earthAtmosphere);
       this._scene.add(this._meshes.milkyway);
-      this._scene.add(this._lights.ambient);
       // Append every stored pins according to given data
       for (let i = 0; i < this._pins.length; ++i) {
         this._meshes.earth.add(this._pins[i]);
@@ -592,6 +621,7 @@ class WorldMapView {
     this._pivots.moon.rotation.y += AngularSpeeds.moon;
     this._pivots.sun.rotation.y += AngularSpeeds.sun;
     this._meshes.earthClouds.rotation.y += AngularSpeeds.clouds;
+    this._pivots.particles.rotation.y -= AngularSpeeds.particles;
     // Update DayNightShader sun light direction according to light world matrix, same for atmosphere view vector
     this._meshes.earthNight.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
     this._meshes.earthAtmosphere.material.uniforms.viewVector.value = this._camera.position;
@@ -605,7 +635,6 @@ class WorldMapView {
   _unselectAll() {
     if (this._preferences.debug) { console.log('WorldMapView._unselectAll'); }
     if (this._selectedPin !== null) {
-      this._selectedPin.geometry.scale(1, 0.5, 1);
       this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
       this._selectedPin = null;
     }
@@ -637,7 +666,7 @@ class WorldMapView {
       if (intersects.length > 0 && intersects[0].object.info.trigram !== this._selectedCountryTrigram) {
         this._selectedPin = intersects[0].object;
         this._selectedCountryTrigram = this._selectedPin.info.trigram;
-        this._selectedPin.clickCallback(this, intersects[0].point);
+        this._selectedPin.clickCallback(this);
         return; // We return there as selection occurs in callback to select both pins and surfaces
       }
       // Ray cast againt geosurfaces
@@ -659,7 +688,7 @@ class WorldMapView {
           this._selectedSurfaces = countryParts; // Update selected surfaces
           this._selectedCountryTrigram = targetCountry.info.trigram; // Update selected country trigram
           // All selected surface match the same country, we take 0 as reference for cb
-          targetCountry.clickCallback(this, intersects[0].point);
+          targetCountry.clickCallback(this);
         }
       } else {
         this._selectedCountryTrigram = null;
@@ -668,7 +697,7 @@ class WorldMapView {
   }
 
 
-  _countryClicked(WorldMapView, point) { // This is already binded to the target
+  _countryClicked(WorldMapView) { // This is already binded to the target
     if (WorldMapView._preferences.debug) { console.log('WorldMapView._countryClicked'); }
     // Writtin straight into Meshes (this scope)
     if (this.info.GEOUNIT) { // Country surface clicked, pin otherwise
@@ -679,9 +708,8 @@ class WorldMapView {
     WorldMapView._selectedPin = null; // We reset selection bc we don't know if pin or surface clicked
     for (let i = 0; i < WorldMapView._pins.length; ++i) {
       if (WorldMapView._pins[i].info.trigram === WorldMapView._selectedCountryTrigram) {
-        WorldMapView._pins[i].material.color.setHex(0xFF6B67);
+        WorldMapView._pins[i].material.color.setHex(0xE31C17);
         WorldMapView._selectedPin = WorldMapView._pins[i]; // Save pin in case evt comes from surface
-        WorldMapView._selectedPin.geometry.scale(1, 2, 1);
         break; // Break beacause we have one pin per country
       }
     }
@@ -693,16 +721,28 @@ class WorldMapView {
         WorldMapView._selectedSurfaces.push(WorldMapView._geoSurfaces[i]);
       }
     }
-    // Animate camera to go over clicked country
+    // Found country clicked country center and convert it to a camera position on sphere
+    let countrCenter = WorldMapView._camera.position; // Don't move camera by default
+    for (let i = 0; i < WorldMapView._worldData.countries.length; ++i) {
+      if (WorldMapView._worldData.countries[i].trigram === WorldMapView._selectedCountryTrigram) {
+        const latLon = {
+          lat: WorldMapView._worldData.countries[i].countryCenter.lat,
+          long: WorldMapView._worldData.countries[i].countryCenter.long
+        };
+        const cartesian = WorldMapView.getPosFromLatLonRad(latLon.lat, latLon.long, SceneConst.RADIUS.EARTH);
+        countrCenter = new THREE.Vector3(cartesian[0], cartesian[1], cartesian[2]);
+      }
+    }
+    // Animate camera to go over clicked country with its own distance to center kept
     const camDistance = WorldMapView._camera.position.length();
     WorldMapView._animateCameraPosition({
       x: WorldMapView._camera.position.x,
       y: WorldMapView._camera.position.y,
       z: WorldMapView._camera.position.z
     }, {
-      x: WorldMapView._camera.position.copy(point).normalize().multiplyScalar(camDistance).x,
-      y: WorldMapView._camera.position.copy(point).normalize().multiplyScalar(camDistance).y,
-      z: WorldMapView._camera.position.copy(point).normalize().multiplyScalar(camDistance).z
+      x: WorldMapView._camera.position.copy(countrCenter).normalize().multiplyScalar(camDistance).x,
+      y: WorldMapView._camera.position.copy(countrCenter).normalize().multiplyScalar(camDistance).y,
+      z: WorldMapView._camera.position.copy(countrCenter).normalize().multiplyScalar(camDistance).z
     });
     // Call plugin callback
     WorldMapView._countryClickedCB(this.info);

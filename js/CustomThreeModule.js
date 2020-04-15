@@ -514,7 +514,6 @@ const Lensflare = function() {
 		depthWrite: false,
 		transparent: false
 	});
-
 	var material1b = new THREE.RawShaderMaterial({
 		uniforms: {
 			map: { value: tempMap },
@@ -551,8 +550,7 @@ const Lensflare = function() {
 		depthTest: false,
 		depthWrite: false,
 		transparent: false
-	} );
-
+	});
 	// The following object is used for occlusionMap generation
 	var mesh1 = new THREE.Mesh(geometry, material1a);
 	var elements = [];
@@ -654,11 +652,11 @@ const Lensflare = function() {
 		}
 	};
 };
-// Prototype alteration
 Lensflare.prototype = Object.create(THREE.Mesh.prototype);
 Lensflare.prototype.constructor = Lensflare;
 Lensflare.prototype.isLensflare = true;
-// Lens flare element to add in LensFlare
+
+
 const LensflareElement = function(texture, size, distance, color) {
 	/** LensflareElement.js content (see threejs main repository)
 	 * @author Mugen87 / https://github.com/Mugen87
@@ -668,7 +666,6 @@ const LensflareElement = function(texture, size, distance, color) {
 	this.distance = distance || 0;
 	this.color = color || new THREE.Color(0xffffff);
 };
-// LensflareElement internal shader and geometry
 Lensflare.Geometry = (function() {
 	var geometry = new THREE.BufferGeometry();
 	var float32Array = new Float32Array([
