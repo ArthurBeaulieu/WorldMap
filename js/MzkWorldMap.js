@@ -1,8 +1,8 @@
 import WorldMapView from './WorldMapView.js';
 
 
-/* MzkWorldMap version 0.8 */
-const MzkWorldMapVersion = '0.8';
+/* MzkWorldMap version 0.9 */
+const MzkWorldMapVersion = '0.9';
 // Configuration menu constants
 const ConfigurationHTML = `
   <h1>MzkWorldMap configuration</h1>
@@ -70,7 +70,8 @@ class MzkWorldMap {
    * @param {string} options.baseUrl - URL to for 'assets/' folder
    * @param {object} options.renderTo - The DOM element to render MzkWorldMap to
    * @param {function} [options.countryClicked] - The callback to call when a country is clicked
-   * @param {object} [options.userData] - User 'object per country' data, see README.md **/
+   * @param {object} [options.userData] - User 'object per country' data, see README.md
+   * @param {object} [options.centerOn] - The country to center world map on **/
   constructor(options) {
     // Save options in controller
     this._assetsUrl = options.assetsUrl || null;
@@ -81,7 +82,7 @@ class MzkWorldMap {
     // Optional arguments
     this._countryClicked = options.countryClicked || (() => {});
     this._userData = options.data || { type: 'default', countries: [] };
-    this._centerOn = options.centerOn;
+    this._centerOn = options.centerOn || 'FRA';
     // Check local storage for previous preferences
     this._preferences = this._getLocalPreferences();
     this._view = null; // Active WorldMapView

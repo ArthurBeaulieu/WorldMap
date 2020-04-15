@@ -8,13 +8,13 @@ import shutil
 import argparse
 # Globals
 global pluginVersion
-pluginVersion = '0.8'
+pluginVersion = '0.9'
 
 
 # To install this plugin, refer to ManaZeak wiki (https://github.com/ManaZeak/ManaZeak/wiki)
 # ManaZeakPluginIntall script
 # Script to install MzkWorldMap into ManaZeak (https://github.com/ManaZeak/ManaZeak)
-# It needs either -i (install) or -u (uninstall) flag to manipulate plugin, in addition with
+# It needs either -i (install), -p (pull) or -u (uninstall) flags to manipulate plugin, in addition with
 # the ManaZeak 'static/' folder and will copy all MzkWorldMap assets to static/plugins/MzkWorldMap/,
 # with static being the given path. This way, it makes all JSON and images available for
 # MzkWorldMap Js module without any nginx modification. MzkWorldMap javascript and css
