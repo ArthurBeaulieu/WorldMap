@@ -50,7 +50,8 @@ const ConfigurationHTML = `
       <label for="8192">High (8192x8192)</label>
       <input type="radio" id="id-8192" name="shadowResolution" value="8192"><br>
     </div>
-    <p class="mzkworldmap-debug"><label for="debug">Debug mode</label><input type="checkbox" id="id-debug" name="debug"></p>
+    <p class="mzkworldmap-check"><label for="trueSpeeds">True speeds</label><input type="checkbox" id="id-trueSpeeds" name="trueSpeeds"></p>
+    <p class="mzkworldmap-check"><label for="debug">Debug mode</label><input type="checkbox" id="id-debug" name="debug"></p>
     <button type="submit">Start MzkWorldMap</button>
   </form>
 `;
@@ -132,6 +133,7 @@ class MzkWorldMap {
       container.querySelector(`#id-${this._preferences.borderPrecision}`).checked = true;
       container.querySelector(`#id-${this._preferences.sphereSegments}`).checked = true;
       container.querySelector(`#id-${this._preferences.shadowResolution}`).checked = true;
+      container.querySelector(`#id-trueSpeeds`).checked = this._preferences.trueSpeeds;
       container.querySelector(`#id-debug`).checked = this._preferences.debug;
     }
     // Handle form submission
@@ -145,12 +147,17 @@ class MzkWorldMap {
         output.push(entry[1]);
       }
       // Set debug from checkbox state
-      let debug = false;
+      let trueSpeeds = false;
       if (output[4] === 'on') {
+        trueSpeeds = true;
+      }
+      // Set debug from checkbox state
+      let debug = false;
+      if (output[5] === 'on') {
         debug = true;
       }
       // Update local storage and session preferences
-      this._setLocalPreferences(output, debug);
+      this._setLocalPreferences(output, trueSpeeds, debug);
       this._preferences = this._getLocalPreferences();
       // Remove configuration view and build WorldMapView
       requestAnimationFrame(() => {
@@ -225,18 +232,20 @@ class MzkWorldMap {
       borderPrecision: localStorage.getItem('mzkworldmap-border-precision'),
       sphereSegments: localStorage.getItem('mzkworldmap-sphere-segments'),
       shadowResolution: localStorage.getItem('mzkworldmap-shadow-resolution'),
+      trueSpeeds: JSON.parse(localStorage.getItem('mzkworldmap-true-speeds')), // Convert string to bool
       debug: JSON.parse(localStorage.getItem('mzkworldmap-debug')) // Convert string to bool
     };
   }
 
 
   /** Set local storage items according to submitted form values in configuration HTML. **/
-  _setLocalPreferences(preferences, debug) {
+  _setLocalPreferences(preferences, trueSpeeds, debug) {
     // Array order follows HTML template order
     localStorage.setItem('mzkworldmap-texture-quality', preferences[0]);
     localStorage.setItem('mzkworldmap-border-precision', preferences[1]);
     localStorage.setItem('mzkworldmap-sphere-segments', preferences[2]);
     localStorage.setItem('mzkworldmap-shadow-resolution', preferences[3]);
+    localStorage.setItem('mzkworldmap-true-speeds', trueSpeeds);
     localStorage.setItem('mzkworldmap-debug', debug);
   }
 
@@ -248,6 +257,7 @@ class MzkWorldMap {
            ConfigurationValues.borders.indexOf(this._preferences.borderPrecision) !== -1 &&
            ConfigurationValues.segments.indexOf(this._preferences.sphereSegments) !== -1 &&
            ConfigurationValues.shadows.indexOf(this._preferences.shadowResolution) !== -1 &&
+           typeof this._preferences.trueSpeeds === 'boolean' &&
            typeof this._preferences.debug === 'boolean'; // Debug checkbox in necessarly a bool
   }
 
