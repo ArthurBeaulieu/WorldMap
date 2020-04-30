@@ -1,7 +1,7 @@
-/* MzkWorldMap version 0.9 */
+/* MzkWorldMap version 0.9.1 */
 div.mzkworldmap {
   --margin: 10px;
-  --icon-size: 25px;
+  --icon-size: 28px;
   /* https://github.com/ManaZeak/ManaZeak/wiki/%5BDEV%5D-Color-convention */
   --color-bg-light: #1D1E25;
   --color-bg-dark: #0F1015;
@@ -24,47 +24,51 @@ div.mzkworldmap {
     right: var(--margin);
     position: absolute;
     top: var(--margin);
+
+    transition: filter .2s;
+
+    &:active,
+    &:focus,
+    &:hover {
+      /* Generated with #56D45B, using online converter https://codepen.io/sosuke/pen/Pjoqqp */
+      filter: invert(62%) sepia(13%) saturate(1440%) hue-rotate(134deg) brightness(94%) contrast(93%);
+    }
   }
 
   .camera-controls-container {
     bottom: var(--margin);
-    right: var(--margin);
-    height: calc(var(--icon-size) * 3);
+    left: 50%;
+    opacity: 1;
     position: absolute;
-    width: calc(var(--icon-size) * 3);
+
+    transform: translateX(-50%);
+    transition: opacity .2s;
 
     .camera-controls {
+      display: flex;
       height: 100%;
-      position: relative;
+      width: 100%;
 
       img {
         cursor: pointer;
         height: var(--icon-size);
-        position: absolute;
 
-        &.camera-top {
-          left: calc(50% - (var(--icon-size) / 2));
-          top: 0;
+        transition: filter .2s;
+
+        &:active,
+        &:focus,
+        &:hover {
+          /* Generated with #56D45B, using online converter https://codepen.io/sosuke/pen/Pjoqqp */
+          filter: invert(62%) sepia(13%) saturate(1440%) hue-rotate(134deg) brightness(94%) contrast(93%);
+        }
+
+        &.toggle {
+          /* Generated with #56D45B, using online converter https://codepen.io/sosuke/pen/Pjoqqp */
+          filter: invert(66%) sepia(91%) saturate(360%) hue-rotate(68deg) brightness(95%) contrast(81%);
         }
 
         &.camera-left {
-          left: 0;
-          top: calc(50% - (var(--icon-size) / 2));
-        }
-
-        &.camera-bottom {
-          bottom: 0;
-          left: calc(50% - (var(--icon-size) / 2));
-        }
-
-        &.camera-right {
-          right: 0;
-          top: calc(50% - (var(--icon-size) / 2));
-        }
-
-        &.camera-center {
-          left: calc(50% - (var(--icon-size) / 2));
-          top: calc(50% - (var(--icon-size) / 2));
+          transform: rotate(180deg);
         }
       }
     }

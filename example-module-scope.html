@@ -2,7 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>MzkWorldMap 0.9 - Module scope</title>
+  <title>MzkWorldMap 0.9.1 - Module scope</title>
+  <!-- Include minified css bundle -->
   <link rel="stylesheet" href="./dist/mzkworldmap.min.css">
 </head>
 <!--
@@ -11,6 +12,7 @@
 MzkWorldMap 2019-2020
 @author Arthur Beaulieu - https://github.com/ArthurBeaulieu
 
+Allow CORS on your brower to locally test the module (revoke CORS permission afterwards)
 To use MzkWorldMap as an ES6 Module, you must ensure that assets, css and js
 folder keep the same tree structure (or change yourself pathes in classes).
 THREE js is already shipped in CustomThreeModule.js, and you don't need to add
@@ -20,10 +22,14 @@ HTML head to properly set style rules.
 
 -->
 <body style="background:black;margin:0;overflow:hidden;">
-  <div class="worldmap"></div> <!-- The MzkWorldMap parent DOM element -->
+  <!-- The MzkWorldMap parent DOM element -->
+  <div class="worldmap"></div>
   <script type="module">
-  /*  ----------  MzkWorldMap usage as a module  ----------  */
+  /*  ----------  Import ES6 module (replace path with yours)  ----------  */
   import MzkWorldMap from './js/MzkWorldMap.js';
+
+
+  /*  ----------  Optional, callback and data preparation ----------  */
 
 
   /** Country clicked callback (plugin exit point)
@@ -46,19 +52,24 @@ HTML head to properly set style rules.
       }]
     }]
   };
+
+
+  /*  ----------  MzkWorldMap usage as a module  ----------  */
+
+
   // Build MzkWorldMap with required data
   const map = new MzkWorldMap({
     assetsUrl: './assets/', // Must indicate the assets path to properly retrieve its own assets, must end with a slash
     renderTo: document.querySelector('.worldmap'), // The parent div to render the canvas to
-    countryClicked: countryClicked, // Optional, the callback that is trigger each time a country is clicked
-    data: userData, // Optional, must contain all artists per country (NAME/ID for each)
-    centerOn: 'AUS' // Optional, the country NATO trigram to center at MzkWorldMap init and select country
+    countryClicked: countryClicked, // Optional (default null), the callback that is trigger each time a country is clicked
+    data: userData, // Optional (default {}), must contain all artists per country (NAME/ID for each)
+    centerOn: 'FRA' // Optional (default FRA), the country NATO trigram to center at MzkWorldMap init and select country
   });
-  // When done with module, destroy it
+  // When done with module, destroy it to clean WebGL context
   // map.destroy();
 
 
-/*  ----------  Et voila !  ----------  */
+  /*  ----------  Et voila !  ----------  */
   </script>
 </body>
 </html>

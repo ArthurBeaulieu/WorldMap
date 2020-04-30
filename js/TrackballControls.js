@@ -30,7 +30,7 @@ class TrackballControls {
     this._touchZoomDistanceEnd = 0;
 
     this.panSpeed = 0.3;
-    this.noPan = false;
+    this.noPan = true;
     this._panStart = new THREE.Vector2();
     this._panEnd = new THREE.Vector2();
     // Camera movement inertia : Closer to 0 -> very slow decay ; closer to 1 -> very fast decay
@@ -89,7 +89,7 @@ class TrackballControls {
     this.domElement.removeEventListener('DOMMouseScroll', this.mousewheel, false);
     this.domElement.removeEventListener('touchstart', this.touchstart, false);
     this.domElement.removeEventListener('touchend', this.touchend, false);
-    this.domElement.removeEventListener('touchmove', this.touchmove, false);    
+    this.domElement.removeEventListener('touchmove', this.touchmove, false);
   }
 
 

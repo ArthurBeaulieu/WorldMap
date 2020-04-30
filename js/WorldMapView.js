@@ -23,17 +23,19 @@ const SceneConst = { // Scene constants, for consistent values across features
     WIDTH: 0.002
   },
   ANIMATION: {
-    CAMERA: 366
+    CAMERA: 366,
+    ICON: 5000
   }
 };
 const AngularSpeeds = { // Angular speed are tweaked to see an actual animation on render loop
-  moon: (2 * Math.PI) / (27.3 * 60 * 60), // True formula is (2 * Pi) / (27.3 * 24 * 60 * 60)
-  sun: (2 * Math.PI) / (365 * 10 * 60), // True formula is (2 * Pi) / (365.25 * 24 * 60 * 60)
+  moon: ((2 * Math.PI) / (27.3 * 60 * 60)) * 12,
+  sun: ((2 * Math.PI) / (365.25 * 24 * 60 * 60)) * 12,
   clouds: (2 * Math.PI) / (20 * 60 * 60),
   camera: Math.PI / 6,
   particles: (2 * -Math.PI) / (365 * 10 * 60),
-  r_moon: (2 * Math.PI) / (27.3 * 24 * 60 * 60),
-  r_sun: (2 * Math.PI) / (365.25 * 24 * 60 * 60)
+  milkyway: (2 * -Math.PI) / (20 * 60 * 60),
+  r_moon: (2 * Math.PI) / (27.3 * 24 * 60 * 60), // True formula is (2 * Math.PI) / (27.3 * 24 * 60 * 60)
+  r_sun: (2 * Math.PI) / (365.25 * 24 * 60 * 60) // True formula is (2 * Math.PI) / (365.25 * 24 * 60 * 60)
 };
 let MzkMeshes = null; // Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
 
@@ -53,6 +55,7 @@ class WorldMapView {
     this._centerOn = options.centerOn;
     this._geoData = options.geoData;
     this._preferences = options.preferences;
+    this._version = options.version;
     // Texture loading management
     this._manager = null;
     this._loader = null;
@@ -95,16 +98,18 @@ class WorldMapView {
     this._selectedPin = null;
     this._selectedSurfaces = [];
     this._controlsContainer = null;
+    this._iconOpacityTimeoutId = null;
     this._buttons = {
-      top: null,
       left: null,
-      bottom: null,
-      right: null,
+      autoRotate: null,
       center: null,
+      right: null,
       configuration: null
     };
     this._isLightOn = false; // Used with associated button
     this._cameraSpeed = AngularSpeeds.camera; // Used with associated buttons
+    this._cameraAutoRotation = false; // Lock camra auto rotation
+    this._initialPosition = null;
     // Scene country pins, surface and trigram
     this._selectedCountryTrigram = null;
     this._geoSurfaces = [];
@@ -187,6 +192,7 @@ class WorldMapView {
       container.innerHTML = `
         <h1>ManaZeak World Map</h1>
         <h2>Loading world data...</h2>
+        <p>Version ${this._version}</p>
         <div id="track" class="track"><div id="current" class="current"></div></div>
       `;
       // Append loading container with progress bar
@@ -202,7 +208,12 @@ class WorldMapView {
           // Loading screen can properly disapear with css transition
           container.style.opacity = 0;
           // Delay according to CSS transition value with extra timing
-          setTimeout(() => { this._renderTo.removeChild(container); resolve(); }, 1000);
+          setTimeout(() => {
+            this._renderTo.removeChild(container);
+            // Start opacity transition loop (see mouse move event on render to div)
+            this._updateOpacityTransition();
+            // Animation ended, viewer might be ready
+          }, 1000);
         };
         // Progress and error callbacks
         this._manager.onError = url => { console.log( `WorldMapView._createLoadingManager: Error loading ${url}`); };
@@ -382,35 +393,30 @@ class WorldMapView {
     const controls = document.createElement('DIV');
     controls.classList.add('camera-controls');
 
-    this._buttons.top = document.createElement('IMG');
     this._buttons.left = document.createElement('IMG');
-    this._buttons.bottom = document.createElement('IMG');
-    this._buttons.right = document.createElement('IMG');
+    this._buttons.autoRotate = document.createElement('IMG');
     this._buttons.center = document.createElement('IMG');
+    this._buttons.right = document.createElement('IMG');
 
-    this._buttons.top.classList.add('camera-top');
     this._buttons.left.classList.add('camera-left');
-    this._buttons.bottom.classList.add('camera-bottom');
-    this._buttons.right.classList.add('camera-right');
+    this._buttons.autoRotate.classList.add('auto-rotate');
     this._buttons.center.classList.add('camera-center');
+    this._buttons.right.classList.add('camera-right');
 
-    this._buttons.top.alt = 'move-camera-top';
     this._buttons.left.alt = 'move-camera-left';
-    this._buttons.bottom.alt = 'move-camera-bottom';
-    this._buttons.right.alt = 'move-camera-right';
+    this._buttons.center.alt = 'auto-rotate-camera';
     this._buttons.center.alt = 'move-camera-center';
+    this._buttons.right.alt = 'move-camera-right';
 
-    this._buttons.top.src = `${this._assetsUrl}img/icons/nav-up.svg`;
-    this._buttons.left.src = `${this._assetsUrl}img/icons/nav-left.svg`;
-    this._buttons.bottom.src = `${this._assetsUrl}img/icons/nav-down.svg`;
-    this._buttons.right.src = `${this._assetsUrl}img/icons/nav-right.svg`;
+    this._buttons.left.src = `${this._assetsUrl}img/icons/nav-arrow-right.svg`; // 180 rotate in css
+    this._buttons.autoRotate.src = `${this._assetsUrl}img/icons/nav-auto-rotate.svg`;
     this._buttons.center.src = `${this._assetsUrl}img/icons/nav-center.svg`;
+    this._buttons.right.src = `${this._assetsUrl}img/icons/nav-arrow-right.svg`;
 
-    controls.appendChild(this._buttons.top);
     controls.appendChild(this._buttons.left);
-    controls.appendChild(this._buttons.bottom);
-    controls.appendChild(this._buttons.right);
     controls.appendChild(this._buttons.center);
+    controls.appendChild(this._buttons.autoRotate);
+    controls.appendChild(this._buttons.right);
 
     this._controlsContainer.appendChild(controls);
     this._renderTo.appendChild(this._controlsContainer);
@@ -457,6 +463,7 @@ class WorldMapView {
         this._camera.position.x = cameraPos.normalize().multiplyScalar(1.66).x;
         this._camera.position.y = cameraPos.normalize().multiplyScalar(1.66).y;
         this._camera.position.z = cameraPos.normalize().multiplyScalar(1.66).z;
+        this._initialPosition = this._camera.position.clone();
         // Center pivots as referential is geocentric
         this._pivots.moon.position.set(0, 0, 0);
         this._pivots.sun.position.set(0, 0, 0);
@@ -466,17 +473,14 @@ class WorldMapView {
         this._meshes.moon.position.set(0, 0, -SceneConst.DISTANCE.MOON);
         // Light will hold sun meshes as lens flare must be related to light source
         this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN);
-
-        var utcTime = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
+        // Place sun depending on current time UTC
+        let utcTime = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
         utcTime = new Date(utcTime);
         const hours = utcTime.getHours() - 12; // Center interval on noon
         const minutes = utcTime.getMinutes();
         console.log(hours, hours + (minutes / 60))
-        // Add to put it on paper to find this
+        // Had to put it on paper to find this
         this._pivots.sun.rotation.y += (Math.PI * (hours + (minutes / 60)) / 12) - (Math.PI / 2); // Pi/2 is for texture offset
-
-        // this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN);
-
         // Misc alignement
         this._meshes.moon.rotation.y += Math.PI / 2; // Put dark side of the moon to the dark
         this._meshes.earthClouds.rotation.y += Math.PI / 2; // Align clouds on day/night bound
@@ -534,6 +538,8 @@ class WorldMapView {
         this._meshes.earth.add(this._geoSurfaces[i]);
       }
 
+      this._scene.updateMatrixWorld(true);
+
       resolve();
     });
   }
@@ -569,12 +575,13 @@ class WorldMapView {
         window.addEventListener('resize', this._onResize, false);
         window.addEventListener('click', this._onCanvasClicked, false);
 
-        this._buttons.top.addEventListener('click', this._moveCameraTop.bind(this), false);
         this._buttons.left.addEventListener('click', this._moveCameraLeft.bind(this), false);
-        this._buttons.bottom.addEventListener('click', this._moveCameraBottom.bind(this), false);
-        this._buttons.right.addEventListener('click', this._moveCameraRight.bind(this), false);
+        this._buttons.autoRotate.addEventListener('click', this._toggleAutoRotate.bind(this), false);
         this._buttons.center.addEventListener('click', this._moveCameraToInitPos.bind(this), false);
+        this._buttons.right.addEventListener('click', this._moveCameraRight.bind(this), false);
         this._buttons.configuration.addEventListener('click', this._configurationCB, false);
+
+        this._renderTo.addEventListener('mousemove', this._updateOpacityTransition.bind(this), false);
 
         resolve();
       } catch (err) {
@@ -588,12 +595,8 @@ class WorldMapView {
     return new Promise(resolve => {
       if (this._preferences.debug) { console.log('WorldMapView._keyEvents'); }
       window.addEventListener('keyup', event => {
-        if (event.key === 'ArrowUp' || event.key === 'z') {
-          this._moveCameraTop();
-        } else if (event.key === 'ArrowLeft' || event.key === 'q') {
+        if (event.key === 'ArrowLeft' || event.key === 'q') {
           this._moveCameraLeft();
-        } else if (event.key === 'ArrowDown' || event.key === 's') {
-          this._moveCameraBottom();
         } else if (event.key === 'ArrowRight' || event.key === 'd') {
           this._moveCameraRight();
         }
@@ -608,6 +611,38 @@ class WorldMapView {
     this._camera.aspect = window.innerWidth / window.innerHeight;
     this._camera.updateProjectionMatrix();
     this._renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+
+  _updateOpacityTransition() {
+    clearTimeout(this._iconOpacityTimeoutId);
+    this._buttons.configuration.style.opacity = 1;
+    this._controlsContainer.style.opacity = 1;
+    this._iconOpacityTimeoutId = setTimeout(() => {
+      this._buttons.configuration.style.opacity = 0;
+      this._controlsContainer.style.opacity = 0;
+    }, SceneConst.ANIMATION.ICON);
+  }
+
+
+  _toggleAutoRotate() {
+    if (this._buttons.autoRotate.classList.contains('toggle')) {
+      this._disableCameraAutoRotation();
+    } else {
+      this._enableCameraAutoRotation();
+    }
+  }
+
+
+  _enableCameraAutoRotation() {
+    this._buttons.autoRotate.classList.add('toggle');
+    this._cameraAutoRotation = true;
+  }
+
+
+  _disableCameraAutoRotation() {
+    this._buttons.autoRotate.classList.remove('toggle');
+    this._cameraAutoRotation = false;
   }
 
 
@@ -633,15 +668,24 @@ class WorldMapView {
 
   _render() {
     // Put const here, avoid any calculation to reduce CPU load
+    let moonSpeed = AngularSpeeds.moon;
     if (this._preferences.trueSpeeds) {
       this._pivots.moon.rotation.y += AngularSpeeds.r_moon;
       this._pivots.sun.rotation.y += AngularSpeeds.r_sun;
+      moonSpeed = AngularSpeeds.r_moon;
     } else {
       this._pivots.moon.rotation.y += AngularSpeeds.moon;
       this._pivots.sun.rotation.y += AngularSpeeds.sun;
     }
-
+    // If camera locked on moon, we make it rotate along Y only
+    if (this._cameraAutoRotation === true) {
+      const quaternion = new THREE.Quaternion;
+      this._camera.position.applyQuaternion(this._meshes.moon.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0).normalize(), moonSpeed));
+      this._camera.lookAt(this._scene.position);
+    }
+    // Update other pivots
     this._meshes.earthClouds.rotation.y += AngularSpeeds.clouds;
+    this._meshes.milkyway.rotation.z += AngularSpeeds.milkyway; // Give a 'drifting in space' effect
     this._pivots.particles.rotation.y -= AngularSpeeds.particles;
     // Update DayNightShader sun light direction according to light world matrix, same for atmosphere view vector
     this._meshes.earthNight.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
@@ -681,6 +725,8 @@ class WorldMapView {
       mouse.y =  - (event.clientY / this._renderer.domElement.clientHeight) * 2 + 1;
       // Configure ray caster with mouse and camera
       raycaster.setFromCamera(mouse, this._camera);
+      // Avoid ray caster to match country on other side of planet
+      raycaster.far = Math.sqrt((this._camera.position.x ** 2) + (this._camera.position.y ** 2) + (this._camera.position.z ** 2));
       // Ray cast againt pins
       let intersects = raycaster.intersectObjects(this._pins);
       // Check if intersects exists and if target is not selected country
@@ -713,6 +759,19 @@ class WorldMapView {
         }
       } else {
         this._selectedCountryTrigram = null;
+      }
+      // Ray cast againt earth
+      raycaster.far = SceneConst.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth
+      intersects = raycaster.intersectObjects([this._meshes.earth]);
+      if (intersects.length > 0) {
+        console.log(intersects[0].object)
+        this._disableCameraAutoRotation();
+      }
+      // Ray cast againt moon
+      intersects = raycaster.intersectObjects([this._meshes.moon]);
+      if (intersects.length > 0) {
+        console.log(intersects[0].object)
+        this._moveCameraToMoon();
       }
     }
   }
@@ -764,6 +823,7 @@ class WorldMapView {
     }
     // Animate camera to go over clicked country with its own distance to center kept
     const camDistance = this._camera.position.length();
+    this._disableCameraAutoRotation(); // In case user was auto rotation locked
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -781,6 +841,8 @@ class WorldMapView {
 
   _animateCameraPosition(from, to) {
     if (this._preferences.debug) { console.log('WorldMapView._animateCameraPosition'); }
+    // Put camera up in Y axis alignement
+    this._animateCameraUp(this._camera.up, new THREE.Vector3(0, 1, 0));
     return new TWEEN.Tween(from).to(to, SceneConst.ANIMATION.CAMERA)
       .easing(TWEEN.Easing.Quadratic.InOut)
       .onUpdate(() => {
@@ -792,17 +854,12 @@ class WorldMapView {
   }
 
 
-  _moveCameraTop() {
-    if (this._preferences.debug) { console.log('WorldMapView._moveCameraTop'); }
-    this._animateCameraPosition({
-      x: this._camera.position.x,
-      y: this._camera.position.y,
-      z: this._camera.position.z
-    }, {
-      x: this._camera.position.x,
-      y: this._camera.position.y * Math.cos(this._cameraSpeed) + this._camera.position.z * Math.sin(this._cameraSpeed),
-      z: this._camera.position.z * Math.cos(this._cameraSpeed) - this._camera.position.y * Math.sin(this._cameraSpeed)
-    });
+  _animateCameraUp(from, to) {
+    return new TWEEN.Tween(from).to(to, SceneConst.ANIMATION.CAMERA)
+      .easing(TWEEN.Easing.Quadratic.InOut)
+      .onUpdate(() => {
+        this._camera.up.set(from.x, from.y, from.z);
+      }).start();
   }
 
 
@@ -816,20 +873,6 @@ class WorldMapView {
       x: this._camera.position.x * Math.cos(this._cameraSpeed) - this._camera.position.z * Math.sin(this._cameraSpeed),
       y: this._camera.position.y,
       z: this._camera.position.z * Math.cos(this._cameraSpeed) + this._camera.position.x * Math.sin(this._cameraSpeed)
-    });
-  }
-
-
-  _moveCameraBottom() {
-    if (this._preferences.debug) { console.log('WorldMapView._moveCameraBottom'); }
-    this._animateCameraPosition({
-      x: this._camera.position.x,
-      y: this._camera.position.y,
-      z: this._camera.position.z
-    }, {
-      x: this._camera.position.x,
-      y: this._camera.position.y * Math.cos(this._cameraSpeed) - this._camera.position.z * Math.sin(this._cameraSpeed),
-      z: this._camera.position.z * Math.cos(this._cameraSpeed) + this._camera.position.y * Math.sin(this._cameraSpeed)
     });
   }
 
@@ -850,14 +893,31 @@ class WorldMapView {
 
   _moveCameraToInitPos() {
     if (this._preferences.debug) { console.log('WorldMapView._moveCameraToInitPos'); }
+    this._disableCameraAutoRotation(); // Remove auto rotation when user is asking to go to its init pos
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
       z: this._camera.position.z
     }, {
-      x: 0,
-      y: 0,
-      z: 1.66
+      x: this._initialPosition.x,
+      y: this._initialPosition.y,
+      z: this._initialPosition.z
+    });
+  }
+
+
+  _moveCameraToMoon() {
+    this._enableCameraAutoRotation();
+    const distanceFactor = 1.1;
+    var moonPos = new THREE.Vector3().getPositionFromMatrix(this._meshes.moon.matrixWorld);
+    this._animateCameraPosition({
+      x: this._camera.position.x,
+      y: this._camera.position.y,
+      z: this._camera.position.z
+    }, {
+      x: moonPos.multiplyScalar(distanceFactor).x,
+      y: moonPos.multiplyScalar(distanceFactor).y - SceneConst.RADIUS.EARTH, // This way moon appear up camera and earth is made visible
+      z: moonPos.multiplyScalar(distanceFactor).z
     });
   }
 

@@ -1,11 +1,11 @@
 import WorldMapView from './WorldMapView.js';
 
 
-/* MzkWorldMap version 0.9 */
-const MzkWorldMapVersion = '0.9';
+/* MzkWorldMap version 0.9.1 */
+const MzkWorldMapVersion = '0.9.1';
 // Configuration menu constants
 const ConfigurationHTML = `
-  <h1>MzkWorldMap configuration</h1>
+  <h1>MzkWorldMap ${MzkWorldMapVersion}</h1>
   <p>Please set the following preferences, according to your computer's specifications.<br>
   <i>MzkWorldMap</i> requires a modern web browser that uses WebGL for 3D animation.</p>
   <form>
@@ -86,6 +86,7 @@ class MzkWorldMap {
     this._centerOn = options.centerOn || 'FRA';
     // Check local storage for previous preferences
     this._preferences = this._getLocalPreferences();
+    this._version = MzkWorldMapVersion;
     this._view = null; // Active WorldMapView
     // Init parent with css base style for views to be properly rendered
     this._renderTo.classList.add('mzkworldmap');
@@ -142,20 +143,14 @@ class MzkWorldMap {
       event.preventDefault(); // Prevent location redirection with params
       const data = new FormData(form);
       const output = [];
-      // Iterate over radios to extract values
+      // Iterate over radios/checkboxes to extract values
       for (const entry of data) {
         output.push(entry[1]);
       }
+      // Set true speeds from checkbox state
+      let trueSpeeds = form[12].checked;
       // Set debug from checkbox state
-      let trueSpeeds = false;
-      if (output[4] === 'on') {
-        trueSpeeds = true;
-      }
-      // Set debug from checkbox state
-      let debug = false;
-      if (output[5] === 'on') {
-        debug = true;
-      }
+      let debug = form[13].checked;
       // Update local storage and session preferences
       this._setLocalPreferences(output, trueSpeeds, debug);
       this._preferences = this._getLocalPreferences();
@@ -198,7 +193,8 @@ class MzkWorldMap {
               userData: this._buildFinalData(worldData, this._userData, geoData), // Extend library data with world data (only country that has artists will be filled)
               centerOn: this._centerOn,
               geoData: geoData, // Raw Geojson data
-              preferences: this._preferences // Local storage preferences
+              preferences: this._preferences, // Local storage preferences
+              version: this._version
             });
             // Clean WebGL and WorldMapView when user leave page
             window.addEventListener('beforeunload', this.destroy.bind(this), false);
