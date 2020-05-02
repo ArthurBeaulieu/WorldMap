@@ -609,7 +609,7 @@ class WorldMapView {
 
   _onResize() {
     if (this._preferences.debug) { console.log('WorldMapView._onResize'); }
-    const pixelRatio = this._renderer.getPixelRatio();    
+    const pixelRatio = this._renderer.getPixelRatio();
     this._fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
     this._fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
     this._camera.aspect = window.innerWidth / window.innerHeight;
@@ -772,6 +772,7 @@ class WorldMapView {
         this._selectedCountryTrigram = null;
       }
       // Ray cast againt moon
+      raycaster.far = SceneConst.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth      
       intersects = raycaster.intersectObjects([this._meshes.moon]);
       if (intersects.length > 0) {
         this._lockOnMoon = true;
@@ -779,7 +780,6 @@ class WorldMapView {
         return;
       }
       // Ray cast againt earth
-      raycaster.far = SceneConst.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth
       intersects = raycaster.intersectObjects([this._meshes.earth]);
       if (intersects.length > 0) {
         this._lockOnMoon = false;
