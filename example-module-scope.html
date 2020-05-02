@@ -33,14 +33,15 @@ HTML head to properly set style rules.
 
 
   /** Country clicked callback (plugin exit point)
-   * @param {String} info.name - The country name
-   * @param {String} info.trigram - The country NATO country code (TRIGRAM)
-   * @param {Boolean} info.hasArtists - does the clicked country has artists
-   * @param {Array} info.artists - The clicked country artists (same format as in libraryData)
-   * These are the main info attributes, but it does contains several other information.
+   * @param {String} country.name - The country name
+   * @param {String} country.trigram - The country NATO country code (TRIGRAM)
+   * @param {Boolean} country.hasData - Does the clicked country has data?
+   * @param {Boolean} country.unselect - If user didn't clicked on a country
+   * @param {Array} country.artists - The clicked country artists (same format as in libraryData)
+   * These are the main country attributes, but it does contains several other information.
    * - From MzkWorldMap data, the capital city and country center coordinates are embedded in info.
    * - From geojson data, there are a lot more information you can exploit in here. */
-  const countryClicked = info => { console.log(info.hasArtists, info); };
+  const countryClicked = country => { console.log(country); };
   // Sample data that need to be sent to MzkWorldMap to display country with artists
   const userData = {
     type: 'artists',

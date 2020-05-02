@@ -31,7 +31,7 @@ const AngularSpeeds = { // Angular speed are tweaked to see an actual animation 
   moon: ((2 * Math.PI) / (27.3 * 60 * 60)) * 12,
   sun: ((2 * Math.PI) / (365.25 * 24 * 60 * 60)) * 12,
   clouds: (2 * Math.PI) / (20 * 60 * 60),
-  camera: Math.PI / 6,
+  camera: ((2 * Math.PI) / (60 * 60)),
   particles: (2 * -Math.PI) / (365 * 10 * 60),
   milkyway: (2 * -Math.PI) / (20 * 60 * 60),
   r_moon: (2 * Math.PI) / (27.3 * 24 * 60 * 60), // True formula is (2 * Math.PI) / (27.3 * 24 * 60 * 60)
@@ -65,6 +65,7 @@ class WorldMapView {
     this._controls = null;
     this._renderer = null;
     this._composer = null;
+    this._fxaaPass = null;
     this._rafId = -1;
     // Scene meshes
     this._meshes = {
@@ -107,8 +108,9 @@ class WorldMapView {
       configuration: null
     };
     this._isLightOn = false; // Used with associated button
-    this._cameraSpeed = AngularSpeeds.camera; // Used with associated buttons
+    this._cameraMoveAngle = Math.PI / 6; // Used with associated buttons
     this._cameraAutoRotation = false; // Lock camra auto rotation
+    this._lockOnMoon = false;
     this._initialPosition = null;
     // Scene country pins, surface and trigram
     this._selectedCountryTrigram = null;
@@ -343,13 +345,13 @@ class WorldMapView {
         const geoSurface = MzkMeshes.new({ type: 'geosurface', geometry: polygons[j] });
         // Attach info to mesh
         geoSurface.info = this._geoData.features[i].properties;
-        geoSurface.info.hasArtists = false;
+        geoSurface.info.hasData = false;
         geoSurface.info.trigram = this._geoData.features[i].properties.GU_A3;
         // Find in world data the matching country data
         for (let k = 0; k < this._userData.length; ++k) {
           if (this._userData[k].trigram === this._geoData.features[i].properties.GU_A3) {
             geoSurface.info = this._userData[k];
-            geoSurface.info.hasArtists = true;
+            geoSurface.info.hasData = true;
             break;
           }
         }
@@ -478,7 +480,6 @@ class WorldMapView {
         utcTime = new Date(utcTime);
         const hours = utcTime.getHours() - 12; // Center interval on noon
         const minutes = utcTime.getMinutes();
-        console.log(hours, hours + (minutes / 60))
         // Had to put it on paper to find this
         this._pivots.sun.rotation.y += (Math.PI * (hours + (minutes / 60)) / 12) - (Math.PI / 2); // Pi/2 is for texture offset
         // Misc alignement
@@ -550,10 +551,10 @@ class WorldMapView {
       if (this._preferences.debug) { console.log('WorldMapView._shaderPass'); }
       // Anti aliasing with FXAA
       const pixelRatio = this._renderer.getPixelRatio();
-      const fxaaPass = MzkMeshes.new({ type: 'fxaa' });
-      fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
-      fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
-      this._composer.addPass(fxaaPass);
+      this._fxaaPass = MzkMeshes.new({ type: 'fxaa' });
+      this._fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
+      this._fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
+      this._composer.addPass(this._fxaaPass);
       // Apply light vignetting on scene for better focus on center
       const vignettePass = MzkMeshes.new({ type: 'vignette' });
       vignettePass.uniforms.darkness.value = 1.05;
@@ -608,6 +609,9 @@ class WorldMapView {
 
   _onResize() {
     if (this._preferences.debug) { console.log('WorldMapView._onResize'); }
+    const pixelRatio = this._renderer.getPixelRatio();    
+    this._fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
+    this._fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
     this._camera.aspect = window.innerWidth / window.innerHeight;
     this._camera.updateProjectionMatrix();
     this._renderer.setSize(window.innerWidth, window.innerHeight);
@@ -677,10 +681,15 @@ class WorldMapView {
       this._pivots.moon.rotation.y += AngularSpeeds.moon;
       this._pivots.sun.rotation.y += AngularSpeeds.sun;
     }
-    // If camera locked on moon, we make it rotate along Y only
+    //
     if (this._cameraAutoRotation === true) {
+      let speed = AngularSpeeds.camera;
+      if (this._lockOnMoon === true) {
+        speed = moonSpeed
+      }
+
       const quaternion = new THREE.Quaternion;
-      this._camera.position.applyQuaternion(this._meshes.moon.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0).normalize(), moonSpeed));
+      this._camera.position.applyQuaternion(this._meshes.moon.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0).normalize(), speed));
       this._camera.lookAt(this._scene.position);
     }
     // Update other pivots
@@ -720,6 +729,7 @@ class WorldMapView {
 
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
+      let countryHit = false;
 
       mouse.x = (event.clientX / this._renderer.domElement.clientWidth) * 2 - 1;
       mouse.y =  - (event.clientY / this._renderer.domElement.clientHeight) * 2 + 1;
@@ -756,23 +766,33 @@ class WorldMapView {
           this._selectedCountryTrigram = targetCountry.info.trigram; // Update selected country trigram
           // All selected surface match the same country, we take 0 as reference for cb
           targetCountry.clickCallback(this);
+          return;
         }
       } else {
         this._selectedCountryTrigram = null;
+      }
+      // Ray cast againt moon
+      intersects = raycaster.intersectObjects([this._meshes.moon]);
+      if (intersects.length > 0) {
+        this._lockOnMoon = true;
+        this._moveCameraToMoon();
+        return;
       }
       // Ray cast againt earth
       raycaster.far = SceneConst.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth
       intersects = raycaster.intersectObjects([this._meshes.earth]);
       if (intersects.length > 0) {
-        console.log(intersects[0].object)
+        this._lockOnMoon = false;
         this._disableCameraAutoRotation();
       }
-      // Ray cast againt moon
-      intersects = raycaster.intersectObjects([this._meshes.moon]);
-      if (intersects.length > 0) {
-        console.log(intersects[0].object)
-        this._moveCameraToMoon();
-      }
+
+      this._countryClickedCB({
+        unselect: true,
+        hasData: false,
+        artists: [],
+        name: '',
+        trigram: ''
+      });
     }
   }
 
@@ -870,9 +890,9 @@ class WorldMapView {
       y: this._camera.position.y,
       z: this._camera.position.z
     }, {
-      x: this._camera.position.x * Math.cos(this._cameraSpeed) - this._camera.position.z * Math.sin(this._cameraSpeed),
+      x: this._camera.position.x * Math.cos(this._cameraMoveAngle) - this._camera.position.z * Math.sin(this._cameraMoveAngle),
       y: this._camera.position.y,
-      z: this._camera.position.z * Math.cos(this._cameraSpeed) + this._camera.position.x * Math.sin(this._cameraSpeed)
+      z: this._camera.position.z * Math.cos(this._cameraMoveAngle) + this._camera.position.x * Math.sin(this._cameraMoveAngle)
     });
   }
 
@@ -884,9 +904,9 @@ class WorldMapView {
       y: this._camera.position.y,
       z: this._camera.position.z
     }, {
-      x: this._camera.position.x * Math.cos(this._cameraSpeed) + this._camera.position.z * Math.sin(this._cameraSpeed),
+      x: this._camera.position.x * Math.cos(this._cameraMoveAngle) + this._camera.position.z * Math.sin(this._cameraMoveAngle),
       y: this._camera.position.y,
-      z: this._camera.position.z * Math.cos(this._cameraSpeed) - this._camera.position.x * Math.sin(this._cameraSpeed)
+      z: this._camera.position.z * Math.cos(this._cameraMoveAngle) - this._camera.position.x * Math.sin(this._cameraMoveAngle)
     });
   }
 
