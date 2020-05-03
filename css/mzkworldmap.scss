@@ -1,4 +1,4 @@
-/* MzkWorldMap version 0.9.1 */
+/* MzkWorldMap version 0.9.2 */
 div.mzkworldmap {
   --margin: 10px;
   --icon-size: 28px;
@@ -153,7 +153,8 @@ div.mzkworldmap {
     }
   }
 
-  .loading-container {
+  .loading-container,
+  .loading-error {
     align-items: center;
     background: radial-gradient(var(--color-bg-light), var(--color-bg-dark));
     display: flex;
@@ -189,6 +190,22 @@ div.mzkworldmap {
       background-color: var(--color-green);
       height: 100%;
       width: 0;
+    }
+  }
+
+  .loading-error {
+    opacity: 1;
+
+    a {
+      color: var(--color-blue);
+
+      transition: color .2s;
+
+      &:active,
+      &:focus,
+      &:hover {
+        color: var(--color-green);
+      }
     }
   }
 }

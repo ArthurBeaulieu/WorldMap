@@ -1,8 +1,8 @@
 import WorldMapView from './WorldMapView.js';
 
 
-/* MzkWorldMap version 0.9.1 */
-const MzkWorldMapVersion = '0.9.1';
+/* MzkWorldMap version 0.9.2 */
+const MzkWorldMapVersion = '0.9.2';
 // Configuration menu constants
 const ConfigurationHTML = `
   <h1>MzkWorldMap ${MzkWorldMapVersion}</h1>
@@ -55,6 +55,7 @@ const ConfigurationHTML = `
     <button type="submit">Start MzkWorldMap</button>
   </form>
 `;
+// Allowed values for preferences
 const ConfigurationValues = {
   textures: ['2k', '4k', '8k'],
   borders: ['110m', '50m', '10m'],
@@ -331,5 +332,6 @@ class MzkWorldMap {
 }
 
 
-window.MzkWorldMap = MzkWorldMap; // Global scope attachment will be made when bundling this file
+// Global scope attachment will be made when bundling this file
+window.MzkWorldMap = MzkWorldMap;
 export default MzkWorldMap;

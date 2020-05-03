@@ -4,7 +4,10 @@ import MeshFactory from './MeshFactory.js';
 import TWEEN from './Tween.js';
 
 
-const SceneConst = { // Scene constants, for consistent values across features
+// Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
+let MzkMeshes = null;
+// Scene constants, for consistent values across features
+const SceneConst = {
   RADIUS: {
     EARTH: 0.5,
     MOON: 0.25,
@@ -27,24 +30,25 @@ const SceneConst = { // Scene constants, for consistent values across features
     ICON: 5000
   }
 };
-const AngularSpeeds = { // Angular speed are tweaked to see an actual animation on render loop
+// Angular speeds used for animation
+const AngularSpeeds = {
   moon: ((2 * Math.PI) / (27.3 * 60 * 60)) * 12,
   sun: ((2 * Math.PI) / (365.25 * 24 * 60 * 60)) * 12,
   clouds: (2 * Math.PI) / (20 * 60 * 60),
-  camera: ((2 * Math.PI) / (60 * 60)),
+  camera: ((2 * Math.PI) / (60 * 120)),
   particles: (2 * -Math.PI) / (365 * 10 * 60),
   milkyway: (2 * -Math.PI) / (20 * 60 * 60),
-  r_moon: (2 * Math.PI) / (27.3 * 24 * 60 * 60), // True formula is (2 * Math.PI) / (27.3 * 24 * 60 * 60)
-  r_sun: (2 * Math.PI) / (365.25 * 24 * 60 * 60) // True formula is (2 * Math.PI) / (365.25 * 24 * 60 * 60)
+  r_moon: (2 * Math.PI) / (27.3 * 24 * 60 * 60),
+  r_sun: (2 * Math.PI) / (365.25 * 24 * 60 * 60)
 };
-let MzkMeshes = null; // Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
 
 
 class WorldMapView {
 
 
   constructor(options) {
-    THREE.TrackballControls = TrackballControls; // Override THREE TrackBallControl with provided module
+    // Override THREE TrackBallControl with provided module
+    THREE.TrackballControls = TrackballControls;
     // View options
     this._assetsUrl = options.assetsUrl;
     this._renderTo = options.renderTo;
@@ -96,10 +100,7 @@ class WorldMapView {
       sunLightShadow: null
     };
     // Scene DOM elements
-    this._selectedPin = null;
-    this._selectedSurfaces = [];
     this._controlsContainer = null;
-    this._iconOpacityTimeoutId = null;
     this._buttons = {
       left: null,
       autoRotate: null,
@@ -107,7 +108,9 @@ class WorldMapView {
       right: null,
       configuration: null
     };
-    this._isLightOn = false; // Used with associated button
+    // Icon opacity timeout id
+    this._iconOpacityTimeoutId = null;
+    // Camera manipulation
     this._cameraMoveAngle = Math.PI / 6; // Used with associated buttons
     this._cameraAutoRotation = false; // Lock camra auto rotation
     this._lockOnMoon = false;
@@ -116,6 +119,8 @@ class WorldMapView {
     this._selectedCountryTrigram = null;
     this._geoSurfaces = [];
     this._pins = [];
+    this._selectedPin = null;
+    this._selectedSurfaces = [];
     // Event bindings
     this._onResize = this._onResize.bind(this);
     this._onCanvasClicked = this._onCanvasClicked.bind(this);
@@ -127,7 +132,7 @@ class WorldMapView {
       quality: this._preferences.textureQuality // 2k, 4k, 8k depending on pref
     });
     // Init 3D viewer
-    this.init();
+    this._init();
   }
 
 
@@ -142,6 +147,7 @@ class WorldMapView {
       this._renderTo.removeChild(this._renderer.domElement);
       this._renderTo.removeChild(this._buttons.configuration);
       this._renderTo.removeChild(this._controlsContainer);
+      // Also remove stats container if debug
       if (this._preferences.debug) {
         this._renderTo.removeChild(this._helpers.stats.dom);
       }
@@ -158,10 +164,10 @@ class WorldMapView {
   }
 
 
-/*  ----------  Class init  ----------  */
+  /*  ----------  Class init  ----------  */
 
 
-  init() {
+  _init() {
     const consolelog = console.log; // Store Js console.log behavior
     if (this._preferences.debug === false) { console.log = () => {}; } // Remove THREE Js log message when not debugging
     // View build sequence
@@ -178,11 +184,28 @@ class WorldMapView {
       .then(this._keyEvents.bind(this))
       .then(this.animate.bind(this))
       .then(() => { if (this._preferences.debug === false) { console.log = consolelog; } }) // Restore Js console.log behavior
-      .catch(err => console.trace(err) );
+      .catch(this._initFailed.bind(this));
   }
 
 
-/*  ----------  WorldMapView creation  ----------  */
+  _initFailed(error) {
+    console.trace(error);
+    // Create UI feedback for loading sequence
+    const container = document.createElement('DIV');
+    container.classList.add('loading-error');
+    container.innerHTML = `
+      <h1>Loading error</h1>
+      <h2>Contact <a href="mailto:support@manazeak.org" alt="support-mail">support@manazeak.org</a></h2>
+      <p><i>${error}</i></p>
+    `;
+    // Append loading container with progress bar
+    this._renderTo.innerHTML = '';
+    this._renderTo.appendChild(container);
+    this.destroy();
+  }
+
+
+  /*  ----------  WorldMapView creation  ----------  */
 
 
   _createLoadingManager() {
@@ -199,14 +222,21 @@ class WorldMapView {
       `;
       // Append loading container with progress bar
       this._renderTo.appendChild(container);
-      requestAnimationFrame(() => { // We raf to ensure the fade in of loading screen is gonna occur
+      // We raf to ensure the fade in of loading screen is gonna occur
+      requestAnimationFrame(() => {
         container.style.opacity = 1;
         const current = container.querySelector('#current');
         // Now handling texture loader and loading completion
         this._manager = new THREE.LoadingManager();
+        // Progress and error callbacks
+        this._manager.onError = url => { console.log( `WorldMapView._createLoadingManager: Error loading ${url}`); };
+        this._manager.onProgress = (url, loaded, total) => {
+          if (this._preferences.debug) { console.log(`WorldMapView._createLoadingManager: Loading file ${url} (${loaded}/${total} loaded)`); }
+          current.style.width = `${(loaded / total) * 100}%`;
+        };
         // Texture loading complete
         this._manager.onLoad = () => {
-          if (this._preferences.debug) { console.log( 'WorldMapView._createLoadingManager: Loading complete, waiting for browser to render'); }
+          if (this._preferences.debug) { console.log('WorldMapView._createLoadingManager: Loading complete, waiting for browser to render'); }
           // Loading screen can properly disapear with css transition
           container.style.opacity = 0;
           // Delay according to CSS transition value with extra timing
@@ -216,12 +246,6 @@ class WorldMapView {
             this._updateOpacityTransition();
             // Animation ended, viewer might be ready
           }, 1000);
-        };
-        // Progress and error callbacks
-        this._manager.onError = url => { console.log( `WorldMapView._createLoadingManager: Error loading ${url}`); };
-        this._manager.onProgress = (url, loaded, total) => {
-          if (this._preferences.debug) { console.log(`WorldMapView._createLoadingManager: Loading file ${url} (${loaded}/${total} loaded)`); }
-          current.style.width = `${(loaded / total) * 100}%`;
         };
         // Define loader to be sent in MeshFactory
         this._loader = new THREE.TextureLoader(this._manager);
@@ -246,17 +270,17 @@ class WorldMapView {
         this._renderer.gammaFactor = 2.3;
         this._renderer.toneMapping = THREE.ReinhardToneMapping;
         this._renderer.shadowMap.enabled	= true;
-
+        // Renderer setters
         this._renderer.setClearColor(0x040404, 1.0);
         this._renderer.setPixelRatio(window.devicePixelRatio);
         this._renderer.setSize(window.innerWidth, window.innerHeight);
+        // Append renderer dom to the module parent
         this._renderTo.appendChild(this._renderer.domElement);
-
+        // Build composer from renderer
         this._composer = new CustomThreeModule.EffectComposer(this._renderer);
         this._composer.addPass(new CustomThreeModule.RenderPass(this._scene, this._camera));
-
         resolve();
-      } catch (err) {
+      } catch(err) {
         reject(`WorldMapView._buildViewer\n${err}`);
       }
     });
@@ -267,21 +291,19 @@ class WorldMapView {
     return new Promise((resolve, reject) => {
       if (this._preferences.debug) { console.log('WorldMapView._buildLights'); }
       try {
+        // Build scene lights
         this._lights.sun = new THREE.DirectionalLight(0xFFFEEE, 2);
         this._lights.ambient = new THREE.AmbientLight(0x070707);
-
-        this._lights.sun.lookAt(new THREE.Vector3(0, 0, 0));
+        // Configure sun light
         this._lights.sun.castShadow	= true
-
         this._lights.sun.shadow.radius = 5;
         this._lights.sun.shadow.mapSize.width = this._preferences.shadowResolution;
         this._lights.sun.shadow.mapSize.height = this._preferences.shadowResolution;
-
         this._lights.sun.shadow.camera.near = 0.01;
         this._lights.sun.shadow.camera.far = 400;
-
+        this._lights.sun.lookAt(new THREE.Vector3(0, 0, 0));
         resolve();
-      } catch (err) {
+      } catch(err) {
         reject(`WorldMapView._buildLights\n${err}`);
       }
     });
@@ -302,7 +324,7 @@ class WorldMapView {
         this._meshes.earthClouds = MzkMeshes.new({ type: 'earthclouds', loader: this._loader });
         this._meshes.earthBoundaries = MzkMeshes.new({ type: 'earthboundaries', loader: this._loader });
         this._meshes.earthAtmosphere = MzkMeshes.new({ type: 'earthatmosphere', loader: this._loader });
-        // Spherical meshes for sun, moon and milky way
+        // Spherical meshes for sun, moon, milky way and particles
         this._meshes.sun = MzkMeshes.new({ type: 'sun', loader: this._loader });
         this._meshes.moon = MzkMeshes.new({ type: 'moon', loader: this._loader });
         this._meshes.milkyway = MzkMeshes.new({ type: 'milkyway', loader: this._loader });
@@ -313,10 +335,10 @@ class WorldMapView {
         this._meshes.earth.receiveShadow	= true;
         this._meshes.earth.castShadow = true;
         // Build advanced data structures
-        this._buildCountryPins();
-        this._buildGeoMeshes();
-        resolve();
-      } catch (err) {
+        this._buildCountryPins()
+          .then(this._buildGeoMeshes.bind(this))
+          .then(resolve).catch(reject);
+      } catch(err) {
         reject(`WorldMapView._buildMeshes\n${err}`);
       }
     });
@@ -324,41 +346,58 @@ class WorldMapView {
 
 
   _buildCountryPins() {
-    if (this._preferences.debug) { console.log('WorldMapView._buildCountryPins'); }
-    for (let i = 0; i < this._userData.length; ++i) { // Build country pins on Earth
-      const pin = MzkMeshes.new({ type: 'earthpin', scale: this._userData[i].scale });
-      const wireframe = MzkMeshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
-      pin.info = this._userData[i]; // Attach country information to the pin
-      wireframe.renderOrder = 1; // Force wireframe render on top
-      pin.add(wireframe);
-      this._pins.push(pin);
-    }
+    return new Promise((resolve, reject) => {
+      if (this._preferences.debug) { console.log('WorldMapView._buildCountryPins'); }
+      try {
+        // Only build pins from user data. Will not build any pins if no data is sent through the constructor
+        for (let i = 0; i < this._userData.length; ++i) { // Build country pins on Earth
+          const pin = MzkMeshes.new({ type: 'earthpin', scale: this._userData[i].scale });
+          const wireframe = MzkMeshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
+          pin.info = this._userData[i]; // Attach country information to the pin
+          wireframe.renderOrder = 1; // Force wireframe render on top
+          pin.add(wireframe);
+          this._pins.push(pin);
+        }
+        resolve();
+      } catch(err) {
+        reject(`WorldMapView._buildCountryPins\n${err}`);
+      }
+    });
   }
 
 
   _buildGeoMeshes() {
-    if (this._preferences.debug) { console.log('WorldMapView._buildGeoMeshes'); }
-    for (let i = 0; i < this._geoData.features.length; ++i) {
-      // Check polygon type for feature
-      const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
-      for (let j = 0; j < polygons.length; ++j) {
-        const geoSurface = MzkMeshes.new({ type: 'geosurface', geometry: polygons[j] });
-        // Attach info to mesh
-        geoSurface.info = this._geoData.features[i].properties;
-        geoSurface.info.hasData = false;
-        geoSurface.info.trigram = this._geoData.features[i].properties.GU_A3;
-        // Find in world data the matching country data
-        for (let k = 0; k < this._userData.length; ++k) {
-          if (this._userData[k].trigram === this._geoData.features[i].properties.GU_A3) {
-            geoSurface.info = this._userData[k];
-            geoSurface.info.hasData = true;
-            break;
+    return new Promise((resolve, reject) => {
+      if (this._preferences.debug) { console.log('WorldMapView._buildGeoMeshes'); }
+      try {
+        // Iterate over all country in geojson dataset and create associated geometry
+        for (let i = 0; i < this._geoData.features.length; ++i) {
+          // Check polygon type for feature
+          const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
+          // Iterate over polygons set to build country geosurfaces
+          for (let j = 0; j < polygons.length; ++j) {
+            const geoSurface = MzkMeshes.new({ type: 'geosurface', geometry: polygons[j] });
+            // Attach info to mesh
+            geoSurface.info = this._geoData.features[i].properties;
+            geoSurface.info.hasData = false;
+            geoSurface.info.trigram = this._geoData.features[i].properties.GU_A3;
+            // Find in world data the matching country data
+            for (let k = 0; k < this._userData.length; ++k) {
+              if (this._userData[k].trigram === this._geoData.features[i].properties.GU_A3) {
+                geoSurface.info = this._userData[k];
+                geoSurface.info.hasData = true;
+                break;
+              }
+            }
+            // Append surface to mesh array
+            this._geoSurfaces.push(geoSurface);
           }
         }
-        // Append surface to mesh array
-        this._geoSurfaces.push(geoSurface);
+        resolve();
+      } catch(err) {
+        reject(`WorldMapView._buildGeoMeshes\n${err}`);
       }
-    }
+    });
   }
 
 
@@ -370,8 +409,9 @@ class WorldMapView {
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
         this._controls.minDistance = SceneConst.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
         this._controls.maxDistance = SceneConst.DISTANCE.SUN / 2; // Constraint dezoom to half scene
+        // Constraint dezoom to scene size in debug
         if (this._preferences.debug) {
-          this._controls.maxDistance = SceneConst.DISTANCE.SUN; // Constraint dezoom to scene size
+          this._controls.maxDistance = SceneConst.DISTANCE.SUN;
         }
         // Build configuration panel
         this._buttons.configuration = document.createElement('IMG');
@@ -379,67 +419,79 @@ class WorldMapView {
         this._buttons.configuration.src = `${this._assetsUrl}img/icons/conf.svg`;
         this._renderTo.appendChild(this._buttons.configuration);
         // Camera control buttons
-        this._buildCameraControls();
-        resolve();
-      } catch (err) {
+        this._buildViewControls()
+          .then(resolve).catch(reject);
+      } catch(err) {
         reject(`WorldMapView._buildControls\n${err}`);
       }
     });
   }
 
 
-  _buildCameraControls() {
-    if (this._preferences.debug) { console.log('WorldMapView._buildCameraControls'); }
-    this._controlsContainer = document.createElement('DIV');
-    this._controlsContainer.classList.add('camera-controls-container');
-    const controls = document.createElement('DIV');
-    controls.classList.add('camera-controls');
-
-    this._buttons.left = document.createElement('IMG');
-    this._buttons.autoRotate = document.createElement('IMG');
-    this._buttons.center = document.createElement('IMG');
-    this._buttons.right = document.createElement('IMG');
-
-    this._buttons.left.classList.add('camera-left');
-    this._buttons.autoRotate.classList.add('auto-rotate');
-    this._buttons.center.classList.add('camera-center');
-    this._buttons.right.classList.add('camera-right');
-
-    this._buttons.left.alt = 'move-camera-left';
-    this._buttons.center.alt = 'auto-rotate-camera';
-    this._buttons.center.alt = 'move-camera-center';
-    this._buttons.right.alt = 'move-camera-right';
-
-    this._buttons.left.src = `${this._assetsUrl}img/icons/nav-arrow-right.svg`; // 180 rotate in css
-    this._buttons.autoRotate.src = `${this._assetsUrl}img/icons/nav-auto-rotate.svg`;
-    this._buttons.center.src = `${this._assetsUrl}img/icons/nav-center.svg`;
-    this._buttons.right.src = `${this._assetsUrl}img/icons/nav-arrow-right.svg`;
-
-    controls.appendChild(this._buttons.left);
-    controls.appendChild(this._buttons.center);
-    controls.appendChild(this._buttons.autoRotate);
-    controls.appendChild(this._buttons.right);
-
-    this._controlsContainer.appendChild(controls);
-    this._renderTo.appendChild(this._controlsContainer);
+  _buildViewControls() {
+    return new Promise((resolve, reject) => {
+      if (this._preferences.debug) { console.log('WorldMapView._buildViewControls'); }
+      try {
+        // Class and local control container
+        this._controlsContainer = document.createElement('DIV');
+        this._controlsContainer.classList.add('camera-controls-container');
+        const controls = document.createElement('DIV');
+        controls.classList.add('camera-controls');
+        // Create HTML elements
+        this._buttons.left = document.createElement('IMG');
+        this._buttons.autoRotate = document.createElement('IMG');
+        this._buttons.center = document.createElement('IMG');
+        this._buttons.right = document.createElement('IMG');
+        // Set css classes
+        this._buttons.left.classList.add('camera-left');
+        this._buttons.autoRotate.classList.add('auto-rotate');
+        this._buttons.center.classList.add('camera-center');
+        this._buttons.right.classList.add('camera-right');
+        // Provide accessibilty alt attribute
+        this._buttons.left.alt = 'move-camera-left';
+        this._buttons.center.alt = 'auto-rotate-camera';
+        this._buttons.center.alt = 'move-camera-center';
+        this._buttons.right.alt = 'move-camera-right';
+        // Define icon src from assets url
+        this._buttons.left.src = `${this._assetsUrl}img/icons/nav-arrow-right.svg`; // 180 rotate in css
+        this._buttons.autoRotate.src = `${this._assetsUrl}img/icons/nav-auto-rotate.svg`;
+        this._buttons.center.src = `${this._assetsUrl}img/icons/nav-center.svg`;
+        this._buttons.right.src = `${this._assetsUrl}img/icons/nav-arrow-right.svg`;
+        // Append to controls container
+        controls.appendChild(this._buttons.left);
+        controls.appendChild(this._buttons.center);
+        controls.appendChild(this._buttons.autoRotate);
+        controls.appendChild(this._buttons.right);
+        // Store in class controls container and append to module parent
+        this._controlsContainer.appendChild(controls);
+        this._renderTo.appendChild(this._controlsContainer);
+        resolve();
+      } catch(err) {
+        reject(`WorldMapView._buildViewControls\n${err}`);
+      }
+    });
   }
 
 
   _buildHelpers() {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       if (this._preferences.debug) {
         console.log('WorldMapView._buildHelpers');
-        this._helpers.worldAxis = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
-        this._scene.add(this._helpers.worldAxis);
-
-        this._helpers.sunLightShadow = new THREE.CameraHelper(this._lights.sun.shadow.camera);
-        this._scene.add(this._helpers.sunLightShadow);
-
-        this._helpers.stats = new CustomThreeModule.Stats();
-        this._helpers.stats.showPanel(0);
-        this._renderTo.appendChild(this._helpers.stats.dom);
+        try {
+          // World geocentric axis
+          this._helpers.worldAxis = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
+          this._scene.add(this._helpers.worldAxis);
+          // Sun light shadow helper
+          this._helpers.sunLightShadow = new THREE.CameraHelper(this._lights.sun.shadow.camera);
+          this._scene.add(this._helpers.sunLightShadow);
+          // Stats.js
+          this._helpers.stats = new CustomThreeModule.Stats();
+          this._helpers.stats.showPanel(0);
+          this._renderTo.appendChild(this._helpers.stats.dom);
+        } catch(e) {
+          reject(`WorldMapView._buildHelpers\n${err}`);
+        }
       }
-
       resolve();
     });
   }
@@ -465,6 +517,7 @@ class WorldMapView {
         this._camera.position.x = cameraPos.normalize().multiplyScalar(1.66).x;
         this._camera.position.y = cameraPos.normalize().multiplyScalar(1.66).y;
         this._camera.position.z = cameraPos.normalize().multiplyScalar(1.66).z;
+        // Save initial position to be restored at any time using DOM control
         this._initialPosition = this._camera.position.clone();
         // Center pivots as referential is geocentric
         this._pivots.moon.position.set(0, 0, 0);
@@ -480,9 +533,9 @@ class WorldMapView {
         utcTime = new Date(utcTime);
         const hours = utcTime.getHours() - 12; // Center interval on noon
         const minutes = utcTime.getMinutes();
-        // Had to put it on paper to find this
+        // Had to put it on paper to find this!
         this._pivots.sun.rotation.y += (Math.PI * (hours + (minutes / 60)) / 12) - (Math.PI / 2); // Pi/2 is for texture offset
-        // Misc alignement
+        // Reverse anti meridian texture alignement (to face greenwich properly on lat/long coordinates)
         this._meshes.moon.rotation.y += Math.PI / 2; // Put dark side of the moon to the dark
         this._meshes.earthClouds.rotation.y += Math.PI / 2; // Align clouds on day/night bound
         this._pivots.moon.rotation.x += (5.145 * Math.PI) / 180; // 5.145° offset from the earth plane
@@ -505,7 +558,7 @@ class WorldMapView {
           this._selectCountry(this._centerOn);
         }
         resolve();
-      } catch (err) {
+      } catch(err) {
         reject(`WorldMapView._placeAndUpdateElements\n${err}`);
       }
     });
@@ -513,79 +566,139 @@ class WorldMapView {
 
 
   _fillScene() {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       if (this._preferences.debug) { console.log('WorldMapView._fillScene'); }
-      // Shader must be placed on Earth mesh
-      this._meshes.earth.add(this._meshes.earthNight);
-      this._pivots.moon.add(this._meshes.moon);
-      this._lights.sun.add(this._meshes.sun);
-      this._pivots.sun.add(this._lights.sun);
-      this._pivots.particles.add(this._meshes.particles);
-      this._scene.add(this._lights.ambient);
-      this._scene.add(this._pivots.moon);
-      this._scene.add(this._pivots.sun);
-      this._scene.add(this._pivots.particles);
-      this._scene.add(this._meshes.earth);
-      this._scene.add(this._meshes.earthBoundaries);
-      this._scene.add(this._meshes.earthClouds);
-      this._scene.add(this._meshes.earthAtmosphere);
-      this._scene.add(this._meshes.milkyway);
-      // Append every stored pins according to given data
-      for (let i = 0; i < this._pins.length; ++i) {
-        this._meshes.earth.add(this._pins[i]);
+      try {
+        // Shader must be placed on Earth mesh
+        this._meshes.earth.add(this._meshes.earthNight);
+        this._pivots.moon.add(this._meshes.moon);
+        this._lights.sun.add(this._meshes.sun);
+        this._pivots.sun.add(this._lights.sun);
+        this._pivots.particles.add(this._meshes.particles);
+        // Fill scene with all meshes and lights
+        this._scene.add(this._lights.ambient);
+        this._scene.add(this._pivots.moon);
+        this._scene.add(this._pivots.sun);
+        this._scene.add(this._pivots.particles);
+        this._scene.add(this._meshes.earth);
+        this._scene.add(this._meshes.earthBoundaries);
+        this._scene.add(this._meshes.earthClouds);
+        this._scene.add(this._meshes.earthAtmosphere);
+        this._scene.add(this._meshes.milkyway);
+        // Append every stored pins according to given data
+        for (let i = 0; i < this._pins.length; ++i) {
+          this._meshes.earth.add(this._pins[i]);
+        }
+        // Append geosurfaces for every country
+        for (let i = 0; i < this._geoSurfaces.length; ++i) {
+          this._meshes.earth.add(this._geoSurfaces[i]);
+        }
+        // Update scene matrix world for positions
+        this._scene.updateMatrixWorld(true);
+        resolve();
+      } catch(err) {
+        reject(`WorldMapView._fillScene\n${err}`);
       }
-      // Append geosurfaces for every country
-      for (let i = 0; i < this._geoSurfaces.length; ++i) {
-        this._meshes.earth.add(this._geoSurfaces[i]);
-      }
-
-      this._scene.updateMatrixWorld(true);
-
-      resolve();
     });
   }
 
 
   _shaderPass() {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       if (this._preferences.debug) { console.log('WorldMapView._shaderPass'); }
-      // Anti aliasing with FXAA
-      const pixelRatio = this._renderer.getPixelRatio();
-      this._fxaaPass = MzkMeshes.new({ type: 'fxaa' });
-      this._fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
-      this._fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
-      this._composer.addPass(this._fxaaPass);
-      // Apply light vignetting on scene for better focus on center
-      const vignettePass = MzkMeshes.new({ type: 'vignette' });
-      vignettePass.uniforms.darkness.value = 1.05;
-      this._composer.renderToScreen = true;
-      this._composer.addPass(vignettePass);
-
-      resolve();
+      try {
+        // Anti aliasing with FXAA (uniforms must be updated on resize)
+        const pixelRatio = this._renderer.getPixelRatio();
+        this._fxaaPass = MzkMeshes.new({ type: 'fxaa' });
+        this._fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
+        this._fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
+        this._composer.addPass(this._fxaaPass);
+        // Apply light vignetting on scene for better focus on center
+        const vignettePass = MzkMeshes.new({ type: 'vignette' });
+        vignettePass.uniforms.darkness.value = 1.05;
+        this._composer.renderToScreen = true;
+        this._composer.addPass(vignettePass);
+        resolve();
+      } catch(err) {
+        reject(`WorldMapView._shaderPass\n${err}`);
+      }
     });
   }
 
 
-/*  ----------  App, click and keyboard events  ----------  */
+  /*  ----------  Animation and rendering  ----------  */
+
+
+  animate() {
+    // Start debug measure
+    if (this._preferences.debug) { this._helpers.stats.begin(); }
+    // Scene update routine
+    TWEEN.update(); // Update Tween for camera animations
+    this._render(); // Animate scene objects
+    this._composer.render(this._scene, this._camera); // Render scene in composer
+    // End debug measures
+    if (this._preferences.debug) { this._helpers.stats.end(); }
+    // Register next frame and ask for it
+    this._rafId = requestAnimationFrame(this.animate.bind(this));
+  }
+
+
+  _render() { // Put only const here, avoid any calculation to reduce CPU load
+    // Moon and sun speed according to true speeds preference
+    let moonSpeed = AngularSpeeds.moon;
+    if (this._preferences.trueSpeeds) {
+      // Set moon and sun real radial speed around earth
+      this._pivots.moon.rotation.y += AngularSpeeds.r_moon;
+      this._pivots.sun.rotation.y += AngularSpeeds.r_sun;
+      moonSpeed = AngularSpeeds.r_moon;
+    } else {
+      this._pivots.moon.rotation.y += AngularSpeeds.moon;
+      this._pivots.sun.rotation.y += AngularSpeeds.sun;
+    }
+    // Update camera if it is lock on auto-rotation
+    if (this._cameraAutoRotation === true) {
+      // Init camera speed to the regular one
+      let speed = AngularSpeeds.camera;
+      // If locked on moon, update the speed to match moon radial speed
+      if (this._lockOnMoon === true) {
+        speed = moonSpeed
+      }
+      // Build quaternion object to make the camera position to rotate at given speed
+      const quaternion = new THREE.Quaternion;
+      this._camera.position.applyQuaternion(this._meshes.moon.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0).normalize(), speed));
+      this._camera.lookAt(this._scene.position);
+    }
+    // Update other pivots
+    this._meshes.earthClouds.rotation.y += AngularSpeeds.clouds;
+    this._meshes.milkyway.rotation.z += AngularSpeeds.milkyway; // Give a nice 'drifting in space' effect
+    this._pivots.particles.rotation.y -= AngularSpeeds.particles;
+    // Update DayNightShader sun light direction according to light world matrix, same for atmosphere view vector
+    this._meshes.earthNight.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
+    this._meshes.earthAtmosphere.material.uniforms.viewVector.value = this._camera.position;
+    this._controls.update();
+  }
+
+
+  /*  ----------  App, click and keyboard events  ----------  */
 
 
   _events() {
     return new Promise((resolve, reject) => {
       if (this._preferences.debug) { console.log('WorldMapView._events'); }
       try {
+        // Window global events
         window.addEventListener('resize', this._onResize, false);
         window.addEventListener('click', this._onCanvasClicked, false);
-
+        // DOM Controls events
         this._buttons.left.addEventListener('click', this._moveCameraLeft.bind(this), false);
         this._buttons.autoRotate.addEventListener('click', this._toggleAutoRotate.bind(this), false);
         this._buttons.center.addEventListener('click', this._moveCameraToInitPos.bind(this), false);
         this._buttons.right.addEventListener('click', this._moveCameraRight.bind(this), false);
         this._buttons.configuration.addEventListener('click', this._configurationCB, false);
-
+        // Icon opacity events
         this._renderTo.addEventListener('mousemove', this._updateOpacityTransition.bind(this), false);
-
         resolve();
-      } catch (err) {
+      } catch(err) {
         reject(`WorldMapView._events\n${err}`);
       }
     });
@@ -596,9 +709,9 @@ class WorldMapView {
     return new Promise(resolve => {
       if (this._preferences.debug) { console.log('WorldMapView._keyEvents'); }
       window.addEventListener('keyup', event => {
-        if (event.key === 'ArrowLeft' || event.key === 'q') {
+        if (event.key === 'ArrowLeft' || event.key === 'q') { // Std left key
           this._moveCameraLeft();
-        } else if (event.key === 'ArrowRight' || event.key === 'd') {
+        } else if (event.key === 'ArrowRight' || event.key === 'd') { // Std right key
           this._moveCameraRight();
         }
       }, false);
@@ -609,20 +722,29 @@ class WorldMapView {
 
   _onResize() {
     if (this._preferences.debug) { console.log('WorldMapView._onResize'); }
+    // Get pixel ratio from renderer
     const pixelRatio = this._renderer.getPixelRatio();
+    // Update FXAA shader's uniforms
     this._fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
     this._fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
+    // Set camera aspect from window
     this._camera.aspect = window.innerWidth / window.innerHeight;
+    // Update camera projection matrix
     this._camera.updateProjectionMatrix();
+    // Update renderer size
     this._renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
 
   _updateOpacityTransition() {
+    // Clear previous opacity timeout
     clearTimeout(this._iconOpacityTimeoutId);
+    // Force style to be displayed
     this._buttons.configuration.style.opacity = 1;
     this._controlsContainer.style.opacity = 1;
+    // Store and start new timeout for icon opacity
     this._iconOpacityTimeoutId = setTimeout(() => {
+      // Make icon invisible
       this._buttons.configuration.style.opacity = 0;
       this._controlsContainer.style.opacity = 0;
     }, SceneConst.ANIMATION.ICON);
@@ -630,6 +752,8 @@ class WorldMapView {
 
 
   _toggleAutoRotate() {
+    if (this._preferences.debug) { console.log('WorldMapView._toggleAutoRotate'); }
+    // Toggle auto rotate depending on DOM classlist
     if (this._buttons.autoRotate.classList.contains('toggle')) {
       this._disableCameraAutoRotation();
     } else {
@@ -639,82 +763,42 @@ class WorldMapView {
 
 
   _enableCameraAutoRotation() {
+    if (this._preferences.debug) { console.log('WorldMapView._enableCameraAutoRotation'); }
+    // Update DOM classlist
     this._buttons.autoRotate.classList.add('toggle');
+    // Only set boolean to make it active (see _render method)
     this._cameraAutoRotation = true;
+    // Move camera up vector along Y axis
+    this._animateCameraUp(this._camera.up, new THREE.Vector3(0, 1, 0));
   }
 
 
   _disableCameraAutoRotation() {
+    if (this._preferences.debug) { console.log('WorldMapView._disableCameraAutoRotation'); }
+    // Update DOM classlist
     this._buttons.autoRotate.classList.remove('toggle');
+    // Freeze camera to its position in animate
     this._cameraAutoRotation = false;
   }
 
 
-/*  ----------  Animation and rendering  ----------  */
-
-
-  animate() {
-    if (this._preferences.debug) {
-      this._helpers.stats.begin();
-    }
-
-    TWEEN.update(); // Update Tween for animations
-    this._composer.render(this._scene, this._camera);
-    this._render();
-
-    if (this._preferences.debug) {
-      this._helpers.stats.end();
-    }
-
-    this._rafId = requestAnimationFrame(this.animate.bind(this)); // Keep animation
-  }
-
-
-  _render() {
-    // Put const here, avoid any calculation to reduce CPU load
-    let moonSpeed = AngularSpeeds.moon;
-    if (this._preferences.trueSpeeds) {
-      this._pivots.moon.rotation.y += AngularSpeeds.r_moon;
-      this._pivots.sun.rotation.y += AngularSpeeds.r_sun;
-      moonSpeed = AngularSpeeds.r_moon;
-    } else {
-      this._pivots.moon.rotation.y += AngularSpeeds.moon;
-      this._pivots.sun.rotation.y += AngularSpeeds.sun;
-    }
-    //
-    if (this._cameraAutoRotation === true) {
-      let speed = AngularSpeeds.camera;
-      if (this._lockOnMoon === true) {
-        speed = moonSpeed
-      }
-
-      const quaternion = new THREE.Quaternion;
-      this._camera.position.applyQuaternion(this._meshes.moon.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0).normalize(), speed));
-      this._camera.lookAt(this._scene.position);
-    }
-    // Update other pivots
-    this._meshes.earthClouds.rotation.y += AngularSpeeds.clouds;
-    this._meshes.milkyway.rotation.z += AngularSpeeds.milkyway; // Give a 'drifting in space' effect
-    this._pivots.particles.rotation.y -= AngularSpeeds.particles;
-    // Update DayNightShader sun light direction according to light world matrix, same for atmosphere view vector
-    this._meshes.earthNight.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
-    this._meshes.earthAtmosphere.material.uniforms.viewVector.value = this._camera.position;
-    this._controls.update();
-  }
-
-
-/*  ----------  Country selection and callback management  ----------  */
+  /*  ----------  Country selection and callback management  ----------  */
 
 
   _unselectAll() {
     if (this._preferences.debug) { console.log('WorldMapView._unselectAll'); }
+    // If any pin is already selected, reset its color and unsave it
     if (this._selectedPin !== null) {
       this._selectedPin.material.color.setHex(0x56d45b); // Reset pin color
       this._selectedPin = null;
     }
-
+    // Do aswell for geosurfaces
     if (this._selectedSurfaces.length > 0) {
-      this._selectedSurfaces.forEach(({ material }) => { material.opacity = 0; });
+      // Clear opacity for every material
+      for (let i = 0; i < this._selectedSurfaces.length; ++i) {
+        this._selectedSurfaces[i].material.opacity = 0;
+      }
+      // Reset selected surface array
       this._selectedSurfaces = [];
     }
   }
@@ -726,11 +810,11 @@ class WorldMapView {
     if (this._controls.hasMoved === false) {
       event.preventDefault();
       this._unselectAll();
-
+      // Create click event utils
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       let countryHit = false;
-
+      // Set mouse position from event
       mouse.x = (event.clientX / this._renderer.domElement.clientWidth) * 2 - 1;
       mouse.y =  - (event.clientY / this._renderer.domElement.clientHeight) * 2 + 1;
       // Configure ray caster with mouse and camera
@@ -766,18 +850,18 @@ class WorldMapView {
           this._selectedCountryTrigram = targetCountry.info.trigram; // Update selected country trigram
           // All selected surface match the same country, we take 0 as reference for cb
           targetCountry.clickCallback(this);
-          return;
+          return; // We return there as selection occurs in callback to select both pins and surfaces
         }
       } else {
         this._selectedCountryTrigram = null;
       }
       // Ray cast againt moon
-      raycaster.far = SceneConst.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth      
+      raycaster.far = SceneConst.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth
       intersects = raycaster.intersectObjects([this._meshes.moon]);
       if (intersects.length > 0) {
         this._lockOnMoon = true;
         this._moveCameraToMoon();
-        return;
+        return; // No need to further raycast as user wanna go to the moon!
       }
       // Ray cast againt earth
       intersects = raycaster.intersectObjects([this._meshes.earth]);
@@ -785,13 +869,10 @@ class WorldMapView {
         this._lockOnMoon = false;
         this._disableCameraAutoRotation();
       }
-
+      // Send caller a callback to notify the unselect
       this._countryClickedCB({
         unselect: true,
-        hasData: false,
-        artists: [],
-        name: '',
-        trigram: ''
+        hasData: false, artists: [], name: '', trigram: '' // Default values
       });
     }
   }
@@ -802,7 +883,7 @@ class WorldMapView {
     // Writtin straight into Meshes (this scope)
     if (this.info.GEOUNIT) { // Country surface clicked, pin otherwise
       this.info.name = this.info.NAME;
-      this.info.trigram = this.info.GU_A3;
+      this.info.trigram = this.info.GU_A3; // NATO trigram value in geojson, may vary from one set to another
     }
     // Select country on map
     WorldMapView._selectCountry(WorldMapView._selectedCountryTrigram);
@@ -812,6 +893,7 @@ class WorldMapView {
 
 
   _selectCountry(trigram = this._selectedCountryTrigram) {
+    if (this._preferences.debug) { console.log('WorldMapView._selectCountry'); }
     // Update selected pin
     this._selectedPin = null; // We reset selection bc we don't know if pin or surface clicked
     for (let i = 0; i < this._pins.length; ++i) {
@@ -843,7 +925,8 @@ class WorldMapView {
     }
     // Animate camera to go over clicked country with its own distance to center kept
     const camDistance = this._camera.position.length();
-    this._disableCameraAutoRotation(); // In case user was auto rotation locked
+    // In case auto rotation is locked
+    this._disableCameraAutoRotation();
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -875,6 +958,7 @@ class WorldMapView {
 
 
   _animateCameraUp(from, to) {
+    if (this._preferences.debug) { console.log('WorldMapView._animateCameraUp'); }
     return new TWEEN.Tween(from).to(to, SceneConst.ANIMATION.CAMERA)
       .easing(TWEEN.Easing.Quadratic.InOut)
       .onUpdate(() => {
@@ -913,7 +997,8 @@ class WorldMapView {
 
   _moveCameraToInitPos() {
     if (this._preferences.debug) { console.log('WorldMapView._moveCameraToInitPos'); }
-    this._disableCameraAutoRotation(); // Remove auto rotation when user is asking to go to its init pos
+    // Remove auto rotation when user is asking to go to its init pos
+    this._disableCameraAutoRotation();
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,
@@ -927,9 +1012,10 @@ class WorldMapView {
 
 
   _moveCameraToMoon() {
+    if (this._preferences.debug) { console.log('WorldMapView._moveCameraToMoon'); }
     this._enableCameraAutoRotation();
     const distanceFactor = 1.1;
-    var moonPos = new THREE.Vector3().getPositionFromMatrix(this._meshes.moon.matrixWorld);
+    const moonPos = new THREE.Vector3().getPositionFromMatrix(this._meshes.moon.matrixWorld);
     this._animateCameraPosition({
       x: this._camera.position.x,
       y: this._camera.position.y,

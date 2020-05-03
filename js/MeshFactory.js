@@ -22,15 +22,15 @@ class MeshFactory {
 
   destroy() {
     return new Promise(resolve => {
-      for (var i = 0; i < this._textures.length; ++i) {
+      for (let i = 0; i < this._textures.length; ++i) {
         this._textures[i].dispose();
       }
 
-      for (var i = 0; i < this._geometries.length; ++i) {
+      for (let i = 0; i < this._geometries.length; ++i) {
         this._geometries[i].dispose();
       }
 
-      for (var i = 0; i < this._materials.length; ++i) {
+      for (let i = 0; i < this._materials.length; ++i) {
         this._materials[i].dispose();
       }
 
