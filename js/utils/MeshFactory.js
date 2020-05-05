@@ -1,16 +1,13 @@
-import CustomThreeModule from './CustomThreeModule.js';
-
-
-const MeshUtils = {
-  antiMeridian: new THREE.Vector2((Math.PI) / (2 * Math.PI), 0)
-};
+/* Import libs */
+import CustomThreeModule from '../lib/CustomThreeModule.js';
+/* Class utils */
+import Constants from '../utils/Constants.js';
 
 
 class MeshFactory {
 
 
   constructor(options) {
-    this.CONST = options.CONST;
     this._assetsUrl = options.assetsUrl;
     this._segments = options.segments;
     this._quality = options.quality;
@@ -85,15 +82,15 @@ class MeshFactory {
     bumpMap.wrapS = THREE.RepeatWrapping;
     specularMap.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values
-    map.offset = MeshUtils.antiMeridian;
-    bumpMap.offset = MeshUtils.antiMeridian;
-    specularMap.offset = MeshUtils.antiMeridian;
+    map.offset = Constants.MeshUtils.antiMeridian;
+    bumpMap.offset = Constants.MeshUtils.antiMeridian;
+    specularMap.offset = Constants.MeshUtils.antiMeridian;
     // Add to loaded textures
     this._textures.push(map);
     this._textures.push(bumpMap);
     this._textures.push(specularMap);
     // Create mesh geometry and add it to loaded geometries
-    const meshGeometry = new THREE.SphereGeometry(this.CONST.RADIUS.EARTH, this._segments, this._segments);
+    const meshGeometry = new THREE.SphereGeometry(Constants.Scene.RADIUS.EARTH, this._segments, this._segments);
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.MeshPhongMaterial({
@@ -117,7 +114,7 @@ class MeshFactory {
     nightMap.wrapS = THREE.RepeatWrapping;
     this._textures.push(nightMap);
     // Create mesh geometry and add it to loaded geometries
-    const meshGeometry = new THREE.SphereGeometry(this.CONST.RADIUS.EARTH, this._segments, this._segments);
+    const meshGeometry = new THREE.SphereGeometry(Constants.Scene.RADIUS.EARTH, this._segments, this._segments);
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.ShaderMaterial({
@@ -142,10 +139,10 @@ class MeshFactory {
     // Allow texture repetition
     alphaMap.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values
-    alphaMap.offset = MeshUtils.antiMeridian;
+    alphaMap.offset = Constants.MeshUtils.antiMeridian;
     this._textures.push(alphaMap);
     // Create mesh geometry and add it to loaded geometries
-    const meshGeometry = new THREE.SphereGeometry(this.CONST.RADIUS.EARTH + this.CONST.DISTANCE.CLOUDS, this._segments, this._segments);
+    const meshGeometry = new THREE.SphereGeometry(Constants.Scene.RADIUS.EARTH + Constants.Scene.DISTANCE.CLOUDS, this._segments, this._segments);
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.MeshPhongMaterial({
@@ -167,12 +164,12 @@ class MeshFactory {
     envMap.wrapS = THREE.RepeatWrapping;
     alphaMap.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values
-    envMap.offset = MeshUtils.antiMeridian;
-    alphaMap.offset = MeshUtils.antiMeridian;
+    envMap.offset = Constants.MeshUtils.antiMeridian;
+    alphaMap.offset = Constants.MeshUtils.antiMeridian;
     this._textures.push(envMap);
     this._textures.push(alphaMap);
     // Create mesh geometry and add it to loaded geometries
-    const meshGeometry = new THREE.SphereGeometry(this.CONST.RADIUS.EARTH, this._segments, this._segments);
+    const meshGeometry = new THREE.SphereGeometry(Constants.Scene.RADIUS.EARTH, this._segments, this._segments);
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.MeshPhongMaterial({
@@ -189,7 +186,7 @@ class MeshFactory {
 
   _buildEarthAtmoSphere(loader) {
     // Create mesh geometry and add it to loaded geometries
-    const meshGeometry = new THREE.SphereGeometry(this.CONST.RADIUS.EARTH + this.CONST.DISTANCE.ATMOSPHERE, this._segments, this._segments);
+    const meshGeometry = new THREE.SphereGeometry(Constants.Scene.RADIUS.EARTH + Constants.Scene.DISTANCE.ATMOSPHERE, this._segments, this._segments);
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.ShaderMaterial({
@@ -240,10 +237,10 @@ class MeshFactory {
     // Allow texture repetition
     map.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values
-    map.offset = MeshUtils.antiMeridian;
+    map.offset = Constants.MeshUtils.antiMeridian;
     this._textures.push(map);
     // Create mesh geometry and add it to loaded geometries
-    const meshGeometry = new THREE.SphereGeometry(this.CONST.RADIUS.MOON, this._segments, this._segments);
+    const meshGeometry = new THREE.SphereGeometry(Constants.Scene.RADIUS.MOON, this._segments, this._segments);
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.MeshPhongMaterial({
@@ -261,10 +258,10 @@ class MeshFactory {
     // Allow texture repetition
     map.wrapS = THREE.RepeatWrapping;
     // Anti-meridian alignement to match Lat/Long earth values
-    map.offset = MeshUtils.antiMeridian;
+    map.offset = Constants.MeshUtils.antiMeridian;
     this._textures.push(map);
     // Create mesh geometry and add it to loaded geometries
-    const meshGeometry = new THREE.SphereGeometry(this.CONST.RADIUS.SCENE, this._segments, this._segments);
+    const meshGeometry = new THREE.SphereGeometry(Constants.Scene.RADIUS.SCENE, this._segments, this._segments);
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials
     const meshMaterial = new THREE.MeshBasicMaterial({
@@ -314,8 +311,8 @@ class MeshFactory {
     if (scale < 0.25) {
       scale = 0.25;
     }
-    const width = this.CONST.PIN.WIDTH + (this.CONST.PIN.WIDTH * scale);
-    const height = this.CONST.PIN.HEIGHT * scale;
+    const width = Constants.Scene.PIN.WIDTH + (Constants.Scene.PIN.WIDTH * scale);
+    const height = Constants.Scene.PIN.HEIGHT * scale;
     // Create mesh geometry and add it to loaded geometries
     const meshGeometry = new THREE.CylinderGeometry(width, width, height, this._segments);
     this._geometries.push(meshGeometry);
@@ -336,8 +333,8 @@ class MeshFactory {
     // Create mesh geometry and add it to loaded geometries
     const meshGeometry = new THREE.ConicPolygonBufferGeometry(
       geometry, // GeoJSON feature
-      this.CONST.RADIUS.EARTH + this.CONST.DISTANCE.COUNTRY, // Cone low base
-      this.CONST.RADIUS.EARTH + (this.CONST.DISTANCE.COUNTRY * 2) // Cone high base
+      Constants.Scene.RADIUS.EARTH + Constants.Scene.DISTANCE.COUNTRY, // Cone low base
+      Constants.Scene.RADIUS.EARTH + (Constants.Scene.DISTANCE.COUNTRY * 2) // Cone high base
     );
     this._geometries.push(meshGeometry);
     // Create mesh material and add it to loaded materials

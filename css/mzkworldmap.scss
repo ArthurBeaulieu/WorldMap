@@ -1,4 +1,4 @@
-/* MzkWorldMap version 0.9.2 */
+/* MzkWorldMap version 0.9.3 */
 div.mzkworldmap {
   --margin: 10px;
   --icon-size: 28px;
@@ -7,6 +7,7 @@ div.mzkworldmap {
   --color-bg-dark: #0F1015;
   --color-text: #E7E9E7;
   --color-icon: #AAAABE;
+  --color-disabled: #66667B;
   --color-green: #56D45B;
   --color-green-dark: #12B31D;
   --color-blue: #48ABAF;
@@ -207,5 +208,94 @@ div.mzkworldmap {
         color: var(--color-green);
       }
     }
+  }
+
+  .custom-control {
+    --width: 32px;
+
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    margin: 0 auto var(--margin) auto;
+    padding-right: var(--width);
+
+    input {
+      position: absolute;
+      z-index: -1;
+      opacity: 0;
+    }
+
+    &.custom-radio .custom-box {
+      border-radius: 50%;
+    }
+
+    .custom-box {
+      position: absolute;
+      top: calc(var(--width) / -16);
+      right: 0;
+      height: calc(var(--width) / 2);
+      width: calc(var(--width) / 2);
+      background: var(--color-text);
+      margin: 0 !important;
+      padding: 0 !important;
+
+      &:after {
+        content: '';
+        position: absolute;
+        display: none;
+      }
+
+      &.round {
+        border-radius: 50% !important;
+      }
+    }
+
+    &:hover input ~ .custom-box,
+    & input:focus ~ .custom-box {
+      background: var(--color-icon);
+    }
+
+    & input:checked ~ .custom-box,
+    &:hover input:not([disabled]):checked ~ .custom-box,
+    & input:checked:focus ~ .custom-box {
+      background: var(--color-blue-dark);
+    }
+
+    & input:disabled ~ .custom-box {
+      background: var(--color-text);
+      opacity: .6;
+      pointer-events: none;
+    }
+
+    & input:checked ~ .custom-box:after {
+      display: block;
+    }
+  }
+
+  .custom-checkbox .custom-box:after {
+    left: calc((var(--width) / 4) - (var(--width) / 16) - 1px); /* Black magic in operation */
+    top: calc(var(--width) / 16);
+    width: calc(var(--width) / 8);
+    height: calc(var(--width) / 4);
+    border: solid var(--color-text);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .custom-checkbox input:disabled ~ .custom-box:after {
+    border-color: var(--color-disabled);
+  }
+
+  .custom-radio .custom-box:after {
+    left: calc(var(--width) / 8);
+    top: calc(var(--width) / 8);
+    height: calc(var(--width) / 4);
+    width: calc(var(--width) / 4);
+    border-radius: 50%;
+    background: var(--color-text);
+  }
+
+  .custom-radio input:disabled ~ .custom-box:after {
+    background: var(--color-disabled);
   }
 }

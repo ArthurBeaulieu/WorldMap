@@ -1,46 +1,10 @@
-import CustomThreeModule from './CustomThreeModule.js';
-import TrackballControls from './TrackballControls.js';
-import MeshFactory from './MeshFactory.js';
-import TWEEN from './Tween.js';
-
-
-// Mesh factory must be built in WorldMapView constructor, to send proper arguemnts
-let MzkMeshes = null;
-// Scene constants, for consistent values across features
-const SceneConst = {
-  RADIUS: {
-    EARTH: 0.5,
-    MOON: 0.25,
-    SUN: 2,
-    SCENE: 220
-  },
-  DISTANCE: {
-    MOON: 8,
-    SUN: 200,
-    CLOUDS: 0.004,
-    ATMOSPHERE: 0.004,
-    COUNTRY: 0.01
-  },
-  PIN: {
-    HEIGHT: 0.1,
-    WIDTH: 0.002
-  },
-  ANIMATION: {
-    CAMERA: 366,
-    ICON: 5000
-  }
-};
-// Angular speeds used for animation
-const AngularSpeeds = {
-  moon: ((2 * Math.PI) / (27.3 * 60 * 60)) * 12,
-  sun: ((2 * Math.PI) / (365.25 * 24 * 60 * 60)) * 12,
-  clouds: (2 * Math.PI) / (20 * 60 * 60),
-  camera: ((2 * Math.PI) / (60 * 120)),
-  particles: (2 * -Math.PI) / (365 * 10 * 60),
-  milkyway: (2 * -Math.PI) / (20 * 60 * 60),
-  r_moon: (2 * Math.PI) / (27.3 * 24 * 60 * 60),
-  r_sun: (2 * Math.PI) / (365.25 * 24 * 60 * 60)
-};
+/* Libs import */
+import CustomThreeModule from '../lib/CustomThreeModule.js';
+import TWEEN from '../lib/Tween.js';
+/* Class utils import */
+import TrackballControls from '../utils/TrackballControls.js';
+import MeshFactory from '../utils/MeshFactory.js';
+import Constants from '../utils/Constants.js';
 
 
 class WorldMapView {
@@ -59,7 +23,6 @@ class WorldMapView {
     this._centerOn = options.centerOn;
     this._geoData = options.geoData;
     this._preferences = options.preferences;
-    this._version = options.version;
     // Texture loading management
     this._manager = null;
     this._loader = null;
@@ -125,8 +88,7 @@ class WorldMapView {
     this._onResize = this._onResize.bind(this);
     this._onCanvasClicked = this._onCanvasClicked.bind(this);
     // Define MeshFactory
-    MzkMeshes = new MeshFactory({
-      CONST: SceneConst,
+    this.MeshFactory = new MeshFactory({
       assetsUrl: this._assetsUrl,
       segments: this._preferences.sphereSegments, // 32, 64, 128 depending on pref
       quality: this._preferences.textureQuality // 2k, 4k, 8k depending on pref
@@ -152,7 +114,7 @@ class WorldMapView {
         this._renderTo.removeChild(this._helpers.stats.dom);
       }
       // Dispose, call for destructors and clean parent
-      MzkMeshes.destroy();
+      this.MeshFactory.destroy();
       this._controls.destroy();
       this._scene.dispose();
       this._renderer.renderLists.dispose();
@@ -217,7 +179,7 @@ class WorldMapView {
       container.innerHTML = `
         <h1>ManaZeak World Map</h1>
         <h2>Loading world data...</h2>
-        <p>Version ${this._version}</p>
+        <p>Version ${Constants.MzkWorldMapVersion}</p>
         <div id="track" class="track"><div id="current" class="current"></div></div>
       `;
       // Append loading container with progress bar
@@ -319,16 +281,16 @@ class WorldMapView {
         this._pivots.moon = new THREE.Object3D();
         this._pivots.particles = new THREE.Object3D();
         // Build scene elements (Earthwith all its sub-meshes)
-        this._meshes.earth = MzkMeshes.new({ type: 'earth', loader: this._loader });
-        this._meshes.earthNight = MzkMeshes.new({ type: 'earthnight', loader: this._loader });
-        this._meshes.earthClouds = MzkMeshes.new({ type: 'earthclouds', loader: this._loader });
-        this._meshes.earthBoundaries = MzkMeshes.new({ type: 'earthboundaries', loader: this._loader });
-        this._meshes.earthAtmosphere = MzkMeshes.new({ type: 'earthatmosphere', loader: this._loader });
+        this._meshes.earth = this.MeshFactory.new({ type: 'earth', loader: this._loader });
+        this._meshes.earthNight = this.MeshFactory.new({ type: 'earthnight', loader: this._loader });
+        this._meshes.earthClouds = this.MeshFactory.new({ type: 'earthclouds', loader: this._loader });
+        this._meshes.earthBoundaries = this.MeshFactory.new({ type: 'earthboundaries', loader: this._loader });
+        this._meshes.earthAtmosphere = this.MeshFactory.new({ type: 'earthatmosphere', loader: this._loader });
         // Spherical meshes for sun, moon, milky way and particles
-        this._meshes.sun = MzkMeshes.new({ type: 'sun', loader: this._loader });
-        this._meshes.moon = MzkMeshes.new({ type: 'moon', loader: this._loader });
-        this._meshes.milkyway = MzkMeshes.new({ type: 'milkyway', loader: this._loader });
-        this._meshes.particles = MzkMeshes.new({ type: 'particles', loader: this._loader });
+        this._meshes.sun = this.MeshFactory.new({ type: 'sun', loader: this._loader });
+        this._meshes.moon = this.MeshFactory.new({ type: 'moon', loader: this._loader });
+        this._meshes.milkyway = this.MeshFactory.new({ type: 'milkyway', loader: this._loader });
+        this._meshes.particles = this.MeshFactory.new({ type: 'particles', loader: this._loader });
         // Make earth and moon 'shadow friendly'
         this._meshes.moon.receiveShadow	= true;
         this._meshes.moon.castShadow = true;
@@ -351,8 +313,8 @@ class WorldMapView {
       try {
         // Only build pins from user data. Will not build any pins if no data is sent through the constructor
         for (let i = 0; i < this._userData.length; ++i) { // Build country pins on Earth
-          const pin = MzkMeshes.new({ type: 'earthpin', scale: this._userData[i].scale });
-          const wireframe = MzkMeshes.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
+          const pin = this.MeshFactory.new({ type: 'earthpin', scale: this._userData[i].scale });
+          const wireframe = this.MeshFactory.new({ type: 'wireframe', geometry: pin.geometry }); // Add border using wireframe
           pin.info = this._userData[i]; // Attach country information to the pin
           wireframe.renderOrder = 1; // Force wireframe render on top
           pin.add(wireframe);
@@ -376,7 +338,7 @@ class WorldMapView {
           const polygons = this._geoData.features[i].geometry.type === 'Polygon' ? [this._geoData.features[i].geometry.coordinates] : this._geoData.features[i].geometry.coordinates;
           // Iterate over polygons set to build country geosurfaces
           for (let j = 0; j < polygons.length; ++j) {
-            const geoSurface = MzkMeshes.new({ type: 'geosurface', geometry: polygons[j] });
+            const geoSurface = this.MeshFactory.new({ type: 'geosurface', geometry: polygons[j] });
             // Attach info to mesh
             geoSurface.info = this._geoData.features[i].properties;
             geoSurface.info.hasData = false;
@@ -407,11 +369,11 @@ class WorldMapView {
       try {
         // Camera controls
         this._controls = new THREE.TrackballControls(this._camera, this._renderTo);
-        this._controls.minDistance = SceneConst.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
-        this._controls.maxDistance = SceneConst.DISTANCE.SUN / 2; // Constraint dezoom to half scene
+        this._controls.minDistance = Constants.Scene.RADIUS.EARTH + 0.2; // Prevent zooming to get into Earth
+        this._controls.maxDistance = Constants.Scene.DISTANCE.SUN / 2; // Constraint dezoom to half scene
         // Constraint dezoom to scene size in debug
         if (this._preferences.debug) {
-          this._controls.maxDistance = SceneConst.DISTANCE.SUN;
+          this._controls.maxDistance = Constants.Scene.DISTANCE.SUN;
         }
         // Build configuration panel
         this._buttons.configuration = document.createElement('IMG');
@@ -479,7 +441,7 @@ class WorldMapView {
         console.log('WorldMapView._buildHelpers');
         try {
           // World geocentric axis
-          this._helpers.worldAxis = new THREE.AxesHelper(SceneConst.RADIUS.SCENE);
+          this._helpers.worldAxis = new THREE.AxesHelper(Constants.Scene.RADIUS.SCENE);
           this._scene.add(this._helpers.worldAxis);
           // Sun light shadow helper
           this._helpers.sunLightShadow = new THREE.CameraHelper(this._lights.sun.shadow.camera);
@@ -525,9 +487,9 @@ class WorldMapView {
         this._pivots.particles.position.set(0, 0, 0);
         // Place earth, moon and sun to their initial position
         this._meshes.earth.position.set(0, 0, 0);
-        this._meshes.moon.position.set(0, 0, -SceneConst.DISTANCE.MOON);
+        this._meshes.moon.position.set(0, 0, -Constants.Scene.DISTANCE.MOON);
         // Light will hold sun meshes as lens flare must be related to light source
-        this._lights.sun.position.set(0, 0, SceneConst.DISTANCE.SUN);
+        this._lights.sun.position.set(0, 0, Constants.Scene.DISTANCE.SUN);
         // Place sun depending on current time UTC
         let utcTime = new Date().toLocaleString('en-US', { timeZone: 'UTC' });
         utcTime = new Date(utcTime);
@@ -541,7 +503,7 @@ class WorldMapView {
         this._pivots.moon.rotation.x += (5.145 * Math.PI) / 180; // 5.145° offset from the earth plane
         // Iterate over pins to configure their position
         for (let i = 0; i < this._pins.length; ++i) {
-          const pos = this.getPosFromLatLonRad(this._pins[i].info.countryCenter.lat, this._pins[i].info.countryCenter.long, SceneConst.RADIUS.EARTH);
+          const pos = this.getPosFromLatLonRad(this._pins[i].info.countryCenter.lat, this._pins[i].info.countryCenter.long, Constants.Scene.RADIUS.EARTH);
           this._pins[i].position.set(pos[0], pos[1], pos[2]);
           this._pins[i].lookAt(new THREE.Vector3(0, 0, 0)); // As referential is geocentric, we look at the earth's center
           this._pins[i].rotation.y += Math.PI / 2; // Rotate for cylinder to be orthonormal with earth surface
@@ -609,12 +571,12 @@ class WorldMapView {
       try {
         // Anti aliasing with FXAA (uniforms must be updated on resize)
         const pixelRatio = this._renderer.getPixelRatio();
-        this._fxaaPass = MzkMeshes.new({ type: 'fxaa' });
+        this._fxaaPass = this.MeshFactory.new({ type: 'fxaa' });
         this._fxaaPass.uniforms.resolution.value.x = 1 / (this._renderTo.offsetWidth * pixelRatio);
         this._fxaaPass.uniforms.resolution.value.y = 1 / (this._renderTo.offsetHeight * pixelRatio);
         this._composer.addPass(this._fxaaPass);
         // Apply light vignetting on scene for better focus on center
-        const vignettePass = MzkMeshes.new({ type: 'vignette' });
+        const vignettePass = this.MeshFactory.new({ type: 'vignette' });
         vignettePass.uniforms.darkness.value = 1.05;
         this._composer.renderToScreen = true;
         this._composer.addPass(vignettePass);
@@ -645,20 +607,20 @@ class WorldMapView {
 
   _render() { // Put only const here, avoid any calculation to reduce CPU load
     // Moon and sun speed according to true speeds preference
-    let moonSpeed = AngularSpeeds.moon;
+    let moonSpeed = Constants.AngularSpeeds.moon;
     if (this._preferences.trueSpeeds) {
       // Set moon and sun real radial speed around earth
-      this._pivots.moon.rotation.y += AngularSpeeds.r_moon;
-      this._pivots.sun.rotation.y += AngularSpeeds.r_sun;
-      moonSpeed = AngularSpeeds.r_moon;
+      this._pivots.moon.rotation.y += Constants.AngularSpeeds.r_moon;
+      this._pivots.sun.rotation.y += Constants.AngularSpeeds.r_sun;
+      moonSpeed = Constants.AngularSpeeds.r_moon;
     } else {
-      this._pivots.moon.rotation.y += AngularSpeeds.moon;
-      this._pivots.sun.rotation.y += AngularSpeeds.sun;
+      this._pivots.moon.rotation.y += Constants.AngularSpeeds.moon;
+      this._pivots.sun.rotation.y += Constants.AngularSpeeds.sun;
     }
     // Update camera if it is lock on auto-rotation
     if (this._cameraAutoRotation === true) {
       // Init camera speed to the regular one
-      let speed = AngularSpeeds.camera;
+      let speed = Constants.AngularSpeeds.camera;
       // If locked on moon, update the speed to match moon radial speed
       if (this._lockOnMoon === true) {
         speed = moonSpeed
@@ -669,9 +631,9 @@ class WorldMapView {
       this._camera.lookAt(this._scene.position);
     }
     // Update other pivots
-    this._meshes.earthClouds.rotation.y += AngularSpeeds.clouds;
-    this._meshes.milkyway.rotation.z += AngularSpeeds.milkyway; // Give a nice 'drifting in space' effect
-    this._pivots.particles.rotation.y -= AngularSpeeds.particles;
+    this._meshes.earthClouds.rotation.y += Constants.AngularSpeeds.clouds;
+    this._meshes.milkyway.rotation.z += Constants.AngularSpeeds.milkyway; // Give a nice 'drifting in space' effect
+    this._pivots.particles.rotation.y -= Constants.AngularSpeeds.particles;
     // Update DayNightShader sun light direction according to light world matrix, same for atmosphere view vector
     this._meshes.earthNight.material.uniforms.sunDirection.value = new THREE.Vector3().applyMatrix4(this._lights.sun.matrixWorld);
     this._meshes.earthAtmosphere.material.uniforms.viewVector.value = this._camera.position;
@@ -747,7 +709,7 @@ class WorldMapView {
       // Make icon invisible
       this._buttons.configuration.style.opacity = 0;
       this._controlsContainer.style.opacity = 0;
-    }, SceneConst.ANIMATION.ICON);
+    }, Constants.Scene.ANIMATION.ICON);
   }
 
 
@@ -856,7 +818,7 @@ class WorldMapView {
         this._selectedCountryTrigram = null;
       }
       // Ray cast againt moon
-      raycaster.far = SceneConst.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth
+      raycaster.far = Constants.Scene.RADIUS.SCENE; // Restore raycaster far to be able to hit the moon/earth
       intersects = raycaster.intersectObjects([this._meshes.moon]);
       if (intersects.length > 0) {
         this._lockOnMoon = true;
@@ -919,7 +881,7 @@ class WorldMapView {
           lat: this._worldData.countries[i].countryCenter.lat,
           long: this._worldData.countries[i].countryCenter.long
         };
-        const cartesian = this.getPosFromLatLonRad(latLon.lat, latLon.long, SceneConst.RADIUS.EARTH);
+        const cartesian = this.getPosFromLatLonRad(latLon.lat, latLon.long, Constants.Scene.RADIUS.EARTH);
         countrCenter = new THREE.Vector3(cartesian[0], cartesian[1], cartesian[2]);
       }
     }
@@ -946,7 +908,7 @@ class WorldMapView {
     if (this._preferences.debug) { console.log('WorldMapView._animateCameraPosition'); }
     // Put camera up in Y axis alignement
     this._animateCameraUp(this._camera.up, new THREE.Vector3(0, 1, 0));
-    return new TWEEN.Tween(from).to(to, SceneConst.ANIMATION.CAMERA)
+    return new TWEEN.Tween(from).to(to, Constants.Scene.ANIMATION.CAMERA)
       .easing(TWEEN.Easing.Quadratic.InOut)
       .onUpdate(() => {
         this._camera.position.x = from.x;
@@ -959,7 +921,7 @@ class WorldMapView {
 
   _animateCameraUp(from, to) {
     if (this._preferences.debug) { console.log('WorldMapView._animateCameraUp'); }
-    return new TWEEN.Tween(from).to(to, SceneConst.ANIMATION.CAMERA)
+    return new TWEEN.Tween(from).to(to, Constants.Scene.ANIMATION.CAMERA)
       .easing(TWEEN.Easing.Quadratic.InOut)
       .onUpdate(() => {
         this._camera.up.set(from.x, from.y, from.z);
@@ -1022,7 +984,7 @@ class WorldMapView {
       z: this._camera.position.z
     }, {
       x: moonPos.multiplyScalar(distanceFactor).x,
-      y: moonPos.multiplyScalar(distanceFactor).y - SceneConst.RADIUS.EARTH, // This way moon appear up camera and earth is made visible
+      y: moonPos.multiplyScalar(distanceFactor).y - Constants.Scene.RADIUS.EARTH, // This way moon appear up camera and earth is made visible
       z: moonPos.multiplyScalar(distanceFactor).z
     });
   }

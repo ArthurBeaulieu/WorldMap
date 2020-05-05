@@ -1,6 +1,6 @@
 # MzkWorldMap
 
-![](https://badgen.net/badge/version/0.9.2/blue)
+![](https://badgen.net/badge/version/0.9.3/blue)
 
 Browse a 3D interactive Earth globe to navigate around and select countries. Feeding this module with objects (artists, cars, people ...) per countries will display for each of them a cylinder with a scaled height relative to other countries. It can also give information about the clicked country. With several preferences, this scene can be rendered on many machine with various configuration ; however, the browser must support [WebGL](https://www.khronos.org/webgl/).
 
